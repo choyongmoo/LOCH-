@@ -3,4 +3,5 @@ https://ui.shadcn.com/docs/components/sidebar -> 추가된 파일(sheet.tsx, sid
 
 gpt 에디션
 avatar.tsx
+
 scroll-area.tsx
