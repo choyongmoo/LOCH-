@@ -6,6 +6,10 @@ import { Signup } from "./pages/Auth/Signup";
 import { Home } from "./pages/Home";
 import { About } from "./pages/Home/About";
 import { NotFound } from "./pages/NotFound";
+import  WorkspaceLayout from "./layouts/WorkspaceLayout";
+import ProfilePage from "./pages/Workspace/ProfilePage";
+
+
 
 export const Router = () => {
   return (
@@ -21,6 +25,12 @@ export const Router = () => {
         <Route element={<AuthLayout />}>
           <Route path="signin" element={<Signin />} />
           <Route path="signup" element={<Signup />} />
+        </Route>
+
+        {/* Workspace Pages */}
+        <Route path="workspace" element={<WorkspaceLayout />}>
+          <Route index element={<ProfilePage />} />
+          <Route path="profile" element={<ProfilePage />} />
         </Route>
 
         {/* Fallback Route */}
