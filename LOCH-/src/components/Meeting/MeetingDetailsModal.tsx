@@ -1,5 +1,5 @@
 import React from "react";
-import type { MeetingDetailsModalProps } from "@/pages/Meeting/ResizableLayout/types";
+import type { MeetingDetailsModalProps } from "@/pages/Meeting/types";
 
 export const MeetingDetailsModal = ({
   visible,

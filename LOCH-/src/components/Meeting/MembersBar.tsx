@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { MembersBarProps } from "@/pages/Meeting/ResizableLayout/types";
+import type { MembersBarProps } from "@/pages/Meeting/types";
 
 export const MembersBar = ({ members, onOpenDetails, onUserClick }: MembersBarProps) => {
   const [hovered, setHovered] = useState(false);

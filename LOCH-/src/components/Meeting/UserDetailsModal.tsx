@@ -1,5 +1,5 @@
 import React from "react";
-import type { UserDetailsModalProps } from "@/pages/Meeting/ResizableLayout/types";
+import type { UserDetailsModalProps } from "@/pages/Meeting/types";
 
 export const UserDetailsModal = ({ visible, onClose, user }: UserDetailsModalProps) => {
   if (!visible) return null;

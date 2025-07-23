@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
-import type { ChatMessage, ChatBoxProps } from "@/pages/Meeting/ResizableLayout/types";
+import type { ChatMessage, ChatBoxProps } from "@/pages/Meeting/types";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);

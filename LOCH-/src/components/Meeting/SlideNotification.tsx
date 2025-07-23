@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { SlideNotificationProps } from "@/pages/Meeting/ResizableLayout/types";
+import type { SlideNotificationProps } from "@/pages/Meeting/types";
 
 export const SlideNotification = ({ message, visible, duration = 3000 }: SlideNotificationProps) => {
   const [show, setShow] = useState(false);
