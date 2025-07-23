@@ -29,8 +29,42 @@ export default function CustomSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
+                    <SidebarMenuButton onClick={() => navigate("/workspace/home")}>
+                      홈
+                    </SidebarMenuButton>
+
                     <SidebarMenuButton>
-                      개인
+                      내 제품
+                    </SidebarMenuButton>
+                    <SidebarMenuSub>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton>회의</SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton>녹화</SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton>화이트보드</SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton>노트</SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton>클립</SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton>문서</SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton>작업</SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton>더 많은 제품 살펴보기</SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                    </SidebarMenuSub>
+                  
+                    <SidebarMenuButton>
+                      내 계정
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
@@ -43,41 +77,18 @@ export default function CustomSidebar() {
                     </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>회의</SidebarMenuSubButton>
+                        <SidebarMenuSubButton>설정</SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
+                        <SidebarMenuSubButton>개인 장치</SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
+                        <SidebarMenuSubButton>개인 연락처</SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
+                        <SidebarMenuSubButton>데이터 및 개인정보 보호</SidebarMenuSubButton>
                       </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>          
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Settings</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Settings</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Settings</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
+                      
                     </SidebarMenuSub>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
@@ -88,19 +99,19 @@ export default function CustomSidebar() {
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>프로필</SidebarMenuSubButton>
+                        <SidebarMenuSubButton>요금제 및 청구</SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>회의</SidebarMenuSubButton>
+                        <SidebarMenuSubButton>사용자 관리</SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
+                        <SidebarMenuSubButton>계정 관리</SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
+                        <SidebarMenuSubButton>Advanced</SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
+                        <SidebarMenuSubButton>전화 시스템 관리</SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
@@ -123,14 +134,9 @@ export default function CustomSidebar() {
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton>Settings</SidebarMenuSubButton>
                       </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Settings</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   </SidebarMenuItem>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton>Models</SidebarMenuButton>
-                  </SidebarMenuItem>
+                  
                    
                 </SidebarMenu>
               </SidebarGroupContent>

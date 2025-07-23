@@ -7,6 +7,7 @@ import { Home } from "./pages/Home";
 import { About } from "./pages/Home/About";
 import { NotFound } from "./pages/NotFound";
 import  WorkspaceLayout from "./layouts/WorkspaceLayout";
+import HomePage from "@/pages/Workspace/HomePage"
 import ProfilePage from "./pages/Workspace/ProfilePage";
 
 
@@ -29,8 +30,9 @@ export const Router = () => {
 
         {/* Workspace Pages */}
         <Route path="workspace" element={<WorkspaceLayout />}>
-          <Route index element={<ProfilePage />} />
-          <Route path="profile" element={<ProfilePage />} />
+          <Route index element={<HomePage />} />
+          <Route path="home" element={<HomePage />} />
+          <Route path="profile" element={<ProfilePage />} />         
         </Route>
 
         {/* Fallback Route */}
