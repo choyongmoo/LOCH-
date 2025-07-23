@@ -1,0 +1,24 @@
+export const Footer = () => {
+  return (
+    <footer className="w-full border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 py-6 text-center transition-colors">
+      <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+        LOCH – AI-Powered Collaboration Platform
+      </p>
+
+      {/* 깃허브 링크 */}
+      <a
+        href="https://github.com/your-github-xxxxxxxxx"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-sm text-blue-500 dark:text-blue-400 hover:underline block mt-1"
+      >
+        github.com/your-github
+      </a>
+
+      {/* 저작권 표시 */}
+      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+        © 2024 - 2025 LOCH Team
+      </p>
+    </footer>
+  );
+};
