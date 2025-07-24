@@ -1,16 +1,15 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { AuthLayout } from "./layouts/AuthLayout";
 import { HomeLayout } from "./layouts/HomeLayout";
+import { MeetingLayout } from "./layouts/MeetingLayout"
 import { Signin } from "./pages/Auth/Signin";
 import { Signup } from "./pages/Auth/Signup";
 import { Home } from "./pages/Home";
 import { About } from "./pages/Home/About";
 import { NotFound } from "./pages/NotFound";
-import  WorkspaceLayout from "./layouts/WorkspaceLayout";
-import HomePage from "@/pages/Workspace/HomePage"
 import ProfilePage from "./pages/Workspace/ProfilePage";
-
-
+import HomePage from "./pages/Workspace/HomePage";
+import WorkspaceLayout from "./layouts/WorkspaceLayout";
 
 export const Router = () => {
   return (
@@ -32,7 +31,11 @@ export const Router = () => {
         <Route path="workspace" element={<WorkspaceLayout />}>
           <Route index element={<HomePage />} />
           <Route path="home" element={<HomePage />} />
-          <Route path="profile" element={<ProfilePage />} />         
+          <Route path="profile" element={<ProfilePage />} />
+        </Route>
+        {/* Meeting Pages */}
+        <Route path="meeting" element={<MeetingLayout />}>
+          <Route index element={<MeetingLayout />} />
         </Route>
 
         {/* Fallback Route */}
