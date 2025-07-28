@@ -1,138 +1,107 @@
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
-  SidebarGroupLabel,
   SidebarGroupContent,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarProvider,
 } from "@/components/common/ui/sidebar"
 import { ScrollArea } from "@/components/common/ui/scroll-area"
-import { useNavigate } from "react-router";
-
+import { useNavigate, useLocation } from "react-router";
+import { OthLogo } from "@/components/common/OthLogo";
 
 
 export default function CustomSidebar() {
   const navigate = useNavigate();
+  const location = useLocation();
   return (
-      <Sidebar className="w-full !static !h-auto !min-h-0 !max-h-none">
+      <Sidebar className="h-screen bg-[#111827] w-full !static !min-h-0 !max-h-none font-bold">
+        <div className="flex items-center justify-center py-6">
+          <OthLogo />
+        </div>
         <SidebarContent>
           <ScrollArea className="h-full">
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem>
-                    <SidebarMenuButton onClick={() => navigate("/workspace/home")}>
+                    <SidebarMenuButton
+                      onClick={() => navigate("/workspace/home")}
+                      className={location.pathname === "/workspace/home" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                    >
                       홈
                     </SidebarMenuButton>
-
-                    <SidebarMenuButton>
+                    <SidebarMenuButton
+                      onClick={() => navigate("/meeting")}
+                      className={location.pathname === "/meeting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                    >
+                      회의
+                    </SidebarMenuButton>
+                    <br />
+                    <SidebarMenuButton
+                      className={location.pathname.startsWith("/product") ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                    >
                       내 제품
                     </SidebarMenuButton>
-                    <SidebarMenuSub>
+                    <SidebarMenuSub>    
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>회의</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>녹화</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>화이트보드</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>노트</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>클립</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>문서</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>작업</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>더 많은 제품 살펴보기</SidebarMenuSubButton>
+                        <SidebarMenuSubButton
+                          className={location.pathname === "/docs" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                        >
+                          문서
+                        </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   
-                    <SidebarMenuButton>
+                    <SidebarMenuButton
+                      className={location.pathname.startsWith("/workspace/profile") ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                    >
                       내 계정
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                           onClick={() => {
-                          console.log("프로필 버튼 클럼나ㅣㅇ리ㅏㄴㅁ;ㅇ러ㅣㅏ;ㄴㅁ어라ㅣ;ㅁㄴ어리;마너링ㅁㄴ");
-                          navigate("/workspace/profile");
-                    }}>
-                    프로필
+                          console.log("프로필 버튼 클럼나ㅣㅇ리ㅏㄴㅁ;ㅇ러ㅣㅏ;ㄴㅁ어라ㅣ;ㅁㄴ어리;마너링ㅁㄴ");navigate("/workspace/profile");}}
+                          className={location.pathname === "/workspace/profile" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                        >
+                      프로필
                     </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>설정</SidebarMenuSubButton>
+                        <SidebarMenuSubButton
+                          className={location.pathname === "/workspace/settings" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                        >
+                          설정
+                        </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>개인 장치</SidebarMenuSubButton>
+                        <SidebarMenuSubButton
+                          className={location.pathname === "/workspace/contact" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                        >
+                          개인 연락처
+                        </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>개인 연락처</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>데이터 및 개인정보 보호</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      
                     </SidebarMenuSub>
                   </SidebarMenuItem>
                   <SidebarMenuItem>
 
-
-                    <SidebarMenuButton>
+                    <SidebarMenuButton
+                      className={location.pathname.startsWith("/admin") ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                    >
                       관리자
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>요금제 및 청구</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>사용자 관리</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>계정 관리</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Advanced</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>전화 시스템 관리</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Starred</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>          
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Settings</SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton>Settings</SidebarMenuSubButton>
+                        <SidebarMenuSubButton
+                          className={location.pathname === "/admin/server" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                        >
+                          서버 관리
+                        </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   </SidebarMenuItem>

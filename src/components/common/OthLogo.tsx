@@ -1,9 +1,9 @@
 import { Link } from "react-router";
 
-export const Logo = () => {
+export const OthLogo = () => {
   return (
     <Link to="/" className="flex items-center gap-3">
-      <img src="/src/assets/react.svg" alt="River Logo" className="size-12" />
+      <span className="text-3xl font-bold">LOCH</span>
     </Link>
   );
 };

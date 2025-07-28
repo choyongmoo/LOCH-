@@ -18,7 +18,7 @@ const WorkspaceLayout = () => {
         </div>
 
         {/* 메인 콘텐츠 + 슬라이드 패널 영역 */}
-        <div className="flex-1 relative overflow-visible bg-[#1C1D26]">
+        <div className="flex-1 relative overflow-visible bg-[#1C1D26] min-h-screen">
           <Outlet />
         </div>
       </div>
