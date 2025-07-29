@@ -16,7 +16,7 @@ const MiniSidebar = () => {
     setGroups([...groups, newGroupName]);
   };
   return (
-    <div className="h-full flex flex-col items-center py-4 space-y-4 w-14 bg-gray-100 dark:bg-[#1E1F2B] border-r border-gray-300 dark:border-gray-700">
+    <div className="min-h-screen flex flex-col items-center py-4 w-14 bg-gray-100 dark:bg-[#1E1F2B] border-r border-gray-300 dark:border-gray-700">
       {/* 그룹 리스트 */}
       <div className="flex flex-col items-center gap-0 mb-0 font-bold">
         {groups.map((group, i) => (

@@ -9,7 +9,9 @@ import { About } from "./pages/Home/About";
 import { NotFound } from "./pages/NotFound";
 import ProfilePage from "./pages/Workspace/ProfilePage";
 import HomePage from "./pages/Workspace/HomePage";
+import MunPage from "./pages/Workspace/MunPage";
 import WorkspaceLayout from "./layouts/WorkspaceLayout";
+
 
 export const Router = () => {
   return (
@@ -31,6 +33,7 @@ export const Router = () => {
         <Route path="workspace" element={<WorkspaceLayout />}>
           <Route index element={<HomePage />} />
           <Route path="home" element={<HomePage />} />
+          <Route path="mun" element={<MunPage />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
         {/* Meeting Pages */}

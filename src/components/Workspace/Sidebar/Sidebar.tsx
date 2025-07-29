@@ -19,7 +19,7 @@ export default function CustomSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   return (
-      <Sidebar className="h-screen bg-[#111827] w-full !static !min-h-0 !max-h-none font-bold">
+      <Sidebar className="min-h-screen bg-[#111827] w-full !static !min-h-0 !max-h-none font-bold">
         <div className="flex items-center justify-center py-6">
           <OthLogo />
         </div>
@@ -31,7 +31,11 @@ export default function CustomSidebar() {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       onClick={() => navigate("/workspace/home")}
-                      className={location.pathname === "/workspace/home" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                      className={
+                        (["/workspace", "/workspace/home", "/"].includes(location.pathname))
+                          ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold"
+                          : ""
+                      }
                     >
                       홈
                     </SidebarMenuButton>
@@ -50,16 +54,15 @@ export default function CustomSidebar() {
                     <SidebarMenuSub>    
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
-                          className={location.pathname === "/docs" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                           onClick={() => navigate("/workspace/mun")}
+                          className={location.pathname === "/workspace/mun" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
                         >
                           문서
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   
-                    <SidebarMenuButton
-                      className={location.pathname.startsWith("/workspace/profile") ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
-                    >
+                    <SidebarMenuButton>
                       내 계정
                     </SidebarMenuButton>
                     <SidebarMenuSub>
