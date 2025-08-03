@@ -84,6 +84,7 @@ export default function CustomSidebar() {
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
+                          onClick={() => navigate("/workspace/contact")}
                           className={location.pathname === "/workspace/contact" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
                         >
                           개인 연락처

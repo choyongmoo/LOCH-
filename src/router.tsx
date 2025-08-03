@@ -10,6 +10,7 @@ import { NotFound } from "./pages/NotFound";
 import ProfilePage from "./pages/Workspace/ProfilePage";
 import HomePage from "./pages/Workspace/HomePage";
 import MunPage from "./pages/Workspace/MunPage";
+import ContactPage from "./pages/Workspace/ContactPage";
 import WorkspaceLayout from "./layouts/WorkspaceLayout";
 
 
@@ -35,6 +36,7 @@ export const Router = () => {
           <Route path="home" element={<HomePage />} />
           <Route path="mun" element={<MunPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="contact" element={<ContactPage />} />
         </Route>
         {/* Meeting Pages */}
         <Route path="meeting" element={<MeetingLayout />}>
