@@ -13,6 +13,9 @@ import MunPage from "./pages/Workspace/MunPage";
 import ContactPage from "./pages/Workspace/ContactPage";
 import WorkspaceLayout from "./layouts/WorkspaceLayout";
 
+import { Download } from "./pages/Home/Download"; 
+import { Docs } from "@/pages/Home/Docs"; 
+import { ForgotPassword } from "./pages/Auth/ForgotPassword";
 
 export const Router = () => {
   return (
@@ -22,12 +25,15 @@ export const Router = () => {
         <Route element={<HomeLayout />}>
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
+          <Route path="download" element={<Download />} /> 
+           <Route path="docs" element={<Docs />} /> 
         </Route>
 
         {/* Auth Pages */}
         <Route element={<AuthLayout />}>
           <Route path="signin" element={<Signin />} />
           <Route path="signup" element={<Signup />} />
+           <Route path="forgot-password" element={<ForgotPassword />} /> 
         </Route>
 
         {/* Workspace Pages */}

@@ -4,7 +4,10 @@ import { Outlet } from "react-router";
 
 export const HomeLayout = () => {
   return (
+    
     <div className="min-h-screen bg-gradient-to-br from-background to-muted/80">
+
+
       <div className="fixed top-0 w-full pointer-events-none">
         <Header />
       </div>
