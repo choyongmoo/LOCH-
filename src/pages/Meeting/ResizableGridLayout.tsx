@@ -25,19 +25,20 @@ interface ResizableGridLayoutProps {
   onSwapApp?: (id: number) => void;
   onSwapHere?: (id: number) => void;
   onCancelSwap?: () => void;
+  // 전체 화면 관련
+  onFullscreen?: (panelId: number) => void;
 }
 
 type DraggingState = { type: 'row' | 'col' | 'rowLeft' | 'rowRight', idx: number, start: number, startSizes: number[] } | null;
 
-export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRight, onPanelDrop, onPanelSplit, onPanelClose, onResize, swapTarget, onSwapApp, onSwapHere, onCancelSwap }: ResizableGridLayoutProps) {
+export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRight, onPanelDrop, onPanelSplit, onPanelClose, onResize, swapTarget, onSwapApp, onSwapHere, onCancelSwap, onFullscreen }: ResizableGridLayoutProps) {
   // 리사이저 상태
   const [dragging, setDragging] = useState<DraggingState>(null);
   const draggingRef = useRef<DraggingState>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // 마우스 이벤트 핸들러 (드래그 해제시 mousemove 리스너도 반드시 해제)
-  const mouseMoveRef = useRef<(e: MouseEvent) => void>(null);
-  const mouseUpRef = useRef<(e: MouseEvent) => void>(null);
+
   const onMouseDownResizer = (type: 'row' | 'col' | 'rowLeft' | 'rowRight', idx: number, e: React.MouseEvent) => {
     e.preventDefault();
     const start = type === 'col' ? e.clientX : e.clientY;
@@ -132,7 +133,7 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
               gridRow: `${panel.row + 1} / span ${panel.rowSpan}`,
               minWidth: 0,
               minHeight: 0,
-              overflow: 'hidden',
+              overflow: 'visible',
               position: 'relative',
               borderRadius: '14px',
               background: '#2F3136',
@@ -164,7 +165,7 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
               num={panel.id}
               app={panel.app}
               title={panel.title}
-              onSplit={(num, droppedApp) => onPanelSplit(num, 'row')}
+              onSplit={(num, _droppedApp) => onPanelSplit(num, 'row')}
               onAppDrop={(appType, targetNum) => onPanelDrop(targetNum, appType)}
               onAdd={() => onPanelSplit(panel.id, 'row')}
               onClose={() => onPanelClose(panel.id)}
@@ -179,6 +180,7 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
               onSwapApp={onSwapApp ? () => onSwapApp(panel.id) : undefined}
               onSwapHere={onSwapHere ? () => onSwapHere(panel.id) : undefined}
               onCancelSwap={onCancelSwap}
+              onFullscreen={onFullscreen}
             />
           </div>
         ))}
@@ -241,7 +243,7 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
               gridRow: `${panel.row + 1} / span ${panel.rowSpan}`,
               minWidth: 0,
               minHeight: 0,
-              overflow: 'hidden',
+              overflow: 'visible',
               position: 'relative',
               borderRadius: '14px',
               background: '#2F3136',
@@ -273,7 +275,7 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
               num={panel.id}
               app={panel.app}
               title={panel.title}
-              onSplit={(num, droppedApp) => onPanelSplit(num, 'row')}
+              onSplit={(num, _droppedApp) => onPanelSplit(num, 'row')}
               onAppDrop={(appType, targetNum) => onPanelDrop(targetNum, appType)}
               onAdd={() => onPanelSplit(panel.id, 'row')}
               onClose={() => onPanelClose(panel.id)}
@@ -288,6 +290,7 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
               onSwapApp={onSwapApp ? () => onSwapApp(panel.id) : undefined}
               onSwapHere={onSwapHere ? () => onSwapHere(panel.id) : undefined}
               onCancelSwap={onCancelSwap}
+              onFullscreen={onFullscreen}
             />
           </div>
         ))}

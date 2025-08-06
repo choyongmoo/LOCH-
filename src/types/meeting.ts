@@ -1,19 +1,39 @@
+// MeetingLayout 관련 타입들
+export interface AppInstance {
+  id: string;
+  type: string;
+  title: string;
+}
+
+export interface DynamicPanel {
+  id: number;
+  app?: string;
+  title?: string;
+  row: number;
+  col: number;
+  rowSpan: number;
+  colSpan: number;
+}
+
+export interface PendingDrop {
+  type: string;
+  targetNum?: number;
+  mode?: 'replace' | 'split';
+}
+
+export interface ReplaceOrSplit {
+  instance: AppInstance;
+  targetNum: number;
+  sourceType: 'instance' | 'app';
+}
+
+export type ModalMode = 'select' | 'create';
+
 // MeetingDetailsModalProps
 export type MeetingDetailsModalProps = {
   visible: boolean;
   onClose: () => void;
-  details?: string;
-  meetingInfo?: {
-    roomName: string;
-    roomId: string;
-    createdAt: string;
-    host: string;
-    status: string;
-    participants: number;
-    maxParticipants: number;
-    duration: string;
-    description: string;
-  };
+  details: string;
 };
 
 // Chat 관련
@@ -35,19 +55,6 @@ export type UserDetailsModalProps = {
   visible: boolean;
   onClose: () => void;
   user: string | null;
-  userInfo?: {
-    name: string;
-    role: string;
-    department: string;
-    email: string;
-    status: string;
-    joinDate: string;
-    lastSeen: string;
-    avatar: string;
-    skills: string[];
-    projects: string[];
-    bio: string;
-  };
 };
 
 // MembersBar
@@ -85,4 +92,6 @@ export type PanelContentProps = {
   onSwapApp?: () => void;
   onSwapHere?: () => void;
   onCancelSwap?: () => void;
-};
+  // 전체 화면 관련
+  onFullscreen?: (num: number) => void;
+}; 

@@ -1,14 +1,11 @@
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import type { ChatMessage, ChatBoxProps } from "@/pages/Meeting/types";
+import type { ChatBoxProps } from "@/types/meeting";
 
 function formatDateTime(iso: string) {
   const d = new Date(iso);
   const pad = (n: number) => n.toString().padStart(2, "0");
-  return (
-    `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ` +
-    `${pad(d.getHours())}:${pad(d.getMinutes())}`
-  );
+  return `${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export const ChatBox = ({ messages, input, setInput, onSend }: ChatBoxProps) => {
@@ -18,6 +15,52 @@ export const ChatBox = ({ messages, input, setInput, onSend }: ChatBoxProps) => 
   const [searchType, setSearchType] = useState<"all" | "user" | "text" | "date">("all");
   const [searchResults, setSearchResults] = useState<number[]>([]);
   const [searchIndex, setSearchIndex] = useState(0);
+  const [isResizing, setIsResizing] = useState(false);
+  
+  // localStorage에서 저장된 크기 불러오기
+  const getSavedSize = () => {
+    const saved = localStorage.getItem('chatBoxSize');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return { width: parsed.width || 384, height: parsed.height || 420 };
+    }
+    return { width: 384, height: 420 }; // 기본 크기
+  };
+  
+  const [size, setSize] = useState(getSavedSize);
+  const resizeRef = useRef<HTMLDivElement>(null);
+  const chatBoxRef = useRef<HTMLDivElement>(null);
+
+  // 최소 크기 설정 (현재 크기)
+  const minWidth = 384;
+  const minHeight = 420;
+
+  // 크기가 변경될 때마다 localStorage에 저장
+  useEffect(() => {
+    localStorage.setItem('chatBoxSize', JSON.stringify(size));
+  }, [size]);
+
+  // 채팅방 외부 클릭 시 닫기
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (chatBoxRef.current && !chatBoxRef.current.contains(event.target as Node)) {
+        // 채팅 버튼 클릭은 제외
+        const target = event.target as HTMLElement;
+        if (target.closest('button[aria-label="Toggle Chat"]')) {
+          return;
+        }
+        
+        // 채팅방 외부 클릭 시 닫기 이벤트 발생
+        const closeEvent = new CustomEvent('closeChatBox');
+        window.dispatchEvent(closeEvent);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   useEffect(() => {
     if (searchTerm === "") {
@@ -123,15 +166,66 @@ export const ChatBox = ({ messages, input, setInput, onSend }: ChatBoxProps) => 
     setSearchIndex(0);
   };
 
+  // 리사이즈 핸들러
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsResizing(true);
+  };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isResizing || !chatBoxRef.current) return;
+
+      const chatBoxRect = chatBoxRef.current.getBoundingClientRect();
+      
+      // 채팅방의 현재 위치를 기준으로 새로운 크기 계산
+      const newWidth = Math.max(minWidth, chatBoxRect.right - e.clientX);
+      const newHeight = Math.max(minHeight, chatBoxRect.bottom - e.clientY);
+
+      setSize({ width: newWidth, height: newHeight });
+    };
+
+    const handleMouseUp = () => {
+      setIsResizing(false);
+    };
+
+    if (isResizing) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isResizing, minWidth, minHeight]);
+
   return (
     <motion.div
+      ref={chatBoxRef}
       key="chatbox"
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: 20 }}
       transition={{ duration: 0.3 }}
-      className="w-96 h-[420px] bg-[#2F3136] rounded-2xl shadow-lg flex flex-col p-4 text-white fixed bottom-18 right-4 z-60"
+      className="bg-[#2F3136] rounded-2xl shadow-lg flex flex-col p-4 text-white fixed bottom-28 right-4 z-60"
+      style={{ 
+        width: size.width, 
+        height: size.height,
+        cursor: isResizing ? 'nw-resize' : 'default'
+      }}
     >
+      {/* 리사이즈 핸들 */}
+      <div
+        ref={resizeRef}
+        className="absolute top-0 left-0 w-6 h-6 cursor-nw-resize z-10"
+        onMouseDown={handleMouseDown}
+        style={{
+          background: 'linear-gradient(135deg, transparent 50%, #5865F2 50%)',
+          borderRadius: '0.5rem 0 0 0'
+        }}
+      />
+      
       <div
         className="mb-2 flex items-center gap-2 whitespace-nowrap"
         style={{ flexWrap: "nowrap" }}

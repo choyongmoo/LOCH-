@@ -1,6 +1,5 @@
 import { AppRenderer } from "./AppRenderer";
-import { Button } from "@/components/common/ui/button";
-import type { PanelContentProps } from "./types";
+import type { PanelContentProps } from "@/types/meeting";
 
 export const PanelContent = ({
   num,
@@ -21,11 +20,12 @@ export const PanelContent = ({
   onSwapApp,
   onSwapHere,
   onCancelSwap,
+  onFullscreen,
 }: PanelContentProps & { maxPanelsReached?: boolean }) => {
   // 상태 없음, props로만 동작
   return (
     <div
-      className="relative bg-gray-800 p-2 flex flex-col h-full"
+      className="relative bg-gray-800 flex flex-col h-full overflow-hidden"
       onDragOver={(e) => e.preventDefault()}
       onDrop={(e) => {
         e.preventDefault();
@@ -93,6 +93,17 @@ export const PanelContent = ({
           disabled={maxPanelsReached}
         >+</button>
       </div>
+      
+      {/* 전체 화면 버튼 (우측 하단) */}
+      {onFullscreen && (
+        <div className="absolute bottom-4 right-2 z-50">
+          <button
+            className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-700 text-white hover:bg-[#5865F2] transition text-xs shadow border border-gray-600"
+            title="전체 화면으로 보기"
+            onClick={() => onFullscreen(num)}
+          >⛶</button>
+        </div>
+      )}
       {/* 인스턴스 제목 표시 */}
       {title && (
         <div
@@ -108,8 +119,9 @@ export const PanelContent = ({
           <span className="truncate block" style={{lineHeight:'1.2'}}>{title}</span>
         </div>
       )}
-      {/* 인스턴스 제목 표시 */}
-      <div className="flex-grow flex items-center justify-center text-white text-xl select-none">
+      
+      {/* 앱 컨텐츠 영역 */}
+      <div className="flex-grow flex items-center justify-center text-white text-xl select-none overflow-auto">
         {app ? <AppRenderer app={app} /> : <div className="text-gray-400">여기로 앱을 드래그하세요</div>}
       </div>
     </div>
