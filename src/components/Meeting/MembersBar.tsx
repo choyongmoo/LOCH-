@@ -9,30 +9,10 @@ export const MembersBar = ({ members, onOpenDetails, onUserClick }: MembersBarPr
   const expandedOffset = 30;
   const containerWidth = iconSize + (members.length - 1) * expandedOffset;
 
-  const commonCircleStyle = {
-    position: "absolute" as const,
-    top: 0,
-    width: iconSize,
-    height: iconSize,
-    borderRadius: "9999px",
-    backgroundColor: "#5865F2",
-    color: "white",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "0.875rem",
-    fontWeight: 600,
-    border: "2px solid rgba(255, 255, 255, 0.3)",
-    boxShadow: "0 0 6px rgba(0,0,0,0.2)",
-    right: 0,
-    transition: "transform 0.3s ease",
-    cursor: "pointer",
-  };
-
   return (
-    <div className="fixed top-4 right-4 flex items-center gap-2 z-50">
+    <div className="fixed top-6 right-6 flex items-center gap-2 z-50">
       <div
-        className="relative select-none"
+        className="relative select-none -mr-14"
         style={{ width: containerWidth, height: iconSize }}
         onMouseEnter={() => setHovered(true)}
         onMouseLeave={() => setHovered(false)}
@@ -47,8 +27,8 @@ export const MembersBar = ({ members, onOpenDetails, onUserClick }: MembersBarPr
             <div
               key={i}
               title={name}
+              className="absolute top-0 w-10 h-10 rounded-full bg-[#5865F2] text-white flex items-center justify-center text-sm font-semibold border-2 border-white/30 shadow-lg cursor-pointer transition-transform duration-300 ease-in-out"
               style={{ 
-                ...commonCircleStyle, 
                 transform: `translateX(${offset}px)`, 
                 zIndex: i + 1,
               }}
