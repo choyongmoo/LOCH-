@@ -11,123 +11,104 @@ import {
   navigationMenuTriggerStyle,
 } from "@/components/common/ui/navigation-menu";
 import { Link } from "react-router";
-
-// 기능 소개 서브 메뉴 항목
-const features: { title: string; href: string; description: string }[] = [
-  {
-    title: "실시간 코드 편집",
-    href: "/features/code",
-    description: "여러 사용자가 동시에 코드를 작성하고 리뷰할 수 있는 편집기",
-  },
-  {
-    title: "회의 및 일정 관리",
-    href: "/features/meeting",
-    description: "회의 예약, 알림, 채팅 및 화상 회의까지 통합된 회의 관리",
-  },
-  {
-    title: "회의록 자동 생성",
-    href: "/features/minutes",
-    description: "음성을 텍스트로 변환하고 요약하여 회의록으로 자동 저장",
-  },
-  {
-    title: "문서 & 스프레드시트",
-    href: "/features/docs",
-    description: "문서, 엑셀을 공동 작성하며 실시간으로 협업",
-  },
-  {
-    title: "화이트보드",
-    href: "/features/whiteboard",
-    description: "아이디어를 자유롭게 표현하고 공유할 수 있는 협업 공간",
-  },
-];
+import { Link as ScrollLink } from "react-scroll";
+import { useNavigate } from "react-router";
 
 export function Navbar() {
+  const navigate = useNavigate();
+
+  const handleIntroClick = (id: string) => {
+    if (window.location.pathname !== "/") {
+      (window as any).__scrollTo = id;
+      navigate("/"); 
+    }
+  };
+
   return (
     <NavigationMenu viewport={false}>
       <NavigationMenuList>
-
-        {/* 홈 */}
+        {/* 소개 드롭다운 */}
         <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link to="/">홈</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-
-        {/* 소개 */}
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link to="/about">소개</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-
-        {/* 기능 소개 */}
-        <NavigationMenuItem>
-          <NavigationMenuTrigger>기능</NavigationMenuTrigger>
+          <NavigationMenuTrigger>소개</NavigationMenuTrigger>
           <NavigationMenuContent>
             <ul className="grid w-[400px] gap-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-              {features.map((feature) => (
-                <ListItem
-                  key={feature.title}
-                  title={feature.title}
-                  href={feature.href}
+              {/* 주요 기능 */}
+              <li>
+                <ScrollLink
+                  to="about"
+                  smooth={true}
+                  duration={500}
+                  offset={0}
+                  onClick={() => handleIntroClick("about")}
                 >
-                  {feature.description}
-                </ListItem>
-              ))}
+                  <NavigationMenuLink asChild>
+                    <div className="text-sm leading-none font-medium cursor-pointer">
+                      주요 기능
+                      <p className="text-muted-foreground line-clamp-2 text-sm leading-snug mt-1">
+                        어떤 기능들이 제공되는지 간단히 살펴보세요.
+                      </p>
+                    </div>
+                  </NavigationMenuLink>
+                </ScrollLink>
+              </li>
+
+              {/* 팀 소개 */}
+              <li>
+                <ScrollLink
+                  to="team"
+                  smooth={true}
+                  duration={500}
+                  offset={-80}
+                  onClick={() => handleIntroClick("team")}
+                >
+                  <NavigationMenuLink asChild>
+                    <div className="text-sm leading-none font-medium cursor-pointer">
+                      팀 소개
+                      <p className="text-muted-foreground line-clamp-2 text-sm leading-snug mt-1">
+                        팀원 역할, 담당 파트, 사진 등 프로젝트를 함께 만든 구성원 소개
+                      </p>
+                    </div>
+                  </NavigationMenuLink>
+                </ScrollLink>
+              </li>
+
+              {/* 기술 스택 */}
+              <li>
+                <ScrollLink
+                  to="tech"
+                  smooth={true}
+                  duration={500}
+                  offset={-80}
+                  onClick={() => handleIntroClick("tech")}
+                >
+                  <NavigationMenuLink asChild>
+                    <div className="text-sm leading-none font-medium cursor-pointer">
+                      기술 스택
+                      <p className="text-muted-foreground line-clamp-2 text-sm leading-snug mt-1">
+                        프론트엔드, 백엔드, 배포 환경 등 프로젝트에 사용된 기술들을 설명합니다.
+                      </p>
+                    </div>
+                  </NavigationMenuLink>
+                </ScrollLink>
+              </li>
             </ul>
           </NavigationMenuContent>
         </NavigationMenuItem>
 
-        {/* 시작 가이드 */}
+        {/* 다운로드 메뉴 */}
         <NavigationMenuItem>
           <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link to="/getting-started">시작 가이드</Link>
+            <Link to="/download">다운로드</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
 
-        {/* 팀 소개 */}
+        {/* 문서 메뉴 */}
         <NavigationMenuItem>
           <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link to="/team">팀 소개</Link>
+            <Link to="/docs">문서</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
-
-        {/* 고객지원 */}
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link to="/faq">고객지원</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-
-        {/* 기술 문서 */}
-        <NavigationMenuItem>
-          <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link to="/docs">기술 문서</Link>
-          </NavigationMenuLink>
-        </NavigationMenuItem>
-
       </NavigationMenuList>
     </NavigationMenu>
-  );
-}
-
-// 메뉴 리스트 아이템 컴포넌트
-function ListItem({
-  title,
-  children,
-  href,
-  ...props
-}: React.ComponentPropsWithoutRef<"li"> & { href: string }) {
-  return (
-    <li {...props}>
-      <NavigationMenuLink asChild>
-        <Link to={href}>
-          <div className="text-sm leading-none font-medium">{title}</div>
-          <p className="text-muted-foreground line-clamp-2 text-sm leading-snug">
-            {children}
-          </p>
-        </Link>
-      </NavigationMenuLink>
-    </li>
   );
 }

@@ -1,6 +1,13 @@
 export const Footer = () => {
   return (
-    <footer className="w-full border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-950 py-6 text-center transition-colors">
+
+    
+    <footer className="w-full bg-gray-50 dark:bg-gray-950 py-0 text-center transition-colors">
+
+        {/* 구분선 */}
+      <div className="w-full max-w-7xl mx-auto border-t border-gray-200 dark:border-gray-700 mb-6" />
+       
+
       <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
         LOCH – AI-Powered Collaboration Platform
       </p>

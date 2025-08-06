@@ -6,6 +6,8 @@ import { Signup } from "./pages/Auth/Signup";
 import { Home } from "./pages/Home";
 import { About } from "./pages/Home/About";
 import { NotFound } from "./pages/NotFound";
+import { Download } from "./pages/Home/Download"; 
+import { Docs } from "@/pages/Home/Docs"; 
 
 import { ForgotPassword } from "./pages/Auth/ForgotPassword";
 
@@ -17,6 +19,9 @@ export const Router = () => {
         <Route element={<HomeLayout />}>
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
+          <Route path="download" element={<Download />} /> 
+           <Route path="docs" element={<Docs />} /> 
+          
         </Route>
 
         {/* Auth Pages */}
