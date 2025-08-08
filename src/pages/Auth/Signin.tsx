@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router";
 import { Button } from "@/components/common/ui/button";
 import {
   Card,
@@ -11,9 +13,94 @@ import { Input } from "@/components/common/ui/input";
 import { Label } from "@/components/common/ui/label";
 import { Paragraph } from "@/components/common/ui/Paragraph";
 import { Separator } from "@/components/common/ui/separator";
-import { Link } from "react-router";
+import { supabase } from "@/lib/supabase";
 
 export const Signin = () => {
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // OAuth / Email-link 콜백 처리 통합
+  useEffect(() => {
+    const handleAuthCallbackInSignin = async () => {
+      try {
+        const url = new URL(window.location.href);
+        const code = url.searchParams.get("code");
+        if (code) {
+          const { error } = await supabase.auth.exchangeCodeForSession(code);
+          if (!error) {
+            navigate("/workspace", { replace: true });
+            return;
+          }
+        }
+
+        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const accessToken = hashParams.get("access_token");
+        const refreshToken = hashParams.get("refresh_token");
+        if (accessToken && refreshToken) {
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (!error) {
+            window.history.replaceState({}, document.title, url.pathname);
+            navigate("/workspace", { replace: true });
+            return;
+          }
+        }
+      } catch (err) {
+        // 무시하고 로그인 화면 유지
+        console.warn("auth callback 처리 실패", err);
+      }
+    };
+
+    void handleAuthCallbackInSignin();
+  }, [navigate]);
+
+  const handleEmailSignin = async () => {
+    setError(null);
+    if (!email || !password) {
+      setError("이메일과 비밀번호를 입력하세요.");
+      return;
+    }
+    try {
+      setLoading(true);
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (signInError) {
+        setError(signInError.message);
+        return;
+      }
+      if (data.session) {
+        navigate("/workspace", { replace: true });
+      }
+    } catch (err) {
+      console.error(err);
+      setError("로그인 중 오류가 발생했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignin = async () => {
+    setError(null);
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/signin`,
+        },
+      });
+    } catch (err) {
+      console.error(err);
+      setError("Google 로그인에 실패했습니다.");
+    }
+  };
+
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
@@ -27,6 +114,7 @@ export const Signin = () => {
           <Button
             variant="outline"
             className="flex items-center justify-center gap-2 w-1/2 py-2"
+            onClick={handleGoogleSignin}
           >
             <img src="/google.svg" alt="Google" className="w-5 h-5" />
             <span className="text-sm font-medium">Google</span>
@@ -37,6 +125,8 @@ export const Signin = () => {
             variant="outline"
             className="flex items-center justify-center gap-2 w-1/2 py-2 
                       bg-yellow-300 hover:bg-yellow-400 text-black dark:text-white font-semibold"
+            disabled
+            title="Kakao 로그인은 준비 중입니다."
           >
             <img src="/kakaotalk.svg" alt="Kakao" className="w-5 h-5" />
             <span className="text-sm font-medium">Kakao</span>
@@ -53,7 +143,12 @@ export const Signin = () => {
         {/*  이메일 입력 */}
         <div className="grid gap-2">
           <Label htmlFor="email">이메일</Label>
-          <Input id="email" type="email" />
+          <Input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+          />
         </div>
 
         {/* 비밀번호 입력 */}
@@ -67,13 +162,28 @@ export const Signin = () => {
               비밀번호를 잊으셨나요?
             </Link>
           </div>
-          <Input id="password" type="password" />
+          <Input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                void handleEmailSignin();
+              }
+            }}
+          />
         </div>
       </CardContent>
 
       {/* 로그인 버튼 및 회원가입 링크 */}
       <CardFooter className="flex flex-col gap-4 pt-2">
-        <Button className="w-full">로그인</Button>
+        {error && (
+          <Paragraph className="text-red-500 text-sm">{error}</Paragraph>
+        )}
+        <Button className="w-full" onClick={handleEmailSignin} disabled={loading}>
+          {loading ? "로그인 중..." : "로그인"}
+        </Button>
         <Paragraph muted className="text-center">
           계정이 없으신가요?{" "}
           <Link to="/signup" className="underline">
