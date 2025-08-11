@@ -12,14 +12,53 @@ import {
 } from "@/components/common/ui/sidebar"
 import { ScrollArea } from "@/components/common/ui/scroll-area"
 import { useNavigate, useLocation } from "react-router";
+import React from "react";
+import { supabase } from "@/lib/supabase";
 import { OthLogo } from "@/components/common/OthLogo";
 
 
 export default function CustomSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [pendingCount, setPendingCount] = React.useState<number>(0);
+
+  const loadPendingCount = React.useCallback(async () => {
+    try {
+      const { data: authData } = await supabase.auth.getUser();
+      const email = authData.user?.email ?? null;
+      if (!email) { setPendingCount(0); return; }
+      const { data: me } = await supabase
+        .from("users")
+        .select("id")
+        .eq("email", email)
+        .order("id", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      const myId = (me?.id as number | undefined) ?? null;
+      if (!myId) { setPendingCount(0); return; }
+      const { data: rows } = await supabase
+        .from("friend_requests")
+        .select("id")
+        .eq("addressee_id", myId)
+        .eq("status", "pending");
+      setPendingCount((rows ?? []).length);
+    } catch {
+      setPendingCount(0);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    void loadPendingCount();
+    const handle = () => { void loadPendingCount(); };
+    window.addEventListener('friends-updated', handle as EventListener);
+    const { data: sub } = supabase.auth.onAuthStateChange(() => void loadPendingCount());
+    return () => {
+      window.removeEventListener('friends-updated', handle as EventListener);
+      sub.subscription.unsubscribe();
+    };
+  }, [loadPendingCount]);
   return (
-      <Sidebar className="min-h-screen bg-[#111827] w-full !static !min-h-0 !max-h-none font-bold">
+      <Sidebar className="min-h-screen bg-[#111827] w-full !static !max-h-none font-bold">
         <div className="flex items-center justify-center py-6">
           <OthLogo />
         </div>
@@ -90,6 +129,21 @@ export default function CustomSidebar() {
                           개인 연락처
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
+                       {(location.pathname === "/workspace/contact" || location.pathname === "/workspace/friends/requests") && (
+                       <SidebarMenuSubItem>
+                           <SidebarMenuSubButton
+                             onClick={() => navigate("/workspace/friends/requests")}
+                             className={`pl-8 text-sm ${location.pathname === "/workspace/friends/requests" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}`}
+                           >
+                             <div className="flex items-center justify-between w-full">
+                               <span>친구 수신함</span>
+                               {pendingCount > 0 && (
+                                 <span className="ml-2 text-xs font-bold">{pendingCount}</span>
+                               )}
+                             </div>
+                           </SidebarMenuSubButton>
+                         </SidebarMenuSubItem>
+                       )}
                     </SidebarMenuSub>
                   </SidebarMenuItem>
                   <SidebarMenuItem>

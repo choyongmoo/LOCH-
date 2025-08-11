@@ -43,6 +43,8 @@ const ProfilePage = () => {
   const [micSelect, setMicSelect] = useState<string>("");
   const [micLoading, setMicLoading] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
+  // 현재 로그인한 사용자의 public.users PK (int8)
+  const [userPk, setUserPk] = useState<number | null>(null);
   const navigate = useNavigate();
 
   const handleSignOutAndRedirect = async (): Promise<void> => {
@@ -101,6 +103,8 @@ const ProfilePage = () => {
       setDeleteLoading(true);
       const { data } = await supabase.auth.getUser();
       const userId = data.user?.id;
+      const userEmail = data.user?.email ?? null;
+      console.log("탈퇴 요청 userId:", userId); // ← 콘솔 출력 추가
       if (!userId) {
         setDeleteError("로그인 정보가 없습니다.");
         return;
@@ -113,6 +117,11 @@ const ProfilePage = () => {
         setDeleteError(error.message ?? "삭제에 실패했습니다.");
         return;
       }
+      // 계정별 최근활동 로컬 스토리지 제거
+      try {
+        const key = `recentWorkspacePages:${userEmail ?? "anonymous"}`;
+        localStorage.removeItem(key);
+      } catch {}
       await supabase.auth.signOut();
       navigate("/", { replace: true });
     } catch {
@@ -120,6 +129,38 @@ const ProfilePage = () => {
     } finally {
       setDeleteLoading(false);
     }
+  };
+
+  // profile 테이블 업서트 헬퍼
+  const upsertProfile = async (
+    payload: Partial<{
+      nickname: string;
+      bio: string | null;
+      accent_color: string | null;
+      language: "ko" | "en";
+      mic_device_id: string | null;
+      mic_enabled: boolean;
+    }>
+  ) => {
+    if (!userPk) {
+      throw new Error("사용자 정보를 불러오지 못했습니다.");
+    }
+    const safeNickname = payload.nickname ?? profileName ?? (email ? email.split("@")[0] : "User");
+    const { error } = await supabase
+      .from("profile")
+      .upsert(
+        {
+          id: userPk,
+          nickname: safeNickname,
+          language: payload.language ?? profileLang ?? "ko",
+          mic_enabled: payload.mic_enabled ?? true,
+          bio: payload.bio ?? profileBio ?? null,
+          accent_color: payload.accent_color ?? profileColor ?? null,
+          mic_device_id: payload.mic_device_id ?? null,
+        },
+        { onConflict: "id" }
+      );
+    if (error) throw error;
   };
 
   const handleNicknameSave = async () => {
@@ -131,13 +172,10 @@ const ProfilePage = () => {
     }
     try {
       setNickLoading(true);
-      const { error } = await supabase.auth.updateUser({ data: { name: trimmed } });
-      if (error) {
-        setNickError(error.message);
-        return;
-      }
+      await upsertProfile({ nickname: trimmed });
       setProfileName(trimmed);
       setShowNicknameModal(false);
+      try { window.dispatchEvent(new CustomEvent('friends-updated')); } catch {}
     } catch {
       setNickError("별명 저장 중 오류가 발생했습니다.");
     } finally {
@@ -150,11 +188,7 @@ const ProfilePage = () => {
     const trimmed = bioInput.trim();
     try {
       setBioLoading(true);
-      const { error } = await supabase.auth.updateUser({ data: { bio: trimmed } });
-      if (error) {
-        setBioError(error.message);
-        return;
-      }
+      await upsertProfile({ bio: trimmed || null });
       setProfileBio(trimmed || null);
       setShowBioModal(false);
     } catch {
@@ -174,13 +208,10 @@ const ProfilePage = () => {
     }
     try {
       setColorLoading(true);
-      const { error } = await supabase.auth.updateUser({ data: { color: value } });
-      if (error) {
-        setColorError(error.message);
-        return;
-      }
+      await upsertProfile({ accent_color: value });
       setProfileColor(value);
       setShowColorModal(false);
+      try { window.dispatchEvent(new CustomEvent('friends-updated')); } catch {}
     } catch {
       setColorError("색상 저장 중 오류가 발생했습니다.");
     } finally {
@@ -192,11 +223,7 @@ const ProfilePage = () => {
     setLangError(null);
     try {
       setLangLoading(true);
-      const { error } = await supabase.auth.updateUser({ data: { lang: langInput } });
-      if (error) {
-        setLangError(error.message);
-        return;
-      }
+      await upsertProfile({ language: langInput });
       setProfileLang(langInput);
       setShowLangModal(false);
     } catch {
@@ -235,16 +262,7 @@ const ProfilePage = () => {
     try {
       setMicLoading(true);
       const selected = micDevices.find((d) => d.deviceId === micSelect);
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          micDeviceId: micSelect,
-          micDeviceLabel: selected?.label ?? "",
-        },
-      });
-      if (error) {
-        setMicError(error.message);
-        return;
-      }
+      await upsertProfile({ mic_device_id: micSelect });
       setProfileMicLabel(selected?.label ?? null);
       setShowMicModal(false);
     } catch {
@@ -256,36 +274,112 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const loadUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setEmail(data.user?.email ?? null);
-      const nameFromMeta = (data.user?.user_metadata as Record<string, unknown>)?.name as
-        | string
-        | undefined;
-      setProfileName(nameFromMeta ?? data.user?.email?.split("@")[0] ?? null);
-      setNicknameInput(nameFromMeta ?? "");
-      const bioFromMeta = (data.user?.user_metadata as Record<string, unknown>)?.bio as
-        | string
-        | undefined;
-      const cleanedBio = typeof bioFromMeta === "string" && bioFromMeta.trim().length > 0 ? bioFromMeta : null;
-      setProfileBio(cleanedBio);
-      setBioInput(bioFromMeta ?? "");
-      const colorFromMeta = (data.user?.user_metadata as Record<string, unknown>)?.color as string | undefined;
-      const validColor = typeof colorFromMeta === "string" && /^#([0-9a-fA-F]{6})$/.test(colorFromMeta) ? colorFromMeta : null;
-      setProfileColor(validColor);
-      setColorInput(validColor ?? "#7e22ce");
-      const langFromMeta = (data.user?.user_metadata as Record<string, unknown>)?.lang as string | undefined;
-      const normalizedLang = langFromMeta === "en" ? "en" : "ko";
-      setProfileLang(normalizedLang);
-      setLangInput(normalizedLang);
+      // 인증 사용자 가져오기
+      const { data: authData } = await supabase.auth.getUser();
+      const authUuid = authData.user?.id ?? null; 
+      const emailFromAuth = authData.user?.email ?? null;
+      setEmail(emailFromAuth);
+      if (!emailFromAuth) return;
 
-      // Load audio devices and set defaults
+      // public.users에서 PK 찾기 (없으면 '이메일 기준 귀속' 시도 → 그래도 없으면 생성)
+      const { data: userRowByUuid } = await supabase
+        .from("users")
+        .select("id, name")
+        .eq("user_uuid", authUuid)
+        .order("id", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      const fallbackName = (authData.user?.user_metadata as Record<string, unknown> | undefined)?.name as
+        | string
+        | undefined;
+      let displayName = fallbackName ?? emailFromAuth.split("@")[0];
+      let pk: number | null = null;
+
+      if (userRowByUuid?.id) {
+        pk = userRowByUuid.id as unknown as number;
+        if (userRowByUuid.name) displayName = userRowByUuid.name as string;
+      } else {
+        // 1) 기존에 이메일로만 만들어진 row가 있다면 내 계정으로 귀속(user_uuid 세팅)
+        const { data: claimed } = await supabase
+          .from("users")
+          .update({ user_uuid: authUuid })
+          .eq("email", emailFromAuth)
+          .is("user_uuid", null)
+          .select("id, name")
+          .maybeSingle();
+
+        if (claimed?.id) {
+          pk = claimed.id as unknown as number;
+          if (claimed.name) displayName = claimed.name as string;
+        } else {
+          // 2) 없으면 새 행 생성(user_uuid 포함)
+          const { data: inserted } = await supabase
+            .from("users")
+            .insert({ email: emailFromAuth, name: displayName, user_uuid: authUuid })
+            .select("id")
+            .single();
+          pk = inserted?.id ?? null;
+        }
+      }
+
+      if (!pk) return;
+      setUserPk(pk);
+      setProfileName(displayName);
+      setNicknameInput(displayName);
+
+      // 프로필 로드 (없으면 기본값으로 생성)
+      const { data: profileRow } = await supabase
+        .from("profile")
+        .select("nickname, bio, accent_color, language, mic_device_id, mic_enabled")
+        .eq("id", pk)
+        .maybeSingle();
+
+      if (!profileRow) {
+        await supabase
+          .from("profile")
+          .upsert(
+            {
+              id: pk,
+              nickname: displayName, // 이메일 앞부분
+              bio: null,
+              accent_color: null,
+              language: null,
+              mic_device_id: null,
+              mic_enabled: null,
+            },
+            { onConflict: "id" }
+          );
+        setProfileBio(null);
+        setBioInput("");
+        setProfileColor(null);
+        setColorInput("#7e22ce");
+        setProfileLang("ko");
+        setLangInput("ko");
+      } else {
+        setProfileName(profileRow.nickname ?? displayName);
+        setNicknameInput(profileRow.nickname ?? displayName);
+        const cleanedBio = typeof profileRow.bio === "string" && profileRow.bio.trim().length > 0 ? profileRow.bio : null;
+        setProfileBio(cleanedBio);
+        setBioInput(profileRow.bio ?? "");
+        const validColor =
+          typeof profileRow.accent_color === "string" && /^#([0-9a-fA-F]{6})$/.test(profileRow.accent_color)
+            ? profileRow.accent_color
+            : null;
+        setProfileColor(validColor);
+        setColorInput(validColor ?? "#7e22ce");
+        const normalizedLang = profileRow.language === "en" ? "en" : "ko";
+        setProfileLang(normalizedLang);
+        setLangInput(normalizedLang);
+      }
+
+      // 오디오 디바이스 로드 및 선택값 결정
       const inputs = await ensureAudioPermissionAndDevices();
       setMicDevices(inputs);
-      const micIdFromMeta = (data.user?.user_metadata as Record<string, unknown>)?.micDeviceId as string | undefined;
-      const micLabelFromMeta = (data.user?.user_metadata as Record<string, unknown>)?.micDeviceLabel as string | undefined;
+      const micId = profileRow?.mic_device_id as string | undefined;
       const defaultId = inputs.find((d) => d.deviceId === "default")?.deviceId || inputs[0]?.deviceId || "";
-      const nextId = inputs.some((d) => d.deviceId === micIdFromMeta) ? micIdFromMeta! : defaultId;
-      const nextLabel = inputs.find((d) => d.deviceId === nextId)?.label || micLabelFromMeta || null;
+      const nextId = inputs.some((d) => d.deviceId === micId) ? (micId as string) : defaultId;
+      const nextLabel = inputs.find((d) => d.deviceId === nextId)?.label || null;
       setProfileMicLabel(nextLabel);
       setMicSelect(nextId);
     };
@@ -294,21 +388,6 @@ const ProfilePage = () => {
 
     const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
       setEmail(session?.user?.email ?? null);
-      const nameFromMeta = (session?.user?.user_metadata as Record<string, unknown>)?.name as
-        | string
-        | undefined;
-      setProfileName(nameFromMeta ?? session?.user?.email?.split("@")[0] ?? null);
-      const bioFromMeta = (session?.user?.user_metadata as Record<string, unknown>)?.bio as
-        | string
-        | undefined;
-      const cleanedBioFromSession = typeof bioFromMeta === "string" && bioFromMeta.trim().length > 0 ? bioFromMeta : null;
-      setProfileBio(cleanedBioFromSession);
-      const colorFromSession = (session?.user?.user_metadata as Record<string, unknown>)?.color as string | undefined;
-      const validSessionColor = typeof colorFromSession === "string" && /^#([0-9a-fA-F]{6})$/.test(colorFromSession) ? colorFromSession : null;
-      setProfileColor(validSessionColor);
-      const langFromSession = (session?.user?.user_metadata as Record<string, unknown>)?.lang as string | undefined;
-      const normalizedSessionLang = langFromSession === "en" ? "en" : "ko";
-      setProfileLang(normalizedSessionLang);
     });
 
     return () => {

@@ -11,6 +11,7 @@ import ProfilePage from "./pages/Workspace/ProfilePage";
 import HomePage from "./pages/Workspace/HomePage";
 import MunPage from "./pages/Workspace/MunPage";
 import ContactPage from "./pages/Workspace/ContactPage";
+import FriendRequestPage from "./pages/Workspace/FriendRequestPage";
 import WorkspaceLayout from "./layouts/WorkspaceLayout";
 
 import { Download } from "./pages/Home/Download"; 
@@ -43,6 +44,7 @@ export const Router = () => {
           <Route path="mun" element={<MunPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="contact" element={<ContactPage />} />
+          <Route path="friends/requests" element={<FriendRequestPage />} />
         </Route>
         {/* Meeting Pages */}
         <Route path="meeting" element={<MeetingLayout />}>

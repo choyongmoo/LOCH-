@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { Skeleton } from "@/components/common/ui/skeleton";
 import { Link } from "react-router";
 import { supabase } from "@/lib/supabase";
 
@@ -7,51 +8,72 @@ export default function HomePage() {
   const [profileName, setProfileName] = useState<string | null>(null);
   const [profileColor, setProfileColor] = useState<string | null>(null);
   const [profileBio, setProfileBio] = useState<string | null>(null);
+  // 사용자 PK가 필요하면 확장 예정
+  // const [userPk, setUserPk] = useState<number | null>(null);
 
   useEffect(() => {
-    const loadUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setEmail(data.user?.email ?? null);
-      const metadata = (data.user?.user_metadata as Record<string, unknown>) || {};
-      const nameFromMeta = metadata?.name as string | undefined;
-      const colorFromMeta = metadata?.color as string | undefined;
-      const bioFromMeta = metadata?.bio as string | undefined;
+    const loadFromDatabase = async () => {
+      const { data: authData } = await supabase.auth.getUser();
+      const emailFromAuth = authData.user?.email ?? null;
+      setEmail(emailFromAuth);
+      if (!emailFromAuth) return;
 
-      setProfileName(nameFromMeta ?? data.user?.email?.split("@")[0] ?? null);
-      setProfileColor(
-        typeof colorFromMeta === "string" && /^#([0-9a-fA-F]{6})$/.test(colorFromMeta)
-          ? colorFromMeta
-          : null
-      );
-      const cleanedBio =
-        typeof bioFromMeta === "string" && bioFromMeta.trim().length > 0
-          ? bioFromMeta
-          : null;
-      setProfileBio(cleanedBio);
+      // users에서 PK 조회(없으면 생성)
+      const { data: userRow } = await supabase
+        .from("users")
+        .select("id, name")
+        .eq("email", emailFromAuth)
+        .order("id", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+
+      let displayName = emailFromAuth.split("@")[0] ?? "";
+      let pk: number | null = null;
+      if (userRow?.id) {
+        pk = userRow.id as unknown as number;
+        if (userRow.name) displayName = userRow.name as string;
+      } else {
+        const { data: inserted } = await supabase
+          .from("users")
+          .insert({ email: emailFromAuth, name: displayName })
+          .select("id")
+          .single();
+        pk = inserted?.id ?? null;
+      }
+      if (!pk) return;
+      // setUserPk(pk);
+
+      // profile 조회(없으면 기본 생성)
+      const { data: profileRow } = await supabase
+        .from("profile")
+        .select("nickname, bio, accent_color, language, mic_device_id, mic_enabled")
+        .eq("id", pk)
+        .maybeSingle();
+
+      if (!profileRow) {
+        await supabase
+          .from("profile")
+          .upsert({ id: pk, nickname: displayName, language: "ko", mic_enabled: true }, { onConflict: "id" });
+        setProfileName(displayName);
+        setProfileColor(null);
+        setProfileBio(null);
+      } else {
+        setProfileName(profileRow.nickname ?? displayName);
+        const validColor =
+          typeof profileRow.accent_color === "string" && /^#([0-9a-fA-F]{6})$/.test(profileRow.accent_color)
+            ? profileRow.accent_color
+            : null;
+        setProfileColor(validColor);
+        const cleanedBio = typeof profileRow.bio === "string" && profileRow.bio.trim().length > 0 ? profileRow.bio : null;
+        setProfileBio(cleanedBio);
+      }
     };
 
-    void loadUser();
+    void loadFromDatabase();
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_, session) => {
-      setEmail(session?.user?.email ?? null);
-      const metadata = (session?.user?.user_metadata as Record<string, unknown>) || {};
-      const nameFromMeta = metadata?.name as string | undefined;
-      const colorFromMeta = metadata?.color as string | undefined;
-      const bioFromMeta = metadata?.bio as string | undefined;
-
-      setProfileName(nameFromMeta ?? session?.user?.email?.split("@")[0] ?? null);
-      setProfileColor(
-        typeof colorFromMeta === "string" && /^#([0-9a-fA-F]{6})$/.test(colorFromMeta)
-          ? colorFromMeta
-          : null
-      );
-      const cleanedBio =
-        typeof bioFromMeta === "string" && bioFromMeta.trim().length > 0
-          ? bioFromMeta
-          : null;
-      setProfileBio(cleanedBio);
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      void loadFromDatabase();
     });
-
     return () => {
       listener.subscription.unsubscribe();
     };
@@ -59,7 +81,8 @@ export default function HomePage() {
 
   const baseName = profileName ?? email ?? "";
   const initials = (baseName || "").charAt(0).toUpperCase();
-  const RECENT_KEY = "recentWorkspacePages";
+  const RECENT_KEY_PREFIX = "recentWorkspacePages:";
+  const getRecentKey = useCallback(() => `${RECENT_KEY_PREFIX}${email ?? "anonymous"}`, [email]);
   const MAX_RECENT = 4; // 화면에 표시 개수
   const MAX_STORE = 10; // 모달에서 최대 10개까지 표시
   const [recentPages, setRecentPages] = useState<Array<{ path: string; ts: number }>>([]);
@@ -87,15 +110,15 @@ export default function HomePage() {
     return seg;
   };
 
-  const loadRecentPages = () => {
+  const loadRecentPages = useCallback(() => {
     try {
-      const raw = localStorage.getItem(RECENT_KEY);
+      const raw = localStorage.getItem(getRecentKey());
       const parsed: Array<{ path: string; ts: number }> = raw ? JSON.parse(raw) : [];
       setRecentPages(parsed);
     } catch {
       setRecentPages([]);
     }
-  };
+  }, [getRecentKey]);
 
   useEffect(() => {
     loadRecentPages();
@@ -106,7 +129,8 @@ export default function HomePage() {
       window.removeEventListener('recentWorkspacePagesUpdated', handleUpdate as EventListener);
       window.removeEventListener('focus', handleUpdate);
     };
-  }, []);
+    // 이메일이 바뀌면 키가 달라지므로 재구독/재로딩
+  }, [email, loadRecentPages]);
 
   return (
     <div className="bg-gray-50 dark:bg-[#18191c] min-h-screen grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
@@ -186,7 +210,12 @@ export default function HomePage() {
           <div className="bg-white dark:bg-[#1a1d21] rounded-2xl shadow-xl p-6 ml-2 lg:ml-4 mt-2 lg:mt-4">
             {/* 상단: 제목 + 버튼 */}
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-gray-800 dark:text-white">최근 활동</h2>
+              <div className="flex items-baseline gap-3">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white">최근 활동</h2>
+                {recentPages.length === 0 && (
+                  <span className="text-xs text-gray-500 dark:text-gray-400">최근 활동이 없습니다.</span>
+                )}
+              </div>
               <div className="flex gap-2">
                 <button onClick={() => setShowAllModal(true)} className="inline-flex items-center justify-center border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-1 text-sm font-bold hover:bg-gray-100 dark:hover:bg-[#23242e] transition">...</button>
               </div>
@@ -210,6 +239,20 @@ export default function HomePage() {
                   </div>
                 </Link>
               ))}
+              {recentPages.length === 0 &&
+                Array.from({ length: MAX_RECENT }).map((_, idx) => (
+                  <div
+                    key={`recent-skeleton-${idx}`}
+                    className="flex items-center gap-4 p-4 border rounded-xl"
+                    aria-hidden
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-gray-100 dark:bg-[#23242e]" />
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-32 mb-2" />
+                      <Skeleton className="h-3 w-48" />
+                    </div>
+                  </div>
+                ))}
             </div>
           </div>
         </div>
