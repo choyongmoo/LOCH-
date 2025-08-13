@@ -8,6 +8,7 @@ export default function HomePage() {
   const [profileName, setProfileName] = useState<string | null>(null);
   const [profileColor, setProfileColor] = useState<string | null>(null);
   const [profileBio, setProfileBio] = useState<string | null>(null);
+  const [friends, setFriends] = useState<Array<{ id: number; nickname: string; accent_color: string }>>([]);
   // 사용자 PK가 필요하면 확장 예정
   // const [userPk, setUserPk] = useState<number | null>(null);
 
@@ -78,6 +79,62 @@ export default function HomePage() {
       listener.subscription.unsubscribe();
     };
   }, []);
+
+  // 간단 친구 목록 로드
+  useEffect(() => {
+    const loadFriends = async () => {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const emailFromAuth = authData.user?.email ?? null;
+        if (!emailFromAuth) { setFriends([]); return; }
+
+        // 내 users.id 조회
+        const { data: me } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', emailFromAuth)
+          .order('id', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        const myId = (me?.id as number | undefined) ?? null;
+        if (!myId) { setFriends([]); return; }
+
+        // 내게 연결된 친구(accepted) id 수집
+        const { data: fr } = await supabase
+          .from('friend_requests')
+          .select('requester_id, addressee_id, status')
+          .or(`requester_id.eq.${myId},addressee_id.eq.${myId}`);
+        const accepted = new Set<number>();
+        (fr ?? []).forEach((r: { requester_id: number; addressee_id: number; status: string }) => {
+          if (r.status === 'accepted') {
+            const other = r.requester_id === myId ? r.addressee_id : r.requester_id;
+            accepted.add(other);
+          }
+        });
+        if (accepted.size === 0) { setFriends([]); return; }
+
+        // profile에서 표시 정보 가져오기
+        const ids = Array.from(accepted);
+        const { data: profiles } = await supabase
+          .from('profile')
+          .select('id, nickname, accent_color')
+          .in('id', ids);
+        const rows = (profiles ?? []).map((p: { id: number; nickname: string | null; accent_color: string | null }) => ({
+          id: p.id,
+          nickname: (p.nickname && p.nickname.trim()) ? p.nickname : `사용자 #${p.id}`,
+          accent_color: (typeof p.accent_color === 'string' && /^#([0-9a-fA-F]{6})$/.test(p.accent_color)) ? p.accent_color : '#7e22ce'
+        }));
+        setFriends(rows);
+      } catch {
+        setFriends([]);
+      }
+    };
+
+    void loadFriends();
+    const handler = () => { void loadFriends(); };
+    window.addEventListener('friends-updated', handler as EventListener);
+    return () => window.removeEventListener('friends-updated', handler as EventListener);
+  }, [email]);
 
   const baseName = profileName ?? email ?? "";
   const initials = (baseName || "").charAt(0).toUpperCase();
@@ -166,7 +223,7 @@ export default function HomePage() {
         {/* 2단 가로 카드 레이아웃 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch w-full ml-2 lg:ml-4 mt-2 lg:mt-4">
           {/* 왼쪽 카드: Loch 설명 */}
-          <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-8 flex flex-col justify-center">
+          <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-8 flex flex-col items-start justify-start">
             <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
               Loch
             </h1>
@@ -185,24 +242,32 @@ export default function HomePage() {
             </p>
           </div>
 
-          {/* 오른쪽 카드: Zoom 다운로드 */}
-          <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-8 flex flex-col items-center justify-center text-center relative
-                w-full max-w-135 mx-auto">
-            {/* Zoom 아이콘 */}
-            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mb-4">
-              {/* SVG Zoom 아이콘 */}
-              <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <circle cx="18" cy="18" r="18" fill="#2563eb"/>
-                <path d="M24.5 17.13V14.5C24.5 13.12 23.38 12 22 12H14C12.62 12 11.5 13.12 11.5 14.5V21.5C11.5 22.88 12.62 24 14 24H22C23.38 24 24.5 22.88 24.5 21.5V18.87L27.03 20.7C27.36 20.93 27.81 20.7 27.81 20.3V15.7C27.81 15.3 27.36 15.07 27.03 15.3L24.5 17.13Z" fill="white"/>
-              </svg>
-            </div>
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2">River 다운로드</h2>
-            <p className="text-sm text-gray-500 dark:text-gray-300 mb-4">
-              River 다운로드 하여 사용해보세요!
-            </p>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-5 py-2 mb-2">
-              River 다운로드
-            </button>
+          {/* 오른쪽 카드: 내 친구 미리보기 */}
+          <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-8 flex flex-col">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-3">내 친구</h3>
+            {friends.length === 0 ? (
+              <div className="text-sm text-gray-500 dark:text-gray-300">친구가 없습니다. 개인 연락처에서 추가해 보세요.</div>
+            ) : (
+              <div className="flex flex-col gap-3">
+                {friends.slice(0, 5).map((f) => (
+                  <Link
+                    key={f.id}
+                    to={`/workspace/contact?friendId=${encodeURIComponent(String(f.id))}`}
+                    className="flex items-center hover:bg-gray-50 dark:hover:bg-[#23242e] rounded px-2 py-1"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: f.accent_color }}>
+                        {f.nickname.charAt(0).toUpperCase()}
+                      </div>
+                      <span className="text-sm text-gray-800 dark:text-gray-100">{f.nickname}</span>
+                    </div>
+                  </Link>
+                ))}
+                {friends.length > 5 && (
+                  <Link to="/workspace/contact" className="self-end text-xs text-gray-500 dark:text-gray-300 hover:underline">모두 보기</Link>
+                )}
+              </div>
+            )}
           </div>
         </div>
 
@@ -301,16 +366,16 @@ export default function HomePage() {
               <path d="M24.5 17.13V14.5C24.5 13.12 23.38 12 22 12H14C12.62 12 11.5 13.12 11.5 14.5V21.5C11.5 22.88 12.62 24 14 24H22C23.38 24 24.5 22.88 24.5 21.5V18.87L27.03 20.7C27.36 20.93 27.81 20.7 27.81 20.3V15.7C27.81 15.3 27.36 15.07 27.03 15.3L24.5 17.13Z" fill="white"/>
             </svg>
           </div>
-          <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-2">친구 볼 수 있게</h2>
+          <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-2">River</h2>
           <p className="text-sm text-gray-500 dark:text-gray-300 mb-4">
-            Zoom 데스크톱 클라이언트에서 바로 미팅을 시작, 참여 및 예약하세요.
+            River를 다운로드 하여 사용해보세요!
           </p>
           <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-5 py-2 mb-2">
-            Zoom 다운로드
+            River 다운로드
           </button>
         </div>
         {/* 미팅 정보 블록 */}
-        <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-6 flex flex-col items-center text-center">
+        <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-6 flex flex-col items-center text-center ml-4">
           <div className="flex gap-4 mb-4">
             <div className="flex flex-col items-center">
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-1">
@@ -335,7 +400,7 @@ export default function HomePage() {
           <div className="text-lg font-bold text-gray-800 dark:text-white mb-2 tracking-widest">517 579 9787 <button className="ml-1 text-xs text-gray-400">📋</button>
           </div>
         </div>
-        {/* 회의 정보 블록 */}
+        {/* 설정 블록 */}
         <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-6 flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <span className="font-bold text-gray-800 dark:text-white">설정</span>
@@ -343,7 +408,7 @@ export default function HomePage() {
           <div className="text-sm text-gray-500 dark:text-gray-300 mb-2">설정 들어갈 수 있게(톱니바퀴 이미지 추가해서)</div>
         </div>
         {/* 회의 정보 블록 */}
-        <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-19 flex flex-col">
+        <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-23 flex flex-col">
           <div className="flex items-center justify-between mb-2">
             <span className="font-bold text-gray-800 dark:text-white">회의</span>
           </div>

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useLocation } from "react-router";
 import { useThemeStore } from "@/store/themeStore";
 //
 
@@ -248,6 +249,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
 };
 
 export default function ContactPage() {
+  const location = useLocation();
   const [selectedFriend, setSelectedFriend] = useState<string | null>(null);
   // 친구별 메시지 상태 관리 (friendId 기준)
   const [messages, setMessages] = useState<Record<number, Message[]>>({});
@@ -429,6 +431,20 @@ export default function ContactPage() {
 
   // 최초 로드
   React.useEffect(() => { void loadMyRelations(); }, []);
+
+  // URL 파라미터(friendId)로 특정 친구 선택
+  React.useEffect(() => {
+    const search = location.search || "";
+    const params = new URLSearchParams(search);
+    const fid = params.get("friendId");
+    if (!fid) return;
+    const friendId = Number(fid);
+    if (!Number.isFinite(friendId)) return;
+    const f = friends.find((x) => x.id === friendId);
+    if (!f) return;
+    const displayNickname = f.nickname && f.nickname.trim() ? f.nickname : (f.name ?? f.email);
+    setSelectedFriend(displayNickname);
+  }, [location.search, friends]);
 
   const handleSend = (text: string) => {
     if (!selectedFriend) return;

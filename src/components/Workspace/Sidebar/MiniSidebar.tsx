@@ -27,8 +27,6 @@ const MiniSidebar = () => {
       <AddGroupButton onClick={handleAddGroup} />
       </div>
 
-      
-        
       {/* 다크모드,화이트모드 */}
         <div className="flex items-center gap-4 pointer-events-auto mt-2">
         <Button variant="outline" size="icon" onClick={toggleTheme}>
