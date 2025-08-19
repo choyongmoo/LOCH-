@@ -9,64 +9,71 @@ export default function HomePage() {
   const [profileColor, setProfileColor] = useState<string | null>(null);
   const [profileBio, setProfileBio] = useState<string | null>(null);
   const [friends, setFriends] = useState<Array<{ id: number; nickname: string; accent_color: string }>>([]);
+  const [isFriendsLoading, setIsFriendsLoading] = useState<boolean>(true);
+  const [isProfileLoading, setIsProfileLoading] = useState<boolean>(true);
   // 사용자 PK가 필요하면 확장 예정
   // const [userPk, setUserPk] = useState<number | null>(null);
 
   useEffect(() => {
     const loadFromDatabase = async () => {
-      const { data: authData } = await supabase.auth.getUser();
-      const emailFromAuth = authData.user?.email ?? null;
-      setEmail(emailFromAuth);
-      if (!emailFromAuth) return;
+      setIsProfileLoading(true);
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const emailFromAuth = authData.user?.email ?? null;
+        setEmail(emailFromAuth);
+        if (!emailFromAuth) return;
 
-      // users에서 PK 조회(없으면 생성)
-      const { data: userRow } = await supabase
-        .from("users")
-        .select("id, name")
-        .eq("email", emailFromAuth)
-        .order("id", { ascending: true })
-        .limit(1)
-        .maybeSingle();
-
-      let displayName = emailFromAuth.split("@")[0] ?? "";
-      let pk: number | null = null;
-      if (userRow?.id) {
-        pk = userRow.id as unknown as number;
-        if (userRow.name) displayName = userRow.name as string;
-      } else {
-        const { data: inserted } = await supabase
+        // users에서 PK 조회(없으면 생성)
+        const { data: userRow } = await supabase
           .from("users")
-          .insert({ email: emailFromAuth, name: displayName })
-          .select("id")
-          .single();
-        pk = inserted?.id ?? null;
-      }
-      if (!pk) return;
-      // setUserPk(pk);
+          .select("id, name")
+          .eq("email", emailFromAuth)
+          .order("id", { ascending: true })
+          .limit(1)
+          .maybeSingle();
 
-      // profile 조회(없으면 기본 생성)
-      const { data: profileRow } = await supabase
-        .from("profile")
-        .select("nickname, bio, accent_color, language, mic_device_id, mic_enabled")
-        .eq("id", pk)
-        .maybeSingle();
+        let displayName = emailFromAuth.split("@")[0] ?? "";
+        let pk: number | null = null;
+        if (userRow?.id) {
+          pk = userRow.id as unknown as number;
+          if (userRow.name) displayName = userRow.name as string;
+        } else {
+          const { data: inserted } = await supabase
+            .from("users")
+            .insert({ email: emailFromAuth, name: displayName })
+            .select("id")
+            .single();
+          pk = inserted?.id ?? null;
+        }
+        if (!pk) return;
+        // setUserPk(pk);
 
-      if (!profileRow) {
-        await supabase
+        // profile 조회(없으면 기본 생성)
+        const { data: profileRow } = await supabase
           .from("profile")
-          .upsert({ id: pk, nickname: displayName, language: "ko", mic_enabled: true }, { onConflict: "id" });
-        setProfileName(displayName);
-        setProfileColor(null);
-        setProfileBio(null);
-      } else {
-        setProfileName(profileRow.nickname ?? displayName);
-        const validColor =
-          typeof profileRow.accent_color === "string" && /^#([0-9a-fA-F]{6})$/.test(profileRow.accent_color)
-            ? profileRow.accent_color
-            : null;
-        setProfileColor(validColor);
-        const cleanedBio = typeof profileRow.bio === "string" && profileRow.bio.trim().length > 0 ? profileRow.bio : null;
-        setProfileBio(cleanedBio);
+          .select("nickname, bio, accent_color, language, mic_device_id, mic_enabled")
+          .eq("id", pk)
+          .maybeSingle();
+
+        if (!profileRow) {
+          await supabase
+            .from("profile")
+            .upsert({ id: pk, nickname: displayName, language: "ko", mic_enabled: true }, { onConflict: "id" });
+          setProfileName(displayName);
+          setProfileColor(null);
+          setProfileBio(null);
+        } else {
+          setProfileName(profileRow.nickname ?? displayName);
+          const validColor =
+            typeof profileRow.accent_color === "string" && /^#([0-9a-fA-F]{6})$/.test(profileRow.accent_color)
+              ? profileRow.accent_color
+              : null;
+          setProfileColor(validColor);
+          const cleanedBio = typeof profileRow.bio === "string" && profileRow.bio.trim().length > 0 ? profileRow.bio : null;
+          setProfileBio(cleanedBio);
+        }
+      } finally {
+        setIsProfileLoading(false);
       }
     };
 
@@ -83,6 +90,7 @@ export default function HomePage() {
   // 간단 친구 목록 로드
   useEffect(() => {
     const loadFriends = async () => {
+      setIsFriendsLoading(true);
       try {
         const { data: authData } = await supabase.auth.getUser();
         const emailFromAuth = authData.user?.email ?? null;
@@ -127,6 +135,8 @@ export default function HomePage() {
         setFriends(rows);
       } catch {
         setFriends([]);
+      } finally {
+        setIsFriendsLoading(false);
       }
     };
 
@@ -136,7 +146,8 @@ export default function HomePage() {
     return () => window.removeEventListener('friends-updated', handler as EventListener);
   }, [email]);
 
-  const baseName = profileName ?? email ?? "";
+  const displayName = isProfileLoading ? null : (profileName ?? email ?? "");
+  const baseName = displayName ?? "";
   const initials = (baseName || "").charAt(0).toUpperCase();
   const RECENT_KEY_PREFIX = "recentWorkspacePages:";
   const getRecentKey = useCallback(() => `${RECENT_KEY_PREFIX}${email ?? "anonymous"}`, [email]);
@@ -199,17 +210,23 @@ export default function HomePage() {
             {/* 왼쪽: 프로필, 이름, 소개글*/}
             <div className="flex items-center gap-6">
               {/* 프로필(이니셜) */}
-              <div
-                className="w-16 h-16 rounded-xl flex items-center justify-center text-white text-3xl font-bold shadow"
-                style={{ backgroundColor: profileColor ?? "#7e22ce" }}
-              >
-                {initials}
-              </div>
+              {isProfileLoading ? (
+                <div className="w-16 h-16 rounded-xl bg-gray-200 dark:bg-[#23242e]" />
+              ) : (
+                <div
+                  className="w-16 h-16 rounded-xl flex items-center justify-center text-white text-3xl font-bold shadow"
+                  style={{ backgroundColor: profileColor ?? "#7e22ce" }}
+                >
+                  {initials}
+                </div>
+              )}
               {/* 이름, 소개글 */}
               <div>
-                <div className="text-xl font-bold text-gray-900 dark:text-white">{profileName ?? email ?? ""}</div>
+                <div className="text-xl font-bold text-gray-900 dark:text-white">
+                  {isProfileLoading ? <Skeleton className="h-6 w-40" /> : (profileName ?? email ?? "")}
+                </div>
                 <div className="text-sm text-gray-500 mt-1">
-                  소개글: <span className="text-gray-800 dark:text-gray-200">{profileBio ?? "소개글을 작성해주세요!"}</span>
+                  소개글: <span className="text-gray-800 dark:text-gray-200">{isProfileLoading ? <Skeleton className="h-4 w-48" /> : (profileBio ?? "소개글을 작성해주세요!")}</span>
                 </div>
               </div>
             </div>
@@ -245,7 +262,16 @@ export default function HomePage() {
           {/* 오른쪽 카드: 내 친구 미리보기 */}
           <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-8 flex flex-col">
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-3">내 친구</h3>
-            {friends.length === 0 ? (
+            {isFriendsLoading ? (
+              <div className="flex flex-col gap-3">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={`friend-skeleton-${i}`} className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#23242e]" />
+                    <Skeleton className="h-4 w-32" />
+                  </div>
+                ))}
+              </div>
+            ) : friends.length === 0 ? (
               <div className="text-sm text-gray-500 dark:text-gray-300">친구가 없습니다. 개인 연락처에서 추가해 보세요.</div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -381,23 +407,24 @@ export default function HomePage() {
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-1">
                 <svg width='24' height='24' fill='none'><rect x='4' y='4' width='16' height='16' rx='8' fill='#2563eb'/><path d='M12 8v8M8 12h8' stroke='white' strokeWidth='2' strokeLinecap='round'/></svg>
               </div>
-              <span className="text-xs text-gray-700 dark:text-gray-200">예약</span>
+              <span className="text-xs text-gray-700 dark:text-gray-200">그룹 A</span>
             </div>
             <div className="flex flex-col items-center">
               <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-1">
-                <svg width='24' height='24' fill='none'><rect x='4' y='4' width='16' height='16' rx='8' fill='#2563eb'/><path d='M12 8v8' stroke='white' strokeWidth='2' strokeLinecap='round'/></svg>
+                <svg width='24' height='24' fill='none'><rect x='4' y='4' width='16' height='16' rx='8' fill='#2563eb'/><path d='M12 8v8M8 12h8' stroke='white' strokeWidth='2' strokeLinecap='round'/></svg>
               </div>
-              <span className="text-xs text-gray-700 dark:text-gray-200">참여하기</span>
+              <span className="text-xs text-gray-700 dark:text-gray-200">그룹 B</span>
             </div>
             <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mb-1">
-                <svg width='24' height='24' fill='none'><rect x='4' y='4' width='16' height='16' rx='8' fill='#fb923c'/><path d='M8 12h8' stroke='white' strokeWidth='2' strokeLinecap='round'/></svg>
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-1">
+                <svg width='24' height='24' fill='none'><rect x='4' y='4' width='16' height='16' rx='8' fill='#2563eb'/><path d='M12 8v8M8 12h8' stroke='white' strokeWidth='2' strokeLinecap='round'/></svg>
               </div>
-              <span className="text-xs text-gray-700 dark:text-gray-200">주최자</span>
+              <span className="text-xs text-gray-700 dark:text-gray-200">그룹 C</span>
             </div>
+          
           </div>
-          <div className="text-xs text-gray-500 dark:text-gray-300 mb-1">서버 관리 들어갈 수 있ㄱ</div>
-          <div className="text-lg font-bold text-gray-800 dark:text-white mb-2 tracking-widest">517 579 9787 <button className="ml-1 text-xs text-gray-400">📋</button>
+          <div className="text-xs text-gray-500 dark:text-gray-300 mb-1">서버 관리</div>
+          <div className="text-lg font-bold text-gray-800 dark:text-white mb-2 tracking-widest">서버를 관리해 보세요! <button className="ml-1 text-xs text-gray-400"></button>
           </div>
         </div>
         {/* 설정 블록 */}
@@ -405,7 +432,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-2">
             <span className="font-bold text-gray-800 dark:text-white">설정</span>
           </div>
-          <div className="text-sm text-gray-500 dark:text-gray-300 mb-2">설정 들어갈 수 있게(톱니바퀴 이미지 추가해서)</div>
+          <div className="text-sm text-gray-500 dark:text-gray-300 mb-2">설정 버튼을 눌러 설정을 해보세요!</div>
         </div>
         {/* 회의 정보 블록 */}
         <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-23 flex flex-col">

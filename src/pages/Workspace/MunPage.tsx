@@ -16,7 +16,6 @@ const MunPage = () => {
       <div className="flex items-center px-2 py-2 text-gray-500 dark:text-gray-400 text-sm border-b border-gray-200 dark:border-[#23242e]">
         <div className="w-8"></div>
         <div className="flex-1">제목</div>
-        <div className="w-36 text-center">분류</div>
         <div className="w-32 text-center">작성자</div>
         <div className="w-32 text-center">작성일</div>
       </div>

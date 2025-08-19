@@ -17,6 +17,8 @@ import WorkspaceLayout from "./layouts/WorkspaceLayout";
 import { Download } from "./pages/Home/Download"; 
 import { Docs } from "@/pages/Home/Docs"; 
 import { ForgotPassword } from "./pages/Auth/ForgotPassword";
+import SettingPage from "./pages/Workspace/SettingPage";
+import ManagerPage from "./pages/Workspace/ManagerPage";
 
 export const Router = () => {
   return (
@@ -45,6 +47,8 @@ export const Router = () => {
           <Route path="profile" element={<ProfilePage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route path="friends/requests" element={<FriendRequestPage />} />
+          <Route path="setting" element={<SettingPage />} />
+          <Route path="manager" element={<ManagerPage />} />
         </Route>
         {/* Meeting Pages */}
         <Route path="meeting" element={<MeetingLayout />}>

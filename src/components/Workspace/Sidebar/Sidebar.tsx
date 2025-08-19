@@ -107,8 +107,7 @@ export default function CustomSidebar() {
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
-                          onClick={() => {
-                          console.log("프로필 버튼 클럼나ㅣㅇ리ㅏㄴㅁ;ㅇ러ㅣㅏ;ㄴㅁ어라ㅣ;ㅁㄴ어리;마너링ㅁㄴ");navigate("/workspace/profile");}}
+                          onClick={() => {navigate("/workspace/profile");}}
                           className={location.pathname === "/workspace/profile" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
                         >
                       프로필
@@ -116,7 +115,8 @@ export default function CustomSidebar() {
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
-                          className={location.pathname === "/workspace/settings" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                          onClick={() => navigate("/workspace/setting")}
+                          className={location.pathname === "/workspace/setting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
                         >
                           설정
                         </SidebarMenuSubButton>
@@ -148,15 +148,14 @@ export default function CustomSidebar() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
 
-                    <SidebarMenuButton
-                      className={location.pathname.startsWith("/admin") ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
-                    >
+                    <SidebarMenuButton>
                       관리자
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
-                          className={location.pathname === "/admin/server" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                          onClick={() => navigate("/workspace/manager")}  
+                          className={location.pathname === "/workspace/manager" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
                         >
                           서버 관리
                         </SidebarMenuSubButton>
