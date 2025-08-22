@@ -14,7 +14,7 @@ export const LeaveConfirmModal: React.FC<LeaveConfirmModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
+    <div className="fixed inset-0 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-6 w-96 max-w-[90vw] shadow-xl">
         {/* 아이콘 */}
         <div className="flex justify-center mb-4">

@@ -1,18 +1,18 @@
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
+
   SidebarGroup,
-  SidebarGroupLabel,
+
   SidebarGroupContent,
-  SidebarHeader,
+
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  SidebarProvider,
+
 } from "@/components/common/ui/sidebar"
 import { ScrollArea } from "@/components/common/ui/scroll-area"
 import { useNavigate } from "react-router";
@@ -70,7 +70,7 @@ export default function CustomSidebar() {
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                           onClick={() => {
-                          console.log("프로필 버튼 클럼나ㅣㅇ리ㅏㄴㅁ;ㅇ러ㅣㅏ;ㄴㅁ어라ㅣ;ㅁㄴ어리;마너링ㅁㄴ");
+
                           navigate("/workspace/profile");
                     }}>
                     프로필

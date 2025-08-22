@@ -1,10 +1,10 @@
-import React from "react";
+
 import type { MeetingDetailsModalProps } from "@/pages/Meeting/types";
 
 export const MeetingDetailsModal = ({
   visible,
   onClose,
-  details,
+
   meetingInfo,
 }: MeetingDetailsModalProps) => {
   if (!visible) return null;
@@ -34,7 +34,7 @@ export const MeetingDetailsModal = ({
   return (
     <div>
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm"
+        className="fixed inset-0"
         onClick={onClose}
       />
       <div

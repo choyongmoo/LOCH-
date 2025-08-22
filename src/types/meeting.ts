@@ -48,6 +48,15 @@ export type ChatBoxProps = {
   input: string;
   setInput: (val: string) => void;
   onSend: () => void;
+  privateChatTabs: string[];
+  activeTab: string;
+  onSetActiveTab: (tab: string) => void;
+  onClosePrivateTab: (targetUser: string) => void;
+  privateMessages?: {[key: string]: ChatMessage[]};
+  onSetPrivateMessages?: (messages: {[key: string]: ChatMessage[]}) => void;
+  unreadMessages?: {[key: string]: number};
+  onSetUnreadMessages?: (unread: {[key: string]: number}) => void;
+  unreadGeneralMessages?: number;
 };
 
 // UserDetailsModal
@@ -62,6 +71,7 @@ export type MembersBarProps = {
   members: string[];
   onOpenDetails: () => void;
   onUserClick?: (name: string) => void;
+  onStartPrivateChat?: (targetUser: string) => void;
 };
 
 // SlideNotification

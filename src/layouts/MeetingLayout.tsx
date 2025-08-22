@@ -1,21 +1,16 @@
-import { ServerSidebar } from '@/components/Meeting/ServerSidebar';
+
 import { MeetingContent } from '@/components/Meeting/MeetingContent';
-import { MeetingModals } from '@/components/Meeting/MeetingModals';
 import { LeaveConfirmModal } from '@/components/Meeting/LeaveConfirmModal';
 import { MyProfileModal } from '@/components/Meeting/MyProfileModal';
 
 // 커스텀 훅들
 import { useNotification } from '@/hooks/useNotification';
 import { useMembers } from '@/hooks/useMembers';
-import { useAppInstances } from '@/hooks/useAppInstances';
 import { usePanels } from '@/hooks/usePanels';
-import { usePanelDrop } from '@/hooks/usePanelDrop';
 import { useFullscreen } from '@/hooks/useFullscreen';
 import { useChat } from '@/hooks/useChat';
-import { useAudioDevices } from '@/hooks/useAudioDevices';
-import { useInstanceManagement } from '@/hooks/useInstanceManagement';
+
 import { useMeetingState } from '@/hooks/useMeetingState';
-import { useMeetingHandlers } from '@/hooks/useMeetingHandlers';
 import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -34,16 +29,14 @@ export const MeetingLayout = () => {
     setShowOptions,
     showDetails,
     setShowDetails,
-    isMuted,
-    setIsMuted
+
   } = useMeetingState();
 
   // 마이크/헤드셋 음소거 상태 분리
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isHeadsetMuted, setIsHeadsetMuted] = useState(false);
   const [micFirst, setMicFirst] = useState(false); // 마이크를 먼저 눌렀는지 추적
-  const [inputVolume, setInputVolume] = useState(100);
-  const [outputVolume, setOutputVolume] = useState(100);
+
 
   // 마이크 음소거 토글 (마이크만)
   const handleMicMuteToggle = () => {
@@ -97,8 +90,9 @@ export const MeetingLayout = () => {
     members, 
     selectedUser, 
     setSelectedUser, 
-    handleJoin, 
-    handleLeave 
+ 
+    handleLeave,
+
   } = useMembers();
 
   // 나가기 핸들러들
@@ -128,41 +122,8 @@ export const MeetingLayout = () => {
   } = useChat();
 
   const {
-    audioInputDevices,
-    audioOutputDevices,
-    selectedInputDevice,
-    selectedOutputDevice,
-    setSelectedInputDevice,
-    setSelectedOutputDevice,
-    loadAudioDevices
-  } = useAudioDevices();
-
-  const {
-    instances,
-    setInstances,
-    showAppModal,
-    setShowAppModal,
-    appType,
-    setAppType,
-    appTitle,
-    setAppTitle,
-    modalMode,
-    setModalMode,
-    pendingDrop,
-    setPendingDrop,
-    replaceOrSplit,
-    setReplaceOrSplit,
-    hoveredType,
-    setHoveredType,
-    handleAppCreate,
-    handleAppModalClose,
-    handleAppModalCreate,
-    handleNewInstance,
-  } = useAppInstances();
-
-  const {
     panels,
-    setPanels,
+
     colSizes,
     rowSizesLeft,
     rowSizesRight,
@@ -177,43 +138,6 @@ export const MeetingLayout = () => {
   } = usePanels();
 
   const {
-    showInstanceModal,
-    selectedInstance,
-    editingTitle,
-    setShowInstanceModal,
-
-    setEditingTitle,
-    handleInstanceEdit,
-    handleInstanceDelete,
-    handleInstanceTitleChange,
-    showDeleteConfirm,
-    setShowDeleteConfirm,
-    confirmDelete,
-    showSuccessModal,
-    setShowSuccessModal,
-    successMessage,
-    showOpenInstanceWarning,
-    setShowOpenInstanceWarning
-  } = useInstanceManagement(setInstances, panels, setPanels, instances);
-
-  const {
-    handlePanelDrop,
-    handleReplaceOrSplit,
-    handleSelectInstance
-  } = usePanelDrop(
-    panels,
-    setPanels,
-    replaceOrSplit,
-    setReplaceOrSplit,
-    setAppType,
-    setShowAppModal,
-    pendingDrop,
-    setPendingDrop,
-    setModalMode,
-    handlePanelSplit,
-  );
-
-  const {
     fullscreenPanel,
     enterFullscreen,
     exitFullscreen,
@@ -222,56 +146,59 @@ export const MeetingLayout = () => {
 
   const { current, addNotification } = useNotification();
 
-  // 이벤트 핸들러들
-  const {
-    handleAppModalCreateWithPanel,
-    handleEmptyDrop,
-    handleOpenOptions,
-    handleOpenDetails,
-    handleUserClick
-  } = useMeetingHandlers(
-    panels,
-    pendingDrop,
-    isMuted,
-    setIsMuted,
-    setShowOptions,
-    setShowDetails,
-    setSelectedUser,
-    setPendingDrop,
-    setPanels,
-    createInitialPanel,
-    handleAppCreate,
-    handleAppModalCreate,
-    handleSelectInstance,
-    loadAudioDevices,
-    addNotification
-  );
+  // 간단한 핸들러들
+      const handlePanelDrop = () => {
+      
+    };
+
+      const handleEmptyDrop = () => {
+      
+    };
+
+  // const handleOpenOptions = () => {
+  //   setShowOptions(true);
+  // }; // 설정 모달로 대체됨
+
+  const handleOpenDetails = () => {
+    setShowDetails(true);
+  };
+
+  const handleUserClick = (name: string) => {
+    setSelectedUser(name);
+  };
 
   const handleFullscreen = (panelId: number) => {
     enterFullscreen(panelId, panels);
   };
 
-  return (
-    <div className="flex h-screen bg-[#36393F]">
-      {/* 왼쪽 사이드바 */}
-      <div className="w-20 bg-[#2F3136] flex flex-col">
-        <ServerSidebar
-          instances={instances}
-          hoveredType={hoveredType}
-          setHoveredType={setHoveredType}
-          isMicMuted={isMicMuted}
-          isHeadsetMuted={isHeadsetMuted}
-          onMicMuteToggle={handleMicMuteToggle}
-          onHeadsetMuteToggle={handleHeadsetMuteToggle}
-          onOpenOptions={handleOpenOptions}
-          onInstanceEdit={handleInstanceEdit}
-          onAppCreate={handleAppCreate}
-          onLeave={handleLeaveClick}
-          onOpenMyProfile={() => setShowMyProfile(true)}
-        />
-      </div>
+  // 앱 생성 핸들러 (카메라만)
+  const handleAppCreate = (type: string) => {
+    if (type === 'C') {
 
-      {/* 메인 콘텐츠 영역 */}
+    }
+  };
+
+  // 앱 제거 핸들러 (카메라만)
+  const handleAppRemove = (type: string) => {
+    if (type === 'C') {
+
+    }
+  };
+
+  // 시뮬레이션된 원격 사용자 데이터 (카메라 상태 포함)
+  const simulatedRemoteUsers = members.map(member => ({
+    id: member.id,
+    name: member.name,
+    isLocal: false,
+    isCameraOn: member.isCameraOn,
+    isMicOn: true,
+    isActive: true,
+    isScreenSharing: member.isScreenSharing
+  }));
+
+  return (
+    <div className="h-screen bg-[#36393F]">
+      {/* Discord 스타일 레이아웃 - MeetingContent에서 전체 레이아웃 관리 */}
       <MeetingContent
         isFullscreen={isFullscreen}
         fullscreenPanel={fullscreenPanel}
@@ -280,7 +207,9 @@ export const MeetingLayout = () => {
         rowSizesLeft={rowSizesLeft}
         rowSizesRight={rowSizesRight}
         current={current}
-        members={members}
+        isChatOpen={chatOpen}
+        chatMessages={messages}
+        chatInput={input}
         onExitFullscreen={exitFullscreen}
         onPanelDrop={handlePanelDrop}
         onPanelSplit={handlePanelSplit}
@@ -291,96 +220,107 @@ export const MeetingLayout = () => {
         onCreatePanel={createInitialPanel}
         onOpenDetails={handleOpenDetails}
         onUserClick={handleUserClick}
+        onMicMuteToggle={handleMicMuteToggle}
+        onHeadsetMuteToggle={handleHeadsetMuteToggle}
+        // onOpenOptions={handleOpenOptions} // 설정 모달로 대체됨
+        onLeave={handleLeaveClick}
+        onOpenMyProfile={() => setShowMyProfile(true)}
+        onToggleChat={toggleChat}
+        onChatInputChange={setInput}
+        onChatSend={sendMessage}
         swapTarget={swapTarget}
         onSwapApp={handleSwapApp}
         onSwapHere={handleSwapHere}
         onCancelSwap={handleCancelSwap}
-      />
-
-      {/* 테스트 버튼들 */}
-      
-      {/* 채팅 버튼 */}
-      <button
-        onClick={toggleChat}
-        className="fixed bottom-14 right-5 z-60 w-12 h-12 rounded-full bg-[#5865F2] text-white shadow-lg flex items-center justify-center hover:bg-[#4752c4] transition"
-        aria-label="Toggle Chat"
-      >
-        💬
-      </button>
-      
-      {/* 모든 모달들 */}
-      <MeetingModals
-        // 채팅 관련
-        chatOpen={chatOpen}
-        messages={messages}
-        input={input}
-        setInput={setInput}
-        onSendMessage={sendMessage}
-        
-        // 앱 모달 관련
-        showAppModal={showAppModal}
-        appType={appType}
-        appTitle={appTitle}
-        modalMode={modalMode}
-        instances={instances}
-        onAppModalClose={handleAppModalClose}
-        onAppTitleChange={setAppTitle}
-        onAppModalCreate={handleAppModalCreateWithPanel}
-        onSelectInstance={handleSelectInstance}
-        onNewInstance={handleNewInstance}
-        
-        // 교체/분할 모달 관련
-        replaceOrSplit={replaceOrSplit}
-        panelsLength={panels.length}
-        onReplaceOrSplit={handleReplaceOrSplit}
-        
-        // 인스턴스 관리 모달 관련
-        showInstanceModal={showInstanceModal}
-        selectedInstance={selectedInstance}
-        editingTitle={editingTitle}
-        onInstanceModalClose={() => setShowInstanceModal(false)}
-        onInstanceTitleChange={setEditingTitle}
-        onInstanceSave={handleInstanceTitleChange}
-        onInstanceDelete={handleInstanceDelete}
-        showDeleteConfirm={showDeleteConfirm}
-        onDeleteConfirm={confirmDelete}
-        onDeleteCancel={() => setShowDeleteConfirm(false)}
-        showSuccessModal={showSuccessModal}
-        onSuccessClose={() => setShowSuccessModal(false)}
-        successMessage={successMessage}
-        showOpenInstanceWarning={showOpenInstanceWarning}
-        onOpenInstanceWarningClose={() => setShowOpenInstanceWarning(false)}
-        
-        // 회의방 상세 모달 관련
-        showDetails={showDetails}
-        onDetailsClose={() => setShowDetails(false)}
-        
-        // 유저 상세 모달 관련
-        selectedUser={selectedUser}
-        onUserClose={() => setSelectedUser(null)}
-        
-        // 옵션 모달 관련
-        showOptions={showOptions}
-        audioInputDevices={audioInputDevices}
-        audioOutputDevices={audioOutputDevices}
-        selectedInputDevice={selectedInputDevice}
-        selectedOutputDevice={selectedOutputDevice}
         isMicMuted={isMicMuted}
         isHeadsetMuted={isHeadsetMuted}
-        inputVolume={inputVolume}
-        outputVolume={outputVolume}
-        onOptionsClose={() => setShowOptions(false)}
-        onOptionsSave={() => {
-          setShowOptions(false);
-          addNotification("설정이 변경되었습니다.");
-        }}
-        onMicMuteToggle={handleMicMuteToggle}
-        onHeadsetMuteToggle={handleHeadsetMuteToggle}
-        onInputDeviceChange={setSelectedInputDevice}
-        onOutputDeviceChange={setSelectedOutputDevice}
-        onInputVolumeChange={setInputVolume}
-        onOutputVolumeChange={setOutputVolume}
+        remoteUsers={simulatedRemoteUsers}
+        onAppCreate={handleAppCreate}
+        onAppRemove={handleAppRemove}
+        onNotification={addNotification}
       />
+
+      {/* 회의방 상세 모달 */}
+      {showDetails && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-[#2F3136] rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-[#DCDDDE] text-lg font-semibold mb-4">회의방 정보</h3>
+            <p className="text-[#72767D] text-sm">회의방 상세 정보가 여기에 표시됩니다.</p>
+            <button
+              onClick={() => setShowDetails(false)}
+              className="mt-4 px-4 py-2 bg-[#5865F2] text-white rounded hover:bg-[#4752c4] transition-colors"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 유저 상세 모달 */}
+      {selectedUser && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-[#2F3136] rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-[#DCDDDE] text-lg font-semibold mb-4">사용자 정보</h3>
+            <p className="text-[#72767D] text-sm">{selectedUser}의 상세 정보가 여기에 표시됩니다.</p>
+            <button
+              onClick={() => setSelectedUser(null)}
+              className="mt-4 px-4 py-2 bg-[#5865F2] text-white rounded hover:bg-[#4752c4] transition-colors"
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 옵션 모달 */}
+      {showOptions && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-[#2F3136] rounded-lg p-6 max-w-lg w-full mx-4">
+            <h3 className="text-[#DCDDDE] text-lg font-semibold mb-4">오디오 설정</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="text-[#DCDDDE] text-sm block mb-2">마이크</label>
+                <button
+                  onClick={handleMicMuteToggle}
+                  className={`px-3 py-2 rounded text-sm ${
+                    isMicMuted ? 'bg-red-500 text-white' : 'bg-[#40444B] text-[#DCDDDE]'
+                  }`}
+                >
+                  {isMicMuted ? '음소거 해제' : '음소거'}
+                </button>
+              </div>
+              <div>
+                <label className="text-[#DCDDDE] text-sm block mb-2">헤드셋</label>
+                <button
+                  onClick={handleHeadsetMuteToggle}
+                  className={`px-3 py-2 rounded text-sm ${
+                    isHeadsetMuted ? 'bg-red-500 text-white' : 'bg-[#40444B] text-[#DCDDDE]'
+                  }`}
+                >
+                  {isHeadsetMuted ? '음소거 해제' : '음소거'}
+                </button>
+              </div>
+            </div>
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowOptions(false)}
+                className="px-4 py-2 bg-[#40444B] text-[#DCDDDE] rounded hover:bg-[#4F545C] transition-colors"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => {
+                  setShowOptions(false);
+                  addNotification("설정이 변경되었습니다.");
+                }}
+                className="px-4 py-2 bg-[#5865F2] text-white rounded hover:bg-[#4752c4] transition-colors"
+              >
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 나가기 확인 모달 */}
       <LeaveConfirmModal
