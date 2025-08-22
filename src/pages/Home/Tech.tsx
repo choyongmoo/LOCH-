@@ -1,133 +1,104 @@
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/common/ui/card";
-import { Paragraph } from "@/components/common/ui/Paragraph";
-import { ChevronDown } from "lucide-react";
-import { Link as ScrollLink } from "react-scroll";
-import infraDiagram from "@/assets/infra-diagram.png";
+import React from "react";
+import zustandLogo from "@/assets/landing/zus.jpg";
+import awsLogo from "@/assets/landing/aws.png";
 
-const frontendTech = [
-  { title: "React", description: "사용자 인터페이스 개발" },
-  { title: "Axios", description: "HTTP 요청 처리" },
-  { title: "Socket.IO-client", description: "실시간 양방향 통신" },
-  { title: "Zustand", description: "로그인, 문서 상태 등 전역 정보 관리" },
-  { title: "TailwindCSS", description: "UI 스타일링 및 컴포넌트 구성" },
+
+type StackItem = { label: string; icon?: React.ReactNode };
+type StackColumnProps = { title: string; items: StackItem[] };
+
+const StackColumn = ({ title, items }: StackColumnProps) => {
+  return (
+    <div className="relative bg-white dark:bg-gray-900 rounded-2xl border border-gray-200 dark:border-gray-800 shadow-sm p-6">
+      <h3 className="text-center text-sm font-extrabold tracking-wider text-gray-500 dark:text-gray-400">
+        {title}
+      </h3>
+      <div className="mt-5 grid gap-3">
+        {items.map((it) => (
+          <div
+            key={it.label}
+            className="flex items-center gap-3 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/60 text-gray-800 dark:text-gray-100 text-sm font-semibold"
+          >
+            {it.icon}
+            <span className="w-full text-center">{it.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
+const IconImg = ({ src, alt }: { src: string; alt: string }) => (
+  <img
+    src={src}
+    alt={alt}
+    className="w-5 h-5 object-contain select-none"
+    loading="lazy"
+    draggable={false}
+  />
+);
+
+const FRONTEND: StackItem[] = [
+  { label: "React", icon: <IconImg src="https://cdn.simpleicons.org/react" alt="React" /> },
+  { label: "Axios", icon: <IconImg src="https://avatars.githubusercontent.com/u/32372333?s=200&v=4" alt="Axios" /> },
+  { label: "Socket.IO Client", icon: <IconImg src="https://cdn.simpleicons.org/socketdotio" alt="Socket.IO" /> },
+  { label: "Zustand", icon: <IconImg src={zustandLogo} alt="Zustand" /> },   // ✅ 로컬 이미지
+  { label: "Tailwind CSS", icon: <IconImg src="https://cdn.simpleicons.org/tailwindcss" alt="TailwindCSS" /> },
 ];
 
-const backendTech = [
-  { title: "Spring Boot", description: "서버 구축 및 API 개발" },
-  { title: "PostgreSQL", description: "데이터베이스 관리" },
-  { title: "Spring Security + JWT", description: "사용자 인증 및 권한 관리" },
-  { title: "JPA (Hibernate)", description: "ORM으로 DB 연동" },
-  { title: "WebSocket", description: "실시간 통신" },
+const BACKEND_SUPABASE: StackItem[] = [
+  { label: "Supabase Auth", icon: <IconImg src="https://cdn.simpleicons.org/supabase" alt="Supabase" /> },
+  { label: "Supabase Database", icon: <IconImg src="https://cdn.simpleicons.org/supabase" alt="Supabase" /> },
+  { label: "Supabase Realtime", icon: <IconImg src="https://cdn.simpleicons.org/supabase" alt="Supabase" /> },
 ];
 
-const devTools = [
-  { title: "GitHub", description: "버전 관리 및 협업" },
-  { title: "Postman", description: "API 테스트" },
-  { title: "Docker", description: "개발 환경 컨테이너화" },
-  { title: "AWS", description: "서버 호스팅" },
+const DATABASE: StackItem[] = [
+  { label: "PostgreSQL (via Supabase)", icon: <IconImg src="https://cdn.simpleicons.org/postgresql" alt="PostgreSQL" /> },
+];
+
+const DEVOPS: StackItem[] = [
+  { label: "GitHub", icon: <IconImg src="https://cdn.simpleicons.org/github" alt="GitHub" /> },
+  { label: "Postman", icon: <IconImg src="https://cdn.simpleicons.org/postman" alt="Postman" /> },
+  { label: "Docker", icon: <IconImg src="https://cdn.simpleicons.org/docker" alt="Docker" /> },
+  { label: "AWS", icon: <IconImg src={awsLogo} alt="AWS" /> },  
 ];
 
 export const Tech = () => {
   return (
-    <section
-      id="tech"
-      className="container mx-auto pt-6 pb-24 scroll-mt-32 transition-colors duration-300"
-    >
-      {/* 제목 */}
-      <div className="text-center mb-20">
-        <h2 className="text-5xl font-bold text-gray-900 dark:text-white">
-          기술 스택
-        </h2>
-        <p className="text-gray-500 dark:text-gray-400 text-xl mt-4">
-          프로젝트를 구성한 프론트엔드, 백엔드, 협업 도구 환경을 소개합니다.
-        </p>
-      </div>
+    <section id="tech" className="relative w-full min-h-[88vh] flex items-center justify-center px-6">
+      <div className="w-full max-w-6xl">
+     
+        <div className="relative flex justify-center">
+          <div className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+            <span className="text-base font-extrabold tracking-wide text-gray-800 dark:text-white">
+              FULL STACK
+            </span>
+          </div>
+          <div className="absolute left-0 right-0 top-1/2 translate-y-[42px] hidden md:block">
+            <div className="mx-auto max-w-5xl border-t border-gray-300 dark:border-gray-700" />
+          </div>
+        </div>
 
-      {/* 인프라 다이어그램 이미지 -> 여기에 이미지 나중에 넣어주기*/} 
-      <div className="flex justify-center mb-12">
-        <img
-          src={infraDiagram}
-          alt="인프라 아키텍처 다이어그램"
-          className="w-[850px] h-[520px] object-contain mx-auto rounded-xl shadow-md border dark:brightness-90"
-        />
-      </div>
+      
+        <div className="relative mt-16 grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="hidden md:block absolute -top-10 left-0 right-0">
+            <div className="grid grid-cols-4 gap-6">
+              {[0, 1, 2, 3].map((i) => (
+                <div key={i} className="flex justify-center">
+                  <div className="h-10 w-px bg-gray-300 dark:bg-gray-700" />
+                </div>
+              ))}
+            </div>
+          </div>
 
-      {/*  아래로 스크롤 화살표 버튼 */}
-      <div className="flex justify-center mb-20">
-        <ScrollLink to="frontend-section" smooth={true} duration={500} offset={-40}>
-          <button
-            className="animate-bounce text-gray-400 hover:text-primary transition-all"
-            aria-label="아래로 이동"
-          >
-            <ChevronDown className="w-10 h-10" />
-          </button>
-        </ScrollLink>
-      </div>
-
-      {/* 프론트엔드 */}
-      <div id="frontend-section" className="mt-32 mb-16">
-        <h3 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">프론트엔드</h3>
-        <Paragraph muted className="mb-8">
-          사용자와 직접 상호작용하는 화면을 구성하고, 상태 관리 및 실시간 통신을 구현했습니다.
-        </Paragraph>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {frontendTech.map((tech, idx) => (
-            <Card key={idx} className="text-left">
-              <CardHeader>
-                <CardTitle>{tech.title}</CardTitle>
-                <CardDescription>{tech.description}</CardDescription>
-              </CardHeader>
-              <CardContent />
-            </Card>
-          ))}
+          <StackColumn title="FRONT-END" items={FRONTEND} />
+          <StackColumn title="BACK-END (Supabase)" items={BACKEND_SUPABASE} />
+          <StackColumn title="DATABASE" items={DATABASE} />
+          <StackColumn title="DEVOPS" items={DEVOPS} />
         </div>
       </div>
-
-      {/* 백엔드 */}
-      <div className="mb-16">
-        <h3 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">백엔드</h3>
-        <Paragraph muted className="mb-8">
-          서버 환경을 구성하고 데이터 처리, 인증, API 개발 등 핵심 로직을 구현했습니다.
-        </Paragraph>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {backendTech.map((tech, idx) => (
-            <Card key={idx} className="text-left">
-              <CardHeader>
-                <CardTitle>{tech.title}</CardTitle>
-                <CardDescription>{tech.description}</CardDescription>
-              </CardHeader>
-              <CardContent />
-            </Card>
-          ))}
-        </div>
-      </div>
-
-      {/* 협업 및 개발 도구 */}
-      <div>
-        <h3 className="text-3xl font-bold mb-4 text-gray-900 dark:text-white">협업 및 개발 도구</h3>
-        <Paragraph muted className="mb-8">
-          팀 협업, API 테스트, 배포 환경 구성 등 전반적인 개발 생태계를 구성했습니다.
-        </Paragraph>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {devTools.map((tech, idx) => (
-            <Card key={idx} className="text-left">
-              <CardHeader>
-                <CardTitle>{tech.title}</CardTitle>
-                <CardDescription>{tech.description}</CardDescription>
-              </CardHeader>
-              <CardContent />
-            </Card>
-          ))}
-        </div>
-      </div>
-
-     <div className="w-full border-t border-gray-200 dark:border-gray-700 mt-48" />
     </section>
   );
 };
+
+export default Tech;

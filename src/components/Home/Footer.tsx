@@ -14,12 +14,12 @@ export const Footer = () => {
 
       {/* 깃허브 링크 */}
       <a
-        href="https://github.com/your-github-xxxxxxxxx"
+        href="https://github.com/choyongmoo/LOCH-"
         target="_blank"
         rel="noopener noreferrer"
         className="text-sm text-blue-500 dark:text-blue-400 hover:underline block mt-1"
       >
-        github.com/your-github
+        github
       </a>
 
       {/* 저작권 표시 */}

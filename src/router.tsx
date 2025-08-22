@@ -15,7 +15,8 @@ import FriendRequestPage from "./pages/Workspace/FriendRequestPage";
 import WorkspaceLayout from "./layouts/WorkspaceLayout";
 
 import { Download } from "./pages/Home/Download"; 
-import { Docs } from "@/pages/Home/Docs"; 
+import Docs from "@/pages/Home/Docs"; 
+import DocsDetail from "./pages/Home/Doc/DocsDetail";
 import { ForgotPassword } from "./pages/Auth/ForgotPassword";
 import SettingPage from "./pages/Workspace/SettingPage";
 import ManagerPage from "./pages/Workspace/ManagerPage";
@@ -30,6 +31,7 @@ export const Router = () => {
           <Route path="about" element={<About />} />
           <Route path="download" element={<Download />} /> 
            <Route path="docs" element={<Docs />} /> 
+          <Route path="docs/:slug" element={<DocsDetail />} />
         </Route>
 
         {/* Auth Pages */}

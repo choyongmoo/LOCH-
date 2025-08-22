@@ -51,7 +51,6 @@ export const Signin = () => {
           }
         }
       } catch (err) {
-        // 무시하고 로그인 화면 유지
         console.warn("auth callback 처리 실패", err);
       }
     };
@@ -109,29 +108,15 @@ export const Signin = () => {
       </CardHeader>
 
       <CardContent className="grid gap-6">
-        <div className="flex gap-3">
-          {/* Google 로그인 */}
-          <Button
-            variant="outline"
-            className="flex items-center justify-center gap-2 w-1/2 py-2"
-            onClick={handleGoogleSignin}
-          >
-            <img src="/google.svg" alt="Google" className="w-5 h-5" />
-            <span className="text-sm font-medium">Google</span>
-          </Button>
-
-          {/* Kakao 로그인 */}
-          <Button
-            variant="outline"
-            className="flex items-center justify-center gap-2 w-1/2 py-2 
-                      bg-yellow-300 hover:bg-yellow-400 text-black dark:text-white font-semibold"
-            disabled
-            title="Kakao 로그인은 준비 중입니다."
-          >
-            <img src="/kakaotalk.svg" alt="Kakao" className="w-5 h-5" />
-            <span className="text-sm font-medium">Kakao</span>
-          </Button>
-        </div>
+        {/* Google 로그인 */}
+        <Button
+          variant="outline"
+          className="flex items-center justify-center gap-2 w-full py-2"
+          onClick={handleGoogleSignin}
+        >
+          <img src="/google.svg" alt="Google" className="w-5 h-5" />
+          <span className="text-sm font-medium">Google</span>
+        </Button>
 
         {/* 구분선 */}
         <div className="flex items-center gap-4">
@@ -140,7 +125,7 @@ export const Signin = () => {
           <Separator className="flex-1" />
         </div>
 
-        {/*  이메일 입력 */}
+        {/* 이메일 입력 */}
         <div className="grid gap-2">
           <Label htmlFor="email">이메일</Label>
           <Input
@@ -176,7 +161,6 @@ export const Signin = () => {
         </div>
       </CardContent>
 
-      {/* 로그인 버튼 및 회원가입 링크 */}
       <CardFooter className="flex flex-col gap-4 pt-2">
         {error && (
           <Paragraph className="text-red-500 text-sm">{error}</Paragraph>

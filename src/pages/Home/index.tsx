@@ -4,9 +4,12 @@ import { Tech } from "./Tech";
 import { Team } from "./Team";
 import { Footer } from "@/components/Home/Footer";
 import { Button } from "@/components/common/ui/button";
-import dashboardIllustration from "@/assets/landing/dashboard.svg";
+import dashboardIllustration from "@/assets/landing/dashboard2.svg";
 
 export const Home = () => {
+
+  document.title = "LOCH";
+  
   useEffect(() => {
   if (typeof window !== "undefined" && (window as any).__scrollTo) {
     const id = (window as any).__scrollTo;
@@ -39,15 +42,12 @@ export const Home = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 px-8 h-full place-items-center -translate-y-24">
           <div className="space-y-8">
             <span className="text-sm font-semibold tracking-wider Suppercase text-gray-500 dark:text-gray-400">
-              TEAMWORK MADE SIMPLE
+              협업 플랫폼
             </span>
             <h1 className="text-[60px] font-extrabold leading-[1.1] text-gray-900 dark:text-white">
               Streamline your workflow
             </h1>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-xl leading-relaxed">
-              코드 편집, 문서 작성, 디자인까지—모든 팀원이 한 공간에서 실시간으로 협업할 수 있어요.
-              따로따로 툴을 바꿀 필요 없이, 함께 만들어보세요.
-            </p>
+            
             <div className="mt-10">
               <Button
                 size="lg"
