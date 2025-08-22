@@ -9,7 +9,16 @@ import { About } from "./pages/Home/About";
 import { NotFound } from "./pages/NotFound";
 import ProfilePage from "./pages/Workspace/ProfilePage";
 import HomePage from "./pages/Workspace/HomePage";
+import MunPage from "./pages/Workspace/MunPage";
+import ContactPage from "./pages/Workspace/ContactPage";
+import FriendRequestPage from "./pages/Workspace/FriendRequestPage";
 import WorkspaceLayout from "./layouts/WorkspaceLayout";
+
+import { Download } from "./pages/Home/Download"; 
+import { Docs } from "@/pages/Home/Docs"; 
+import { ForgotPassword } from "./pages/Auth/ForgotPassword";
+import SettingPage from "./pages/Workspace/SettingPage";
+import ManagerPage from "./pages/Workspace/ManagerPage";
 
 export const Router = () => {
   return (
@@ -19,19 +28,27 @@ export const Router = () => {
         <Route element={<HomeLayout />}>
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
+          <Route path="download" element={<Download />} /> 
+           <Route path="docs" element={<Docs />} /> 
         </Route>
 
         {/* Auth Pages */}
         <Route element={<AuthLayout />}>
           <Route path="signin" element={<Signin />} />
           <Route path="signup" element={<Signup />} />
+           <Route path="forgot-password" element={<ForgotPassword />} /> 
         </Route>
 
         {/* Workspace Pages */}
         <Route path="workspace" element={<WorkspaceLayout />}>
           <Route index element={<HomePage />} />
           <Route path="home" element={<HomePage />} />
+          <Route path="mun" element={<MunPage />} />
           <Route path="profile" element={<ProfilePage />} />
+          <Route path="contact" element={<ContactPage />} />
+          <Route path="friends/requests" element={<FriendRequestPage />} />
+          <Route path="setting" element={<SettingPage />} />
+          <Route path="manager" element={<ManagerPage />} />
         </Route>
         {/* Meeting Pages */}
         <Route path="meeting" element={<MeetingLayout />}>

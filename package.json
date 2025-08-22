@@ -18,17 +18,20 @@
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.7",
+    "@supabase/supabase-js": "^2.54.0",
     "@tailwindcss/vite": "^4.1.11",
+    "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "framer-motion": "^12.23.6",
+    "framer-motion": "^12.23.9",
     "lucide-react": "^0.525.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
     "react-mosaic-component": "^6.1.1",
     "react-resizable-panels": "^3.0.3",
     "react-router": "^7.6.3",
-    "react-router-dom": "^7.6.3",
+    "react-router-dom": "^7.7.1",
+    "react-scroll": "^1.9.3",
     "react-split": "^2.0.14",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.11",
@@ -39,6 +42,7 @@
     "@types/node": "^24.0.12",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "@types/react-scroll": "^1.8.10",
     "@vitejs/plugin-react": "^4.6.0",
     "eslint": "^9.30.1",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -47,6 +51,6 @@
     "tw-animate-css": "^1.3.5",
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.35.1",
-    "vite": "^7.0.3"
+    "vite": "^7.0.6"
   }
 }
