@@ -1,259 +1,157 @@
 import React from 'react';
-import { AnimatePresence } from "framer-motion";
-import { ChatBox } from "@/components/Meeting/ChatBox";
-import { AppModal } from "@/components/Meeting/AppModal";
-import { ReplaceSplitModal } from "@/components/Meeting/ReplaceSplitModal";
-import { InstanceManagementModal } from "@/components/Meeting/InstanceManagementModal";
-import { ConfirmDeleteModal } from "@/components/Meeting/ConfirmDeleteModal";
-import { SuccessModal } from "@/components/Meeting/SuccessModal";
-import { OpenInstanceWarningModal } from "@/components/Meeting/OpenInstanceWarningModal";
-import { MeetingDetailsModal } from "@/components/Meeting/MeetingDetailsModal";
-import { UserDetailsModal } from "@/components/Meeting/UserDetailsModal";
-import { OptionsModal } from "@/components/Meeting/OptionsModal";
-import type { AppInstance } from '@/types/meeting';
+import { CameraConfirmModal } from './CameraConfirmModal';
+import { CameraActionModal } from './CameraActionModal';
 
 interface MeetingModalsProps {
-  // 채팅 관련
-  chatOpen: boolean;
-  messages: any[];
-  input: string;
-  setInput: (input: string) => void;
-  onSendMessage: () => void;
-  
-  // 앱 모달 관련
-  showAppModal: boolean;
-  appType: string | null;
-  appTitle: string;
-  modalMode: 'select' | 'create';
-  instances: AppInstance[];
-  onAppModalClose: () => void;
-  onAppTitleChange: (title: string) => void;
-  onAppModalCreate: () => void;
-  onSelectInstance: (instance: AppInstance) => void;
-  onNewInstance: () => void;
-  
-  // 교체/분할 모달 관련
-  replaceOrSplit: any;
-  panelsLength: number;
-  onReplaceOrSplit: (mode: 'replace' | 'split' | 'cancel') => void;
-  
-  // 인스턴스 관리 모달 관련
-  showInstanceModal: boolean;
-  selectedInstance: AppInstance | null;
-  editingTitle: string;
-  onInstanceModalClose: () => void;
-  onInstanceTitleChange: (title: string) => void;
-  onInstanceSave: () => void;
-  onInstanceDelete: (instanceId: string) => void;
-  showDeleteConfirm: boolean;
-  onDeleteConfirm: () => void;
-  onDeleteCancel: () => void;
-  showSuccessModal: boolean;
-  onSuccessClose: () => void;
-  successMessage: string;
-  showOpenInstanceWarning: boolean;
-  onOpenInstanceWarningClose: () => void;
-  
-  // 회의방 상세 모달 관련
-  showDetails: boolean;
-  onDetailsClose: () => void;
-  
-  // 유저 상세 모달 관련
-  selectedUser: string | null;
-  onUserClose: () => void;
-  
-    // 옵션 모달 관련
-  showOptions: boolean;
-  audioInputDevices: MediaDeviceInfo[];
-  audioOutputDevices: MediaDeviceInfo[];
-  selectedInputDevice: string;
-  selectedOutputDevice: string;
-  isMicMuted: boolean;
-  isHeadsetMuted: boolean;
-  inputVolume: number;
-  outputVolume: number;
-  onOptionsClose: () => void;
-  onOptionsSave: () => void;
-  onMicMuteToggle: () => void;
-  onHeadsetMuteToggle: () => void;
-  onInputDeviceChange: (deviceId: string) => void;
-  onOutputDeviceChange: (deviceId: string) => void;
-  onInputVolumeChange: (volume: number) => void;
-  onOutputVolumeChange: (volume: number) => void;
+  showCameraConfirm: boolean;
+  showShareModal: boolean;
+  showStopShareConfirm: boolean;
+  showSwitchToCameraConfirm: boolean;
+  showCameraAction: boolean;
+  selectedRemoteUser: any;
+  onCameraConfirm: () => void;
+  onCameraCancel: () => void;
+  onCloseCameraAction: () => void;
+  onSingleView: () => void;
+  onSplitView: () => void;
+  onReplaceView: () => void;
+  onStopShareConfirm: () => void;
+  onStopShareCancel: () => void;
+  onSwitchToCameraConfirm: () => void;
+  onSwitchToCameraCancel: () => void;
+  onToggleScreenShare: () => void;
+  onCameraToggleRequest: () => void;
+  onShareModalClose: () => void;
+  isSplitViewDisabled: boolean;
+  isReplaceViewDisabled: boolean;
 }
 
 export const MeetingModals: React.FC<MeetingModalsProps> = ({
-  // 채팅 관련
-  chatOpen,
-  messages,
-  input,
-  setInput,
-  onSendMessage,
-  
-  // 앱 모달 관련
-  showAppModal,
-  appType,
-  appTitle,
-  modalMode,
-  instances,
-  onAppModalClose,
-  onAppTitleChange,
-  onAppModalCreate,
-  onSelectInstance,
-  onNewInstance,
-  
-  // 교체/분할 모달 관련
-  replaceOrSplit,
-  panelsLength,
-  onReplaceOrSplit,
-  
-  // 인스턴스 관리 모달 관련
-  showInstanceModal,
-  selectedInstance,
-  editingTitle,
-  onInstanceModalClose,
-  onInstanceTitleChange,
-  onInstanceSave,
-  onInstanceDelete,
-  showDeleteConfirm,
-  onDeleteConfirm,
-  onDeleteCancel,
-  showSuccessModal,
-  onSuccessClose,
-  successMessage,
-  showOpenInstanceWarning,
-  onOpenInstanceWarningClose,
-  
-  // 회의방 상세 모달 관련
-  showDetails,
-  onDetailsClose,
-  
-  // 유저 상세 모달 관련
-  selectedUser,
-  onUserClose,
-  
-    // 옵션 모달 관련
-  showOptions,
-  audioInputDevices,
-  audioOutputDevices,
-  selectedInputDevice,
-  selectedOutputDevice,
-  isMicMuted,
-  isHeadsetMuted,
-  inputVolume,
-  outputVolume,
-  onOptionsClose,
-  onOptionsSave,
-  onMicMuteToggle,
-  onHeadsetMuteToggle,
-  onInputDeviceChange,
-  onOutputDeviceChange,
-  onInputVolumeChange,
-  onOutputVolumeChange
+  showCameraConfirm,
+  showShareModal,
+  showStopShareConfirm,
+  showSwitchToCameraConfirm,
+  showCameraAction,
+  selectedRemoteUser,
+  onCameraConfirm,
+  onCameraCancel,
+  onCloseCameraAction,
+  onSingleView,
+  onSplitView,
+  onReplaceView,
+  onStopShareConfirm,
+  onStopShareCancel,
+  onSwitchToCameraConfirm,
+  onSwitchToCameraCancel,
+  onToggleScreenShare,
+  onCameraToggleRequest,
+  onShareModalClose,
+  isSplitViewDisabled,
+  isReplaceViewDisabled
 }) => {
   return (
     <>
-      {/* 채팅창 */}
-      <AnimatePresence>
-        {chatOpen && (
-          <ChatBox
-            messages={messages}
-            input={input}
-            setInput={setInput}
-            onSend={onSendMessage}
-          />
-        )}
-      </AnimatePresence>
-
-      {/* 앱 모달 */}
-      <AppModal
-        visible={showAppModal}
-        appType={appType}
-        appTitle={appTitle}
-        modalMode={modalMode}
-        instances={instances}
-        onClose={onAppModalClose}
-        onTitleChange={onAppTitleChange}
-        onCreate={onAppModalCreate}
-        onSelectInstance={onSelectInstance}
-        onNewInstance={onNewInstance}
-      />
-      
-      {/* 교체/분할 모달 */}
-      <ReplaceSplitModal
-        replaceOrSplit={replaceOrSplit}
-        panelsLength={panelsLength}
-        onAction={onReplaceOrSplit}
+      {/* 카메라 확인 모달 */}
+      <CameraConfirmModal
+        isOpen={showCameraConfirm}
+        onConfirm={onCameraConfirm}
+        onCancel={onCameraCancel}
       />
 
-      {/* 인스턴스 관리 모달 */}
-      <InstanceManagementModal
-        visible={showInstanceModal}
-        selectedInstance={selectedInstance}
-        editingTitle={editingTitle}
-        onClose={onInstanceModalClose}
-        onTitleChange={onInstanceTitleChange}
-        onSave={onInstanceSave}
-        onDelete={onInstanceDelete}
+      {/* 카메라 액션 모달 */}
+      <CameraActionModal
+        isOpen={showCameraAction}
+        userName={selectedRemoteUser?.name || ''}
+        isCameraOn={selectedRemoteUser?.isCameraOn}
+        isScreenSharing={selectedRemoteUser?.isScreenSharing}
+        onClose={onCloseCameraAction}
+        onSingleView={onSingleView}
+        onSplitView={onSplitView}
+        onReplaceView={onReplaceView}
+        isSplitViewDisabled={isSplitViewDisabled}
+        isReplaceViewDisabled={isReplaceViewDisabled}
       />
 
-      {/* 삭제 확인 모달 */}
-      <ConfirmDeleteModal
-        visible={showDeleteConfirm}
-        onConfirm={onDeleteConfirm}
-        onCancel={onDeleteCancel}
-        title="인스턴스 삭제"
-        message="정말로 이 인스턴스를 삭제하시겠습니까?"
-      />
+      {/* 화면 공유/카메라 선택 모달 */}
+      {showShareModal && (
+        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+          <div className="bg-[#36393F] p-6 rounded-lg shadow-xl text-white">
+            <h3 className="text-lg font-bold mb-4">화면 공유 또는 카메라 선택</h3>
+            <button
+              onClick={() => {
+                onShareModalClose();
+                onToggleScreenShare(); // 화면 공유 시작
+              }}
+              className="w-full p-3 mb-3 bg-[#57F287] text-white rounded-md hover:bg-[#3ba55c] transition-colors"
+            >
+              화면 공유
+            </button>
+            <button
+              onClick={() => {
+                onShareModalClose();
+                onCameraToggleRequest(); // 카메라 시작
+              }}
+              className="w-full p-3 mb-3 bg-[#5865F2] text-white rounded-md hover:bg-[#4752c4] transition-colors"
+            >
+              카메라
+            </button>
+            <button
+              onClick={onShareModalClose}
+              className="w-full p-3 bg-[#72767D] text-white rounded-md hover:bg-[#40444B] transition-colors"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
 
-      {/* 성공 알림 모달 */}
-      <SuccessModal
-        visible={showSuccessModal}
-        onClose={onSuccessClose}
-        title="성공"
-        message={successMessage}
-      />
+      {/* 화면 공유 중지 확인 모달 */}
+      {showStopShareConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center z-50">
+          <div className="bg-[#36393F] p-6 rounded-lg shadow-xl text-white">
+            <h3 className="text-lg font-bold mb-4">화면 공유 중지</h3>
+            <p className="text-[#DCDDDE] mb-6">화면 공유를 중지하시겠습니까?</p>
+            <div className="flex space-x-3">
+              <button
+                onClick={onStopShareConfirm}
+                className="flex-1 p-3 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
+              >
+                예
+              </button>
+              <button
+                onClick={onStopShareCancel}
+                className="flex-1 p-3 bg-[#72767D] text-white rounded-md hover:bg-[#40444B] transition-colors"
+              >
+                아니오
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
-      {/* 열린 인스턴스 경고 모달 */}
-      <OpenInstanceWarningModal
-        visible={showOpenInstanceWarning}
-        onClose={onOpenInstanceWarningClose}
-      />
-
-      {/* 회의방 상세 모달 */}
-      <MeetingDetailsModal
-        visible={showDetails}
-        onClose={onDetailsClose}
-        details="회의방 상세정보 입력"
-      />
-
-      {/* 유저 상세 모달 */}
-      <UserDetailsModal
-        visible={selectedUser !== null}
-        onClose={onUserClose}
-        user={selectedUser}
-      />
-
-      {/* 옵션 모달 */}
-              <OptionsModal
-          visible={showOptions}
-          onClose={onOptionsClose}
-          onSave={onOptionsSave}
-          audioInputDevices={audioInputDevices}
-          audioOutputDevices={audioOutputDevices}
-          selectedInputDevice={selectedInputDevice}
-          selectedOutputDevice={selectedOutputDevice}
-          isMicMuted={isMicMuted}
-          isHeadsetMuted={isHeadsetMuted}
-          inputVolume={inputVolume}
-          outputVolume={outputVolume}
-          onMicMuteToggle={onMicMuteToggle}
-          onHeadsetMuteToggle={onHeadsetMuteToggle}
-          onInputDeviceChange={onInputDeviceChange}
-          onOutputDeviceChange={onOutputDeviceChange}
-          onInputVolumeChange={onInputVolumeChange}
-          onOutputVolumeChange={onOutputVolumeChange}
-        />
+      {/* 카메라로 전환 확인 모달 */}
+      {showSwitchToCameraConfirm && (
+        <div className="fixed inset-0 flex items-center justify-center z-[9999]">
+          <div className="bg-[#36393F] p-6 rounded-lg shadow-xl text-white">
+            <h3 className="text-lg font-bold mb-4">카메라로 전환</h3>
+            <p className="text-[#DCDDDE] mb-6">화면 공유를 중지하고 카메라를 시작하시겠습니까?</p>
+            <div className="flex space-x-3">
+              <button
+                onClick={onSwitchToCameraConfirm}
+                className="flex-1 p-3 bg-[#5865F2] text-white rounded-md hover:bg-[#4752c4] transition-colors"
+              >
+                예
+              </button>
+              <button
+                onClick={onSwitchToCameraCancel}
+                className="flex-1 p-3 bg-[#72767D] text-white rounded-md hover:bg-[#40444B] transition-colors"
+              >
+                아니오
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

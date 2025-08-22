@@ -64,25 +64,3 @@ export type SlideNotificationProps = {
   duration?: number;
   className?: string;
 };
-
-// PanelContent
-export type PanelContentProps = {
-  num: number;
-  app?: string;
-  title?: string;
-  openMenu: number | null;
-  onToggleMenu: (num: number) => void;
-  onAdd: (targetNum: number) => void;
-  onCloseAll: () => void;
-  onCloseOthers: (num: number) => void;
-  onClose: (num: number) => void;
-  onSplit: (num: number, droppedApp: string) => void;
-  onAppDrop?: (appType: string, targetNum: number) => void;
-  // 앱 위치 바꾸기 관련
-  showSwap?: boolean;
-  showSwapHere?: boolean;
-  isSwapTarget?: boolean;
-  onSwapApp?: () => void;
-  onSwapHere?: () => void;
-  onCancelSwap?: () => void;
-};

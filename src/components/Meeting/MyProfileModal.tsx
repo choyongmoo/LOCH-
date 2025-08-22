@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface MyProfileModalProps {
   visible: boolean;
@@ -97,6 +97,8 @@ export const MyProfileModal = ({ visible, onClose }: MyProfileModalProps) => {
       setShowStatusDropdown(false);
       // localStorage에 즉시 저장
       saveProfileToStorage(updatedProfile);
+      // 커스텀 이벤트 발생시켜 다른 컴포넌트들에게 알림
+      window.dispatchEvent(new CustomEvent('profileUpdated'));
     }
   };
 
@@ -106,6 +108,8 @@ export const MyProfileModal = ({ visible, onClose }: MyProfileModalProps) => {
     setIsEditing(false);
     // localStorage에 즉시 저장
     saveProfileToStorage(updatedProfile);
+    // 커스텀 이벤트 발생시켜 다른 컴포넌트들에게 알림
+    window.dispatchEvent(new CustomEvent('profileUpdated'));
   };
 
   const handleCancel = () => {
@@ -140,7 +144,7 @@ export const MyProfileModal = ({ visible, onClose }: MyProfileModalProps) => {
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+        className="fixed inset-0 z-40"
         onClick={onClose}
       />
       <div

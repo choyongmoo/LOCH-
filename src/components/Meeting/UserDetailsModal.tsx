@@ -1,4 +1,4 @@
-import React from "react";
+
 import type { UserDetailsModalProps } from "@/pages/Meeting/types";
 
 export const UserDetailsModal = ({ visible, onClose, user, userInfo: propUserInfo }: UserDetailsModalProps) => {
@@ -32,7 +32,7 @@ export const UserDetailsModal = ({ visible, onClose, user, userInfo: propUserInf
   return (
     <>
       <div
-        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40"
+        className="fixed inset-0 z-40"
         onClick={onClose}
       />
       <div

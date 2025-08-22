@@ -44,7 +44,7 @@ export const OptionsModal: React.FC<OptionsModalProps> = ({
   return (
     <div className="fixed inset-0 z-50">
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-md"
+        className="absolute inset-0"
         onClick={onClose}
       />
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-[#2F3136] p-6 rounded-lg shadow-xl text-white min-w-[500px] max-h-[80vh] overflow-y-auto border border-[#4F545C]">
