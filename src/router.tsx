@@ -18,6 +18,7 @@ import { Download } from "./pages/Home/Download";
 import Docs from "@/pages/Home/Docs"; 
 import DocsDetail from "./pages/Home/Doc/DocsDetail";
 import { ForgotPassword } from "./pages/Auth/ForgotPassword";
+import { ResetPassword } from "@/pages/Auth/ResetPassword";
 import SettingPage from "./pages/Workspace/SettingPage";
 import ManagerPage from "./pages/Workspace/ManagerPage";
 
@@ -39,6 +40,7 @@ export const Router = () => {
           <Route path="signin" element={<Signin />} />
           <Route path="signup" element={<Signup />} />
            <Route path="forgot-password" element={<ForgotPassword />} /> 
+           <Route path="reset-password" element={<ResetPassword />} />
         </Route>
 
         {/* Workspace Pages */}

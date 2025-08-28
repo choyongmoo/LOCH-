@@ -92,6 +92,10 @@ export const Signin = () => {
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/signin`,
+           queryParams: {
+          // 항상 계정 선택 창 표시
+          prompt: "select_account",
+        },
         },
       });
     } catch (err) {
