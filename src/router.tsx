@@ -55,9 +55,8 @@ export const Router = () => {
           <Route path="manager" element={<ManagerPage />} />
         </Route>
         {/* Meeting Pages */}
-        <Route path="meeting" element={<MeetingLayout />}>
-          <Route index element={<MeetingLayout />} />
-        </Route>
+        <Route path="meeting" element={<MeetingLayout />} />
+        <Route path="meeting/:meetingId" element={<MeetingLayout />} />
 
         {/* Fallback Route */}
         <Route path="*" element={<NotFound />} />

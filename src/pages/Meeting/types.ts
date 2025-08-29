@@ -16,6 +16,52 @@ export type MeetingDetailsModalProps = {
   };
 };
 
+// Supabase 연동 타입들
+export interface Meeting {
+  id: string;
+  name: string;
+  description?: string;
+  host_id: number;
+  max_participants: number;
+  status: 'active' | 'ended' | 'scheduled';
+  created_at: string;
+  started_at?: string;
+  ended_at?: string;
+}
+
+export interface MeetingMember {
+  id: number;
+  meeting_id: string;
+  user_id: number;
+  role: 'host' | 'participant' | 'observer';
+  is_active: boolean;
+  joined_at: string;
+  left_at?: string;
+}
+
+export interface MeetingMessage {
+  id: number;
+  meeting_id: string;
+  sender_id: number;
+  content: string;
+  message_type: 'general' | 'private' | 'system';
+  receiver_id?: number;
+  created_at: string;
+}
+
+export interface MeetingParticipant {
+  id: number;
+  name: string;
+  email: string;
+  is_local: boolean;
+  is_camera_on: boolean;
+  is_mic_on: boolean;
+  is_screen_sharing: boolean;
+  is_active: boolean;
+  joined_at: string;
+  role: string;
+}
+
 // Chat 관련
 export type ChatMessage = {
   user: string;

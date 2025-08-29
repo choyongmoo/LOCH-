@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import GroupItem from "@/components/Workspace/Sidebar/GroupItem";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/common/ui/skeleton";
+import { useNavigate } from "react-router-dom";
 
 const ManagerPage = () => {
   type MeetingRow = { id: string; room_name: string; description: string | null; host: string };
@@ -12,6 +13,8 @@ const ManagerPage = () => {
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [skeletonCount, setSkeletonCount] = useState<number>(0);
+
+  const navigate = useNavigate();
 
   const reloadMeetings = useCallback(async (): Promise<void> => {
       setLoading(true);
@@ -186,7 +189,8 @@ const ManagerPage = () => {
         rows.map((m) => (
           <div
             key={m.id}
-            className="group flex items-center px-2 py-3 border-b border-gray-200 dark:border-[#23242e]"
+            className="group flex items-center px-2 py-3 border-b border-gray-200 dark:border-[#23242e] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2A2B32]"
+            onClick={() => navigate(`/meeting/${m.id}`)}
           >
             <div className="w-8" />
             <div className="flex-1 flex items-center gap-3 min-w-0">
@@ -206,7 +210,10 @@ const ManagerPage = () => {
                 type="button"
                 aria-label="leave"
                 className="opacity-0 group-hover:opacity-100 transition text-xs text-gray-400 hover:text-red-500"
-                onClick={() => setLeaveTarget(m)}
+                onClick={(e) => {
+                  e.stopPropagation(); // 부모 클릭 이벤트 방지
+                  setLeaveTarget(m);
+                }}
               >
                 x
               </button>

@@ -1,24 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { MyProfileModal } from './MyProfileModal';
-
-// localStorage에서 프로필 데이터 불러오기
-const loadProfileFromStorage = () => {
-  try {
-    const saved = localStorage.getItem('userProfile');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-  } catch (error) {
-    console.error('프로필 데이터 로드 실패:', error);
-  }
-  
-  // 기본 프로필 데이터
-  return {
-    name: "홍길동",
-    status: "온라인",
-    avatar: "홍길동".slice(0, 2).toUpperCase(),
-  };
-};
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface ServerSidebarProps {
   isMicMuted?: boolean;
@@ -26,14 +8,14 @@ interface ServerSidebarProps {
   onMicMuteToggle?: () => void;
   onHeadsetMuteToggle?: () => void;
   onToggleScreenShare?: () => void;
-  onToggleCamera?: () => void; // 카메라 토글 핸들러 추가
+  onToggleCamera?: () => void;
   isScreenSharing?: boolean;
   onOpenOptions?: () => void;
   onLeave?: () => void;
   onOpenMyProfile?: () => void;
   remoteUsers?: any[];
   onRemoteUserCameraClick?: (userId: string) => void;
-  onStopShareRequest?: () => void; // 화면 공유 중지 요청 핸들러 추가
+  onStopShareRequest?: () => void;
 }
 
 export const ServerSidebar: React.FC<ServerSidebarProps> = ({
@@ -42,7 +24,7 @@ export const ServerSidebar: React.FC<ServerSidebarProps> = ({
   onMicMuteToggle,
   onHeadsetMuteToggle,
   onToggleScreenShare,
-
+  onToggleCamera,
   isScreenSharing,
   onOpenOptions,
   onLeave,
@@ -51,27 +33,8 @@ export const ServerSidebar: React.FC<ServerSidebarProps> = ({
   onRemoteUserCameraClick,
   onStopShareRequest
 }) => {
-  const [userProfile, setUserProfile] = useState(loadProfileFromStorage);
+  const { userProfile } = useUserProfile();
   const [showMyProfile, setShowMyProfile] = useState(false);
-
-
-  // localStorage 변경 감지
-  useEffect(() => {
-    const handleStorageChange = () => {
-      setUserProfile(loadProfileFromStorage());
-    };
-
-    // storage 이벤트 리스너 (다른 탭에서 변경된 경우)
-    window.addEventListener('storage', handleStorageChange);
-    
-    // 커스텀 이벤트 리스너 (같은 탭에서 변경된 경우)
-    window.addEventListener('profileUpdated', handleStorageChange);
-
-    return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('profileUpdated', handleStorageChange);
-    };
-  }, []);
 
   // 상태에 따른 색상
   const getStatusColor = (status: string) => {
@@ -93,8 +56,6 @@ export const ServerSidebar: React.FC<ServerSidebarProps> = ({
     return colors[index];
   };
 
-
-
   return (
     <>
       <div className="flex flex-col items-center space-y-2 h-full">
@@ -111,7 +72,7 @@ export const ServerSidebar: React.FC<ServerSidebarProps> = ({
         {/* 구분선 */}
         <div className="w-8 h-px bg-[#40444B]"></div>
 
-        {/* 다른 사용자들의 카메라/화면 공유 */}
+        {/* 회의방 참가자들 화면 */}
         {remoteUsers.filter(user => !user.isLocal).map((user) => (
           <div
             key={user.id}
@@ -174,9 +135,9 @@ export const ServerSidebar: React.FC<ServerSidebarProps> = ({
             <button
               onClick={() => {
                 if (isScreenSharing) {
-                  onStopShareRequest?.(); // 화면 공유 중지 시 확인 모달
+                  onStopShareRequest?.();
                 } else {
-                  onToggleScreenShare?.(); // 화면 공유 시작
+                  onToggleScreenShare?.();
                 }
               }}
               className={`w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-200 ${
@@ -222,10 +183,6 @@ export const ServerSidebar: React.FC<ServerSidebarProps> = ({
         visible={showMyProfile}
         onClose={() => setShowMyProfile(false)}
       />
-
-
-
-
     </>
   );
 };

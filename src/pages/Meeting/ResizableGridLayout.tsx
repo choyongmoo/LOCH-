@@ -47,6 +47,8 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
     setDragging(dragState);
     draggingRef.current = dragState;
 
+    console.log('리사이저 드래그 시작:', type, '시작 크기:', startSizes);
+
     const onMouseMove = (ev: MouseEvent) => {
       const dragging = draggingRef.current;
       if (!dragging || !containerRef.current) return;
@@ -78,6 +80,7 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
       }
     };
     const onMouseUp = () => {
+      console.log('리사이저 드래그 종료:', type);
       setDragging(null);
       draggingRef.current = null;
       window.removeEventListener('mousemove', onMouseMove);
@@ -98,6 +101,24 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
     transition: 'background 0.18s, opacity 0.18s',
   };
   const [hoveredResizer, setHoveredResizer] = useState<string | null>(null);
+
+  // 리사이저 표시 조건 개선
+  const shouldShowLeftRowResizer = rowSizesLeft.length > 1 && panels.filter(p => p.col === 0).length >= 2;
+  const shouldShowRightRowResizer = rowSizesRight.length > 1 && panels.filter(p => p.col === 1).length >= 2;
+  const shouldShowColResizer = colSizes.length > 1 && panels.length > 1;
+
+  // 디버깅을 위한 로그
+  console.log('ResizableGridLayout 상태:', {
+    panelsCount: panels.length,
+    colSizes,
+    rowSizesLeft,
+    rowSizesRight,
+    shouldShowLeftRowResizer,
+    shouldShowRightRowResizer,
+    shouldShowColResizer,
+    leftPanels: panels.filter(p => p.col === 0).length,
+    rightPanels: panels.filter(p => p.col === 1).length
+  });
 
   // 동적으로 gridTemplateRows/Columns, 셀 배치
   return (
@@ -184,8 +205,8 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
             />
           </div>
         ))}
-        {/* 상하(좌) 리사이저 */}
-        {rowSizesLeft.length > 1 && panels.filter(p => p.col === 0).length === 2 && (
+        {/* 상하(좌) 리사이저 - 조건 개선 */}
+        {shouldShowLeftRowResizer && (
           <div
             style={{
               position: 'absolute',
@@ -205,8 +226,8 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
           />
         )}
       </div>
-      {/* 좌우 리사이저 */}
-      {colSizes.length > 1 && panels.length > 1 && (
+      {/* 좌우 리사이저 - 조건 개선 */}
+      {shouldShowColResizer && (
         <div
           style={{
             position: 'absolute',
@@ -294,8 +315,8 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
             />
           </div>
         ))}
-        {/* 상하(우) 리사이저 */}
-        {rowSizesRight.length > 1 && panels.filter(p => p.col === 1).length === 2 && (
+        {/* 상하(우) 리사이저 - 조건 개선 */}
+        {shouldShowRightRowResizer && (
           <div
             style={{
               position: 'absolute',

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { SlideNotification } from '@/components/Meeting/SlideNotification';
 import { ServerSidebar } from '@/components/Meeting/ServerSidebar';
 import { ChatBox } from '@/components/Meeting/ChatBox';
@@ -6,12 +6,26 @@ import { MainContentArea } from '@/components/Meeting/MainContentArea';
 import { RightSidebar } from '@/components/Meeting/RightSidebar';
 import { MeetingModals } from '@/components/Meeting/MeetingModals';
 import { SettingsModal } from '@/components/Meeting/SettingsModal';
+import { UserFullscreenView } from '@/components/Meeting/UserFullscreenView';
 
 // 커스텀 훅들
 import { useUserProfile } from '@/hooks/useUserProfile';
 import { useCameraControls } from '@/hooks/useCameraControls';
 import { useScreenShare } from '@/hooks/useScreenShare';
 import { useMeetingModals } from '@/hooks/useMeetingModals';
+
+// Member 타입 정의
+interface Member {
+  id: string;
+  name: string;
+  isLocal: boolean;
+  isCameraOn: boolean;
+  isMicOn: boolean;
+  isActive: boolean;
+  isScreenSharing: boolean;
+  avatar?: string;
+  status?: string;
+}
 
 
 interface MeetingContentProps {
@@ -47,8 +61,6 @@ interface MeetingContentProps {
   onToggleChat: () => void;
   onChatInputChange: (value: string) => void;
   onChatSend: () => void;
-  onAppCreate?: (type: string) => void;
-  onAppRemove?: (type: string) => void;
   onNotification?: (message: string) => void; // 알림 핸들러 추가
   
   // swap 관련
@@ -97,52 +109,15 @@ export const MeetingContent: React.FC<MeetingContentProps> = ({
   isMicMuted = false,
   isHeadsetMuted = false,
   remoteUsers = [],
-  onAppCreate,
-  onAppRemove,
   onNotification
 }) => {
   // 커스텀 훅들 사용
   const { userProfile, getStatusColor } = useUserProfile();
 
-  // 테스트용 원격 사용자 데이터 (실제로는 props로 받아야 함)
-  const testRemoteUsers = [
-    {
-      id: 'user1',
-      name: '김개발',
-      isLocal: false,
-      isCameraOn: true,
-      isMicOn: true,
-      isActive: true,
-      isScreenSharing: false,
-      screenShareStream: null,
-      avatar: '김개발'.slice(0, 2).toUpperCase()
-    },
-    {
-      id: 'user2',
-      name: '이디자인',
-      isLocal: false,
-      isCameraOn: true,
-      isMicOn: false,
-      isActive: true,
-      isScreenSharing: false,
-      screenShareStream: null,
-      avatar: '이디자인'.slice(0, 2).toUpperCase()
-    },
-    {
-      id: 'user3',
-      name: '박기획',
-      isLocal: false,
-      isCameraOn: false,
-      isMicOn: true,
-      isActive: true,
-      isScreenSharing: false,
-      screenShareStream: null,
-      avatar: '박기획'.slice(0, 2).toUpperCase()
-    }
-  ];
-
-  // 테스트용으로 항상 더미 데이터 사용 (실제 배포 시에는 remoteUsers.length > 0 ? remoteUsers : testRemoteUsers로 변경)
-  const actualRemoteUsers = testRemoteUsers;
+  // 실제 원격 사용자 데이터 사용 (props로 받은 remoteUsers) - 현재 사용자 제외
+  const actualRemoteUsers = remoteUsers.length > 0 
+    ? remoteUsers.filter(user => !user.isLocal) 
+    : [];
 
   const {
     isLocalCameraOn,
@@ -158,14 +133,14 @@ export const MeetingContent: React.FC<MeetingContentProps> = ({
     handleSplitView,
     handleReplaceView,
     handleRemoveUserFromView
-  } = useCameraControls({ onAppCreate, onAppRemove, remoteUsers: actualRemoteUsers });
+  } = useCameraControls({ remoteUsers: actualRemoteUsers });
   
   const {
     isLocalScreenSharing,
     screenShareStream,
     handleToggleScreenShare,
     handleStopScreenShare
-  } = useScreenShare({ onAppCreate, onAppRemove, remoteUsers });
+  } = useScreenShare({ remoteUsers });
   
   const {
     showCameraConfirm,
@@ -323,181 +298,371 @@ export const MeetingContent: React.FC<MeetingContentProps> = ({
     screenShareStream: screenShareStream
   };
 
-  // 전체 참가자 목록 생성 (로컬 사용자 + 더미 사용자들) - 문자열 배열로 변환
-  const allMembers = [
-    userProfile.name,
-    ...actualRemoteUsers.map(user => user.name)
-  ];
+  // 전체 참가자 목록 생성 (로컬 사용자 + 원격 사용자들) - 객체 배열로 변환
+  const [allMembers, setAllMembers] = useState<Member[]>([
+    {
+      id: 'local',
+      name: userProfile.name,
+      isLocal: true,
+      isCameraOn: false,
+      isMicOn: !isMicMuted,
+      isActive: true,
+      isScreenSharing: isLocalScreenSharing,
+      avatar: userProfile.avatar,
+      status: userProfile.status
+    },
+    ...actualRemoteUsers.map(user => ({
+      id: user.id,
+      name: user.name,
+      isLocal: false,
+      isCameraOn: user.isCameraOn || false,
+      isMicOn: user.isMicOn || true,
+      isActive: user.isActive || true,
+      isScreenSharing: user.isScreenSharing || false,
+      avatar: user.name.slice(0, 2).toUpperCase(),
+      status: "온라인"
+    }))
+  ]);
+  
+  // userProfile 상태 변경 시 allMembers 업데이트
+  useEffect(() => {
+    setAllMembers([
+      {
+        id: 'local',
+        name: userProfile.name,
+        isLocal: true,
+        isCameraOn: false,
+        isMicOn: !isMicMuted,
+        isActive: true,
+        isScreenSharing: isLocalScreenSharing,
+        avatar: userProfile.avatar,
+        status: userProfile.status
+      },
+      ...actualRemoteUsers.map(user => ({
+        id: user.id,
+        name: user.name,
+        isLocal: false,
+        isCameraOn: user.isCameraOn || false,
+        isMicOn: user.isMicOn || true,
+        isActive: user.isActive || true,
+        isScreenSharing: user.isScreenSharing || false,
+        avatar: user.name.slice(0, 2).toUpperCase(),
+        status: "온라인"
+      }))
+    ]);
+  }, [userProfile.status, userProfile.name, userProfile.avatar, isMicMuted, isLocalScreenSharing, actualRemoteUsers]);
+
+  // 사용자 전체화면 상태 관리
+  const [isUserFullscreenActive, setIsUserFullscreenActive] = useState(false);
+  const [userFullscreenInfo, setUserFullscreenInfo] = useState<{
+    userName: string;
+    isLocal: boolean;
+    isScreenSharing: boolean;
+    screenShareStream?: MediaStream | null;
+    cameraStream?: MediaStream | null;
+  } | null>(null);
+
+  // 브라우저 전체화면 상태 확인
+  const isBrowserFullscreen = !!(
+    document.fullscreenElement ||
+    (document as any).webkitFullscreenElement ||
+    (document as any).mozFullScreenElement ||
+    (document as any).msFullscreenElement
+  );
+
+  // UI 숨김 조건: 사용자 전체화면이 활성화되었거나 브라우저 전체화면이 활성화된 경우
+  const shouldHideUI = isUserFullscreenActive || isBrowserFullscreen;
+
+  // 사용자 전체화면 종료 핸들러
+  const handleExitUserFullscreen = () => {
+    // 브라우저 전체화면 종료 (안전하게 처리)
+    try {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      } else if ((document as any).webkitExitFullscreen) {
+        (document as any).webkitExitFullscreen();
+      } else if ((document as any).mozCancelFullScreen) {
+        (document as any).mozCancelFullScreen();
+      } else if ((document as any).msExitFullscreen) {
+        (document as any).msExitFullscreen();
+      }
+    } catch (error) {
+      // 전체화면 종료 중 오류 (정상적인 상황)
+    }
+    
+    // 사용자 전체화면 상태 초기화
+    setUserFullscreenInfo(null);
+    setIsUserFullscreenActive(false);
+  };
+
+  // 브라우저 전체화면 상태 감지 및 ESC 키 이벤트 처리
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isBrowserFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      
+      // 브라우저 전체화면이 종료되면 사용자 전체화면 모드도 종료
+      if (!isBrowserFullscreen && userFullscreenInfo) {
+        setUserFullscreenInfo(null);
+        setIsUserFullscreenActive(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        // 사용자 전체화면이 활성화되어 있으면 먼저 종료
+        if (userFullscreenInfo) {
+          console.log('MeetingContent: ESC 키 감지, 사용자 전체화면 종료');
+          handleExitUserFullscreen();
+          return;
+        }
+
+        // 브라우저 전체화면이 활성화되어 있으면 종료
+        const isBrowserFullscreen = !!(
+          document.fullscreenElement ||
+          (document as any).webkitFullscreenElement ||
+          (document as any).mozFullScreenElement ||
+          (document as any).msFullscreenElement
+        );
+        
+        if (isBrowserFullscreen) {
+          handleExitUserFullscreen();
+        }
+      }
+    };
+
+    // 이벤트 리스너 등록
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [userFullscreenInfo]);
 
   return (
     <>
-      <div className="flex h-screen bg-[#36393F] text-white">
-        {/* 왼쪽 서버 사이드바 - Discord 스타일 */}
-        <div className="w-16 bg-[#202225] flex-shrink-0 flex flex-col items-center pt-0 pb-3">
-          <ServerSidebar
-            isMicMuted={isMicMuted}
-            isHeadsetMuted={isHeadsetMuted}
-            onMicMuteToggle={onMicMuteToggle}
-            onHeadsetMuteToggle={onHeadsetMuteToggle}
-            onToggleScreenShare={handleScreenShareToggle}
-            onToggleCamera={handleCameraToggleRequest}
-            isScreenSharing={isLocalScreenSharing}
-            onOpenOptions={handleOpenSettings}
-            onLeave={onLeave}
-            onOpenMyProfile={onOpenMyProfile}
-            remoteUsers={actualRemoteUsers}
-            onRemoteUserCameraClick={handleRemoteUserCameraClickWithUsers}
-            onStopShareRequest={handleStopShareRequestDirect}
-          />
-        </div>
-
-        {/* 중앙 메인 영역 */}
-        <div className="flex-1 flex flex-col">
-          {/* 상단 알림 */}
-          <SlideNotification
-            message={current ?? ""}
-            visible={current !== null}
-            className="top-4 left-4 right-4"
-          />
-          
-          {/* 메인 컨텐츠 영역 */}
-          <MainContentArea
-            isFullscreen={isFullscreen}
-            fullscreenPanel={fullscreenPanel}
-            panels={panels}
-            colSizes={colSizes}
-            rowSizesLeft={rowSizesLeft}
-            rowSizesRight={rowSizesRight}
-            swapTarget={swapTarget}
-            onExitFullscreen={onExitFullscreen}
-            onPanelDrop={onPanelDrop}
-            onPanelSplit={onPanelSplit}
-            onPanelClose={onPanelClose}
-            onResize={onResize}
-            onFullscreen={onFullscreen}
-            onSwapApp={onSwapApp}
-            onSwapHere={onSwapHere}
-            onCancelSwap={onCancelSwap}
+      {shouldHideUI ? (
+        // 사용자 전체화면 모드일 때는 UserFullscreenView만 표시
+        userFullscreenInfo ? (
+          <UserFullscreenView
+            userInfo={userFullscreenInfo}
             localUser={localUser}
             remoteUsers={actualRemoteUsers}
             onToggleCamera={handleCameraToggle}
             onCameraStartRequest={handleCameraToggleRequest}
             onToggleMic={onMicMuteToggle}
             onToggleScreenShare={handleScreenShareToggle}
-                          onUserClick={() => {}}
-            selectedUserId={selectedCameraUser}
-            onSelectedUserChange={setSelectedCameraUser}
-            layout={cameraLayout}
-            onLayoutChange={setCameraLayout}
-            userOrder={userOrder}
-            onClose={handleCloseCamera}
-            onRemoveUserFromView={handleRemoveUserFromView}
+            onExitFullscreen={handleExitUserFullscreen}
           />
-        </div>
-
-        {/* 오른쪽 멤버 리스트 - Discord 스타일 */}
-        <RightSidebar
-          members={allMembers}
-          userProfile={userProfile}
-          getStatusColor={getStatusColor}
-          onOpenDetails={onOpenDetails}
-          onUserClick={onUserClick}
-          onOpenMyProfile={onOpenMyProfile}
-          onToggleChat={onToggleChat}
-          onStartPrivateChat={(targetUser: string) => {
-            // 채팅창이 열려있지 않으면 열기
-            if (!isChatOpen) {
-              onToggleChat();
-            }
-            // 개인 채팅 탭 추가 (중복 방지)
-            if (!privateChatTabs.includes(targetUser)) {
-              setPrivateChatTabs(prev => [...prev, targetUser]);
-            }
-            // 해당 탭으로 전환
-            setActiveTab(targetUser);
-            // 읽지 않은 메시지 초기화
-            setUnreadMessages(prev => ({ ...prev, [targetUser]: 0 }));
-          }}
-          onToggleGeneralChat={() => {
-            setActiveTab('general');
-            setUnreadGeneralMessages(0); // 전체 채팅 읽지 않은 메시지 초기화
-          }}
-          unreadGeneralMessages={unreadGeneralMessages}
-          unreadMessages={unreadMessages}
-        />
-
-        {/* 채팅 박스 - 오른쪽 하단에 고정 (사용자 컨트롤 영역 위로) */}
-        {isChatOpen && (
-          <div className="fixed bottom-20 right-4 z-50">
-            <ChatBox
-              messages={chatMessages}
-              input={chatInput}
-              setInput={onChatInputChange}
-              onSend={onChatSend}
-              privateChatTabs={privateChatTabs}
-              activeTab={activeTab}
-              onSetActiveTab={(tab: string) => {
-                setActiveTab(tab);
-                if (tab === 'general') {
-                  setUnreadGeneralMessages(0); // 전체 탭 클릭 시 읽지 않은 메시지 초기화
-                }
-              }}
-              onClosePrivateTab={(targetUser: string) => {
-                setPrivateChatTabs(prev => prev.filter(tab => tab !== targetUser));
-                if (activeTab === targetUser) {
-                  setActiveTab('general');
-                }
-              }}
-              privateMessages={privateMessages}
-              onSetPrivateMessages={setPrivateMessages}
-              unreadMessages={unreadMessages}
-              onSetUnreadMessages={setUnreadMessages}
-              unreadGeneralMessages={unreadGeneralMessages}
+        ) : (
+          <div className="w-full h-screen bg-black flex items-center justify-center">
+            <div className="text-white text-lg">전체화면 모드</div>
+          </div>
+        )
+      ) : (
+        // 일반 모드일 때는 모든 UI 표시
+        <div className="flex h-screen bg-[#36393F] text-white">
+          {/* 왼쪽 서버 사이드바 - Discord 스타일 */}
+          <div className="w-16 bg-[#202225] flex-shrink-0 flex flex-col items-center pt-0 pb-3">
+            <ServerSidebar
+              isMicMuted={isMicMuted}
+              isHeadsetMuted={isHeadsetMuted}
+              onMicMuteToggle={onMicMuteToggle}
+              onHeadsetMuteToggle={onHeadsetMuteToggle}
+              onToggleScreenShare={handleScreenShareToggle}
+              onToggleCamera={handleCameraToggleRequest}
+              isScreenSharing={isLocalScreenSharing}
+              onOpenOptions={handleOpenSettings}
+              onLeave={onLeave}
+              onOpenMyProfile={onOpenMyProfile}
+              remoteUsers={actualRemoteUsers}
+              onRemoteUserCameraClick={handleRemoteUserCameraClickWithUsers}
+              onStopShareRequest={handleStopShareRequestDirect}
             />
           </div>
-        )}
-      </div>
 
-      {/* 모든 모달들 */}
-      <MeetingModals
-        showCameraConfirm={showCameraConfirm}
-        showShareModal={showShareModal}
-        showStopShareConfirm={showStopShareConfirm}
-        showSwitchToCameraConfirm={showSwitchToCameraConfirm}
-        showCameraAction={showCameraAction}
-        selectedRemoteUser={selectedRemoteUser}
-        onCameraConfirm={handleCameraConfirmWithStart}
-        onCameraCancel={handleCameraCancel}
-        onCloseCameraAction={handleCloseCameraAction}
-        onSingleView={handleSingleViewAction}
-        onSplitView={handleSplitViewAction}
-        onReplaceView={handleReplaceViewAction}
-        onStopShareConfirm={handleStopShareConfirmWithStop}
-        onStopShareCancel={handleStopShareCancel}
-        onSwitchToCameraConfirm={handleSwitchToCameraConfirmWithSwitch}
-        onSwitchToCameraCancel={handleSwitchToCameraCancel}
-        onToggleScreenShare={handleScreenShareStart}
-        onCameraToggleRequest={handleCameraToggleRequest}
-        onShareModalClose={() => setShowShareModal(false)}
-        isSplitViewDisabled={isSplitViewDisabled}
-        isReplaceViewDisabled={isReplaceViewDisabled}
-      />
+          {/* 중앙 메인 영역 */}
+          <div className="flex-1 flex flex-col">
+            {/* 상단 알림 */}
+            <SlideNotification
+              message={current ?? ""}
+              visible={current !== null}
+              className="top-4 left-4 right-4"
+            />
+            
+            {/* 메인 컨텐츠 영역 */}
+            <MainContentArea
+              isFullscreen={isFullscreen}
+              fullscreenPanel={fullscreenPanel}
+              panels={panels}
+              colSizes={colSizes}
+              rowSizesLeft={rowSizesLeft}
+              rowSizesRight={rowSizesRight}
+              swapTarget={swapTarget}
+              onExitFullscreen={onExitFullscreen}
+              onPanelDrop={onPanelDrop}
+              onPanelSplit={onPanelSplit}
+              onPanelClose={onPanelClose}
+              onResize={onResize}
+              onFullscreen={onFullscreen}
+              onSwapApp={onSwapApp}
+              onSwapHere={onSwapHere}
+              onCancelSwap={onCancelSwap}
+              localUser={localUser}
+              remoteUsers={actualRemoteUsers}
+              onToggleCamera={handleCameraToggle}
+              onCameraStartRequest={handleCameraToggleRequest}
+              onToggleMic={onMicMuteToggle}
+              onToggleScreenShare={handleScreenShareToggle}
+              onStopScreenShareRequest={handleStopShareRequestDirect}
+              onUserClick={() => {}}
+              selectedUserId={selectedCameraUser}
+              onSelectedUserChange={setSelectedCameraUser}
+              layout={cameraLayout}
+              onLayoutChange={setCameraLayout}
+              userOrder={userOrder}
+              onClose={handleCloseCamera}
+              onRemoveUserFromView={handleRemoveUserFromView}
+              onUserFullscreenStateChange={(isActive: boolean, userInfo?: any) => {
+                // 상태 즉시 업데이트
+                setIsUserFullscreenActive(isActive);
+                
+                if (userInfo) {
+                  setUserFullscreenInfo(userInfo);
+                }
+                
+                // 상태 변화 즉시 확인 및 강제 업데이트
+                setTimeout(() => {
+                  // 강제로 상태 재설정
+                  setIsUserFullscreenActive(isActive);
+                  if (userInfo) {
+                    setUserFullscreenInfo(userInfo);
+                  }
+                }, 0);
+              }}
+            />
+          </div>
 
-      {/* 설정 모달 */}
-      <SettingsModal
-        isOpen={showSettings}
-        onClose={handleCloseSettings}
-        isMicMuted={isMicMuted}
-        isHeadsetMuted={isHeadsetMuted}
-        onMicMuteToggle={onMicMuteToggle}
-        onHeadsetMuteToggle={onHeadsetMuteToggle}
-        onSave={() => {
-          // 설정 저장 시 알림 표시
-          if (onNotification) {
-            onNotification("설정이 저장되었습니다.");
-          }
-        }}
-      />
+          {/* 오른쪽 멤버 리스트 - Discord 스타일 */}
+          <RightSidebar
+            members={allMembers}
+            userProfile={userProfile}
+            getStatusColor={getStatusColor}
+            onOpenDetails={onOpenDetails}
+            onUserClick={onUserClick}
+            onOpenMyProfile={onOpenMyProfile}
+            onToggleChat={onToggleChat}
+            onStartPrivateChat={(targetUser: string) => {
+              // 채팅창이 열려있지 않으면 열기
+              if (!isChatOpen) {
+                onToggleChat();
+              }
+              // 개인 채팅 탭 추가 (중복 방지)
+              if (!privateChatTabs.includes(targetUser)) {
+                setPrivateChatTabs(prev => [...prev, targetUser]);
+              }
+              // 해당 탭으로 전환
+              setActiveTab(targetUser);
+              // 읽지 않은 메시지 초기화
+              setUnreadMessages(prev => ({ ...prev, [targetUser]: 0 }));
+            }}
+            onToggleGeneralChat={() => {
+              setActiveTab('general');
+              setUnreadGeneralMessages(0); // 전체 채팅 읽지 않은 메시지 초기화
+            }}
+            unreadGeneralMessages={unreadGeneralMessages}
+            unreadMessages={unreadMessages}
+          />
+
+          {/* 채팅 박스 - 오른쪽 하단에 고정 */}
+          {isChatOpen && (
+            <div className="fixed bottom-20 right-4 z-50">
+              <ChatBox
+                messages={chatMessages}
+                input={chatInput}
+                setInput={onChatInputChange}
+                onSend={onChatSend}
+                privateChatTabs={privateChatTabs}
+                activeTab={activeTab}
+                onSetActiveTab={(tab: string) => {
+                  setActiveTab(tab);
+                  if (tab === 'general') {
+                    setUnreadGeneralMessages(0); // 전체 탭 클릭 시 읽지 않은 메시지 초기화
+                  }
+                }}
+                onClosePrivateTab={(targetUser: string) => {
+                  setPrivateChatTabs(prev => prev.filter(tab => tab !== targetUser));
+                  if (activeTab === targetUser) {
+                    setActiveTab('general');
+                  }
+                }}
+                privateMessages={privateMessages}
+                onSetPrivateMessages={setPrivateMessages}
+                unreadMessages={unreadMessages}
+                onSetUnreadMessages={setUnreadMessages}
+                unreadGeneralMessages={unreadGeneralMessages}
+              />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* 모든 모달들 (사용자 전체화면 모드에서는 숨김) */}
+      {!shouldHideUI && (
+        <MeetingModals
+          showCameraConfirm={showCameraConfirm}
+          showShareModal={showShareModal}
+          showStopShareConfirm={showStopShareConfirm}
+          showSwitchToCameraConfirm={showSwitchToCameraConfirm}
+          showCameraAction={showCameraAction}
+          selectedRemoteUser={selectedRemoteUser}
+          onCameraConfirm={handleCameraConfirmWithStart}
+          onCameraCancel={handleCameraCancel}
+          onCloseCameraAction={handleCloseCameraAction}
+          onSingleView={handleSingleViewAction}
+          onSplitView={handleSplitViewAction}
+          onReplaceView={handleReplaceViewAction}
+          onStopShareConfirm={handleStopShareConfirmWithStop}
+          onStopShareCancel={handleStopShareCancel}
+          onSwitchToCameraConfirm={handleSwitchToCameraConfirmWithSwitch}
+          onSwitchToCameraCancel={handleSwitchToCameraCancel}
+          onToggleScreenShare={handleScreenShareStart}
+          onCameraToggleRequest={handleCameraToggleRequest}
+          onShareModalClose={() => setShowShareModal(false)}
+          isSplitViewDisabled={isSplitViewDisabled}
+          isReplaceViewDisabled={isReplaceViewDisabled}
+        />
+      )}
+
+      {/* 설정 모달 (사용자 전체화면 모드에서는 숨김) */}
+      {!shouldHideUI && (
+        <SettingsModal
+          isOpen={showSettings}
+          onClose={handleCloseSettings}
+          isMicMuted={isMicMuted}
+          isHeadsetMuted={isHeadsetMuted}
+          onMicMuteToggle={onMicMuteToggle}
+          onHeadsetMuteToggle={onHeadsetMuteToggle}
+          onSave={() => {
+            // 설정 저장 시 알림 표시
+            if (onNotification) {
+              onNotification("설정이 저장되었습니다.");
+            }
+          }}
+        />
+      )}
     </>
   );
 };

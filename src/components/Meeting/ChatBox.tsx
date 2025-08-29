@@ -247,6 +247,38 @@ export const ChatBox = ({
     ? messages
     : (privateMessages[activeTab] || []);
 
+  // 날짜별로 메시지 그룹화 및 날짜 구분선 추가
+  const messagesWithDateSeparators = currentMessages.reduce((acc: any[], message: any, index: number) => {
+    const messageDate = new Date(message.timestamp);
+    const messageDateStr = messageDate.toLocaleDateString('ko-KR', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    // 첫 번째 메시지이거나 이전 메시지와 날짜가 다른 경우 날짜 구분선 추가
+    if (index === 0 || 
+        new Date(currentMessages[index - 1].timestamp).toLocaleDateString('ko-KR', {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric'
+        }) !== messageDateStr) {
+      acc.push({
+        type: 'date-separator',
+        date: messageDateStr,
+        key: `date-${index}`
+      });
+    }
+
+    acc.push({
+      ...message,
+      type: 'message',
+      key: `message-${index}`
+    });
+
+    return acc;
+  }, []);
+
   // 리사이즈 핸들러
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -463,14 +495,33 @@ export const ChatBox = ({
           </div>
         ) : (
           <>
-            {currentMessages.map(({ user, text, timestamp }, i) => {
+            {messagesWithDateSeparators.map((item, i) => {
+              if (item.type === 'date-separator') {
+                return (
+                  <div key={item.key} className="flex items-center justify-center my-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="flex-1 h-px bg-[#4F545C]"></div>
+                      <span className="text-xs text-[#72767D] font-medium px-3 py-1 bg-[#2F3136] rounded-full">
+                        {item.date}
+                      </span>
+                      <div className="flex-1 h-px bg-[#4F545C]"></div>
+                    </div>
+                  </div>
+                );
+              }
+
+              const { user, text, timestamp } = item;
+              const originalIndex = currentMessages.findIndex(msg => 
+                msg.user === user && msg.text === text && msg.timestamp === timestamp
+              );
               const isHighlighted =
-                searchResults.includes(i) &&
-                i === searchResults[searchIndex];
+                searchResults.includes(originalIndex) &&
+                originalIndex === searchResults[searchIndex];
+
               return (
                 <div
-                  key={i}
-                  data-message-index={i}
+                  key={item.key}
+                  data-message-index={originalIndex}
                   className={`chat-message ${
                     isHighlighted ? "bg-yellow-500 bg-opacity-20 rounded-lg p-2 border border-yellow-500" : ""
                   }`}

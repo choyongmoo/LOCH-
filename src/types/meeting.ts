@@ -48,14 +48,14 @@ export type ChatBoxProps = {
   input: string;
   setInput: (val: string) => void;
   onSend: () => void;
-  privateChatTabs: string[];
-  activeTab: string;
-  onSetActiveTab: (tab: string) => void;
-  onClosePrivateTab: (targetUser: string) => void;
-  privateMessages?: {[key: string]: ChatMessage[]};
-  onSetPrivateMessages?: (messages: {[key: string]: ChatMessage[]}) => void;
-  unreadMessages?: {[key: string]: number};
-  onSetUnreadMessages?: (unread: {[key: string]: number}) => void;
+  privateChatTabs?: string[];
+  activeTab?: string;
+  onSetActiveTab?: (tab: string) => void;
+  onClosePrivateTab?: (targetUser: string) => void;
+  privateMessages?: { [key: string]: ChatMessage[] };
+  onSetPrivateMessages?: (messages: { [key: string]: ChatMessage[] }) => void;
+  unreadMessages?: { [key: string]: number };
+  onSetUnreadMessages?: (unread: { [key: string]: number }) => void;
   unreadGeneralMessages?: number;
 };
 
@@ -64,14 +64,27 @@ export type UserDetailsModalProps = {
   visible: boolean;
   onClose: () => void;
   user: string | null;
+  userInfo?: {
+    name: string;
+    role: string;
+    department: string;
+    email: string;
+    status: string;
+    joinDate: string;
+    lastSeen: string;
+    avatar: string;
+    skills: string[];
+    projects: string[];
+    bio: string;
+  };
 };
 
 // MembersBar
 export type MembersBarProps = {
   members: string[];
   onOpenDetails: () => void;
-  onUserClick?: (name: string) => void;
-  onStartPrivateChat?: (targetUser: string) => void;
+  onUserClick: (name: string) => void;
+  onStartPrivateChat?: (name: string) => void;
 };
 
 // SlideNotification
@@ -104,4 +117,61 @@ export type PanelContentProps = {
   onCancelSwap?: () => void;
   // 전체 화면 관련
   onFullscreen?: (num: number) => void;
-}; 
+};
+
+// Supabase Meeting 관련 타입들
+export interface Meeting {
+  id: string;
+  room_name: string;
+  description: string | null;
+  host: string;
+  created_at: string;
+  updated_at: string;
+  status: 'waiting' | 'active' | 'ended';
+  max_participants: number;
+  is_private: boolean;
+  password?: string;
+}
+
+export interface MeetingMember {
+  id: number;
+  meeting_id: string;
+  user_id: number;
+  joined_at: string;
+  left_at?: string;
+  role: 'host' | 'participant' | 'observer';
+  is_active: boolean;
+  user?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
+export interface MeetingMessage {
+  id: number;
+  meeting_id: string;
+  sender_id: number;
+  content: string;
+  message_type: 'general' | 'private' | 'system';
+  receiver_id?: number;
+  created_at: string;
+  sender?: {
+    id: number;
+    name: string;
+    email: string;
+  };
+}
+
+export interface MeetingParticipant {
+  id: number;
+  name: string;
+  email: string;
+  is_local: boolean;
+  is_camera_on: boolean;
+  is_mic_on: boolean;
+  is_screen_sharing: boolean;
+  is_active: boolean;
+  joined_at: string;
+  role: 'host' | 'participant' | 'observer';
+} 

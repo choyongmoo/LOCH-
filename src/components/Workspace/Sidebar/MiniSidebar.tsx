@@ -44,8 +44,8 @@ const MiniSidebar = () => {
       .select("id, room_name, description")
       .single();
 
-    if (!error && data) {
-      // 호스트를 멤버십에 추가
+    if (data) {
+      // 내가 속한 meeting_members에 추가
       const { data: usersRow } = await supabase
         .from("users")
         .select("id")

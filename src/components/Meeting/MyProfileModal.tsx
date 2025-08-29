@@ -1,35 +1,10 @@
 import { useState, useRef, useEffect } from "react";
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 interface MyProfileModalProps {
   visible: boolean;
   onClose: () => void;
 }
-
-// localStorage에서 프로필 데이터 불러오기
-const loadProfileFromStorage = () => {
-  try {
-    const saved = localStorage.getItem('userProfile');
-    if (saved) {
-      return JSON.parse(saved);
-    }
-  } catch (error) {
-    console.error('프로필 데이터 로드 실패:', error);
-  }
-  
-  // 기본 프로필 데이터
-  return {
-    name: "홍길동",
-    role: "개발자",
-    department: "개발팀",
-    email: "hong@company.com",
-    status: "온라인",
-    joinDate: "2024-01-15",
-    avatar: "홍길동".slice(0, 2).toUpperCase(),
-    skills: ["React", "TypeScript", "Node.js"],
-    projects: ["LOCH 프로젝트", "웹 애플리케이션"],
-    bio: "프론트엔드 개발에 열정을 가진 개발자입니다. 사용자 경험을 개선하는 것에 관심이 많습니다."
-  };
-};
 
 // 프로필 타입 정의
 interface UserProfile {
@@ -45,30 +20,42 @@ interface UserProfile {
   bio: string;
 }
 
-// localStorage에 프로필 데이터 저장하기
-const saveProfileToStorage = (profile: UserProfile) => {
-  try {
-    localStorage.setItem('userProfile', JSON.stringify(profile));
-  } catch (error) {
-    console.error('프로필 데이터 저장 실패:', error);
-  }
+// Supabase에 프로필 데이터 저장하기 (향후 구현 예정)
+const saveProfileToSupabase = async (profile: UserProfile) => {
+  // TODO: Supabase 프로필 업데이트 로직 구현
 };
 
 export const MyProfileModal = ({ visible, onClose }: MyProfileModalProps) => {
   if (!visible) return null;
 
-  // 내 정보 상태 (localStorage에서 불러오기)
-  const [profile, setProfile] = useState<UserProfile>(loadProfileFromStorage);
+  // Supabase에서 사용자 프로필 가져오기
+  const { userProfile, updateStatus } = useUserProfile();
+  
+  // 내 정보 상태 (userProfile을 직접 사용)
+  const profile: UserProfile = {
+    name: userProfile.name || "사용자",
+    role: "개발자",
+    department: "개발팀",
+    email: "",
+    status: userProfile.status || "온라인",
+    joinDate: "2024-01-15",
+    avatar: userProfile.avatar || userProfile.name?.slice(0, 2).toUpperCase() || "사용",
+    skills: ["React", "TypeScript", "Node.js"],
+    projects: ["LOCH 프로젝트", "웹 애플리케이션"],
+    bio: "프론트엔드 개발에 열정을 가진 개발자입니다. 사용자 경험을 개선하는 것에 관심이 많습니다."
+  };
 
   const [isEditing, setIsEditing] = useState(false);
   const [editProfile, setEditProfile] = useState<UserProfile>({ ...profile });
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // 프로필이 변경될 때마다 localStorage에 저장
+  // 프로필이 변경될 때마다 Supabase에 저장 (향후 구현)
   useEffect(() => {
-    saveProfileToStorage(profile);
-  }, [profile]);
+    if (profile.name !== userProfile.name) {
+      saveProfileToSupabase(profile);
+    }
+  }, [profile, userProfile.name]);
 
   // 상태에 따른 색상과 배경색
   const getStatusColor = (status: string) => {
@@ -92,24 +79,21 @@ export const MyProfileModal = ({ visible, onClose }: MyProfileModalProps) => {
   // 상태 변경 함수
   const handleStatusChange = (newStatus: string) => {
     if (!isEditing) {
-      const updatedProfile = { ...profile, status: newStatus };
-      setProfile(updatedProfile);
       setShowStatusDropdown(false);
-      // localStorage에 즉시 저장
-      saveProfileToStorage(updatedProfile);
-      // 커스텀 이벤트 발생시켜 다른 컴포넌트들에게 알림
-      window.dispatchEvent(new CustomEvent('profileUpdated'));
+      
+      // useUserProfile의 상태도 업데이트 (localStorage에 자동 저장됨)
+      updateStatus(newStatus);
+      
+      // Supabase에 즉시 저장 (향후 구현)
+      const updatedProfile = { ...profile, status: newStatus };
+      saveProfileToSupabase(updatedProfile);
     }
   };
 
   const handleSave = () => {
-    const updatedProfile = { ...editProfile };
-    setProfile(updatedProfile);
     setIsEditing(false);
-    // localStorage에 즉시 저장
-    saveProfileToStorage(updatedProfile);
-    // 커스텀 이벤트 발생시켜 다른 컴포넌트들에게 알림
-    window.dispatchEvent(new CustomEvent('profileUpdated'));
+    // Supabase에 즉시 저장 (향후 구현)
+    saveProfileToSupabase(editProfile);
   };
 
   const handleCancel = () => {

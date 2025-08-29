@@ -1,8 +1,11 @@
 
 import type { UserDetailsModalProps } from "@/pages/Meeting/types";
+import { useUserProfile } from '@/hooks/useUserProfile';
 
 export const UserDetailsModal = ({ visible, onClose, user, userInfo: propUserInfo }: UserDetailsModalProps) => {
   if (!visible || !user) return null;
+
+  const { userProfile } = useUserProfile();
 
   // 사용자 정보 (props로 받거나 기본값 사용)
   const userInfo = propUserInfo || {
@@ -10,7 +13,7 @@ export const UserDetailsModal = ({ visible, onClose, user, userInfo: propUserInf
     role: "개발자",
     department: "개발팀",
     email: `${user.toLowerCase().replace(/\s+/g, '')}@company.com`,
-    status: "온라인",
+    status: userProfile.status, // useUserProfile에서 가져온 상태 사용
     joinDate: "2024-01-15",
     lastSeen: "방금 전",
     avatar: user.slice(0, 2).toUpperCase(),

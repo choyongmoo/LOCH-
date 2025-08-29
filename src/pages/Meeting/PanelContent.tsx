@@ -22,6 +22,9 @@ export const PanelContent = ({
   onCancelSwap,
   onFullscreen,
 }: PanelContentProps & { maxPanelsReached?: boolean }) => {
+  // 디버깅: onFullscreen prop 값 확인
+  console.log('PanelContent render:', { num, onFullscreen: !!onFullscreen, onFullscreenType: typeof onFullscreen });
+  
   // 상태 없음, props로만 동작
   return (
     <div
@@ -58,7 +61,7 @@ export const PanelContent = ({
         {/* '여기와 바꾸기' 버튼 */}
         {showSwapHere && (
           <button
-            className="w-20 h-7 flex items-center justify-center rounded-full bg-[#5865F2] text-white hover:bg-[#4752c4] transition text-xs shadow border border-[#5865F2] px-2"
+            className="w-20 h-7 flex items-center justify-center rounded-full bg-[#5865F2] text-white hover:bg-[#4752c4] transition text-xs shadow border border-gray-600 px-2"
             title="이 패널과 앱 위치를 변경합니다"
             onClick={onSwapHere}
           >위치 변경</button>
@@ -86,24 +89,37 @@ export const PanelContent = ({
           title="모든 화면 닫기"
           onClick={onCloseAll}
         >□</button>
+        {/* 분할 버튼 - 4개 화면일 때 상태 개선 */}
         <button
-          className={`w-7 h-7 flex items-center justify-center rounded-full bg-[#5865F2] text-white transition text-xs shadow border border-[#5865F2] ${maxPanelsReached ? 'opacity-50 cursor-not-allowed' : 'hover:bg-[#4752c4]'}`}
-          title="화면 추가(분할)"
+          className={`w-7 h-7 flex items-center justify-center rounded-full transition text-xs shadow border ${
+            maxPanelsReached 
+              ? 'bg-gray-500 text-gray-300 cursor-not-allowed border-gray-400' 
+              : 'bg-[#5865F2] text-white hover:bg-[#4752c4] border-[#5865F2]'
+          }`}
+          title={maxPanelsReached ? "최대 4개 화면까지 분할 가능합니다" : "화면 추가(분할)"}
           onClick={() => !maxPanelsReached && onAdd(num)}
           disabled={maxPanelsReached}
         >+</button>
       </div>
       
-      {/* 전체 화면 버튼 (우측 하단) */}
-      {onFullscreen && (
-        <div className="absolute bottom-4 right-2 z-50">
-          <button
-            className="w-7 h-7 flex items-center justify-center rounded-full bg-gray-700 text-white hover:bg-[#5865F2] transition text-xs shadow border border-gray-600"
-            title="전체 화면으로 보기"
-            onClick={() => onFullscreen(num)}
-          >⛶</button>
-        </div>
-      )}
+      {/* 전체 화면 버튼 (우측 하단) - Discord 스타일 */}
+      <div className="absolute bottom-4 right-2 z-[9999]">
+        <button
+          className={`w-12 h-12 flex items-center justify-center rounded-full transition-all duration-200 text-sm shadow-2xl border-2 hover:scale-110 ${
+            onFullscreen 
+              ? 'bg-[#5865F2] text-white hover:bg-[#4752c4] border-[#5865F2] hover:border-[#4752c4]' 
+              : 'bg-gray-600 text-gray-300 cursor-not-allowed border-gray-500'
+          }`}
+          title={onFullscreen ? "전체 화면으로 보기 (ESC로 종료)" : "전체화면 기능을 사용할 수 없습니다"}
+          onClick={() => onFullscreen && onFullscreen(num)}
+          disabled={!onFullscreen}
+        >
+          <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 11-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12z" clipRule="evenodd" />
+          </svg>
+        </button>
+      </div>
+      
       {/* 인스턴스 제목 표시 */}
       {title && (
         <div
@@ -124,6 +140,13 @@ export const PanelContent = ({
       <div className="flex-grow flex items-center justify-center text-white text-xl select-none overflow-auto">
         {app ? <AppRenderer app={app} /> : <div className="text-gray-400">여기로 앱을 드래그하세요</div>}
       </div>
+      
+      {/* 4개 화면일 때 안내 메시지 */}
+      {maxPanelsReached && (
+        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2 text-xs text-gray-400 bg-gray-800 rounded-full px-3 py-1 border border-gray-600">
+          최대 분할 도달
+        </div>
+      )}
     </div>
   );
 };

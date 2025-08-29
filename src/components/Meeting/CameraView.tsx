@@ -8,10 +8,12 @@ interface CameraViewProps {
   onCameraStartRequest?: () => void; // 카메라 시작 요청 (확인 모달 열기)
   onToggleMic?: () => void;
   onToggleScreenShare?: () => void;
+  onStopScreenShareRequest?: () => void; // 화면 공유 중지 요청 (확인 모달 열기)
   isCameraOn?: boolean;
   isMicOn?: boolean;
   isScreenSharing?: boolean;
   screenShareStream?: MediaStream | null;
+  onFullscreen?: (userInfo: { userName: string; isLocal: boolean; isScreenSharing: boolean; screenShareStream?: MediaStream | null; cameraStream?: MediaStream | null }) => void; // 사용자 정보 전달
 }
 
 export const CameraView: React.FC<CameraViewProps> = ({
@@ -22,10 +24,12 @@ export const CameraView: React.FC<CameraViewProps> = ({
   onCameraStartRequest,
   onToggleMic,
   onToggleScreenShare,
+  onStopScreenShareRequest,
   isCameraOn = true,
   isMicOn = true,
   isScreenSharing = false,
-  screenShareStream = null
+  screenShareStream = null,
+  onFullscreen
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
@@ -48,7 +52,6 @@ export const CameraView: React.FC<CameraViewProps> = ({
       setIsLoading(false);
       // 화면 공유 시작 시 에러 상태 초기화 (카메라 오류에서 화면 공유로 전환)
       setError(null);
-      console.log('화면 공유 모드로 전환됨, 에러 상태 초기화');
     } else if (isLocal && !isCameraOn && !isScreenSharing) {
       // 카메라도 꺼져있고 화면 공유도 하지 않는 상태에서는 로딩 상태 해제
       setIsLoading(false);
@@ -64,15 +67,12 @@ export const CameraView: React.FC<CameraViewProps> = ({
     };
   }, [isLocal, isCameraOn, isScreenSharing]);
 
-  // 화면 공유 중일 때 로컬 사용자도 화면 공유 스트림을 볼 수 있도록 처리
+  // 화면 공유 중일 때 로컬 사용자도 화메라 스트림을 볼 수 있도록 처리
   useEffect(() => {
-    console.log('화면 공유 useEffect 실행:', { isLocal, isScreenSharing, hasStream: !!screenShareStream });
-    
     if (isLocal && isScreenSharing && screenShareStream && videoRef.current) {
-      console.log('화면 공유 스트림 설정 중:', screenShareStream);
       
       videoRef.current.srcObject = screenShareStream;
-      // 화면 공유 스트림 설정 시 에러 상태 초기화
+      // 화메라 공유 스트림 설정 시 에러 상태 초기화
       setError(null);
       // 스트림이 설정되면 즉시 로딩 완료 처리
       setIsLoading(false);
@@ -80,17 +80,15 @@ export const CameraView: React.FC<CameraViewProps> = ({
       setForceUpdate(prev => prev + 1);
       
       const handleLoadedMetadata = () => {
-        console.log('화면 공유 비디오 메타데이터 로드 완료');
         setIsLoading(false);
       };
       
       const handleCanPlay = () => {
-        console.log('화면 공유 비디오 재생 준비 완료');
         setIsLoading(false);
       };
       
       const handleError = (e: Event) => {
-        console.error('화면 공유 비디오 오류:', e);
+        console.error('화메라 공유 비디오 오류:', e);
         setIsLoading(false);
       };
       
@@ -105,8 +103,6 @@ export const CameraView: React.FC<CameraViewProps> = ({
           videoRef.current.removeEventListener('error', handleError);
         }
       };
-    } else if (isLocal && isScreenSharing && !screenShareStream) {
-      console.log('화면 공유 중이지만 스트림이 없음');
     }
   }, [screenShareStream, isLocal, isScreenSharing]);
 
@@ -161,12 +157,12 @@ export const CameraView: React.FC<CameraViewProps> = ({
   const handleScreenShareClick = async () => {
     if (onToggleScreenShare) {
       setIsScreenShareLoading(true);
-      // 화면 공유 시작 시 에러 상태 미리 초기화
+      // 화메라 공유 시작 시 에러 상태 미리 초기화
       setError(null);
       try {
         await onToggleScreenShare();
       } catch (error) {
-        console.error('화면 공유 오류:', error);
+        console.error('화메라 공유 오류:', error);
       } finally {
         setIsScreenShareLoading(false);
       }
@@ -198,7 +194,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
                     : 'bg-[#57F287] hover:bg-[#3ba55c]'
                 }`}
               >
-                {isScreenShareLoading ? '화면 공유 준비 중...' : '화면 공유 시작'}
+                {isScreenShareLoading ? '화메라 공유 준비 중...' : '화메라 공유 시작'}
               </button>
               <button
                 onClick={() => {
@@ -206,7 +202,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
                   if (onToggleCamera) {
                     onToggleCamera();
                   }
-                  // 화면 공유 중지
+                  // 화메라 공유 중지
                   if (onToggleScreenShare && isScreenSharing) {
                     onToggleScreenShare();
                   }
@@ -247,7 +243,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
           <div className="text-white text-3xl font-bold mb-2">{getInitials(userName)}</div>
           <div className="text-white text-lg">{userName}</div>
           
-          {/* 로컬 사용자인 경우 화면 공유/카메라 시작 버튼 */}
+          {/* 로컬 사용자인 경우 화메라 시작/중지 버튼 */}
           {isLocal && (
             <div className="mt-4 space-y-2">
               <button
@@ -265,7 +261,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
                     : 'bg-white/20 hover:bg-white/30'
                 }`}
               >
-                {isScreenShareLoading ? '화면 공유 준비 중...' : '화면 공유 시작'}
+                {isScreenShareLoading ? '화메라 공유 준비 중...' : '화메라 공유 시작'}
               </button>
             </div>
           )}
@@ -295,15 +291,13 @@ export const CameraView: React.FC<CameraViewProps> = ({
               muted={isLocal}
               className="w-full h-full object-contain bg-gray-900"
               onLoadedMetadata={() => {
-                console.log('화면 공유 비디오 메타데이터 로드됨');
                 setIsLoading(false);
               }}
               onCanPlay={() => {
-                console.log('화면 공유 비디오 재생 가능');
                 setIsLoading(false);
               }}
               onError={(e) => {
-                console.error('화면 공유 비디오 오류:', e);
+                console.error('화메라 공유 비디오 오류:', e);
                 setIsLoading(false);
               }}
             />
@@ -311,7 +305,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
             <div className="w-full h-full flex items-center justify-center bg-gray-900">
               <div className="text-center">
                 <div className="text-4xl mb-2">📺</div>
-                <div className="text-[#DCDDDE] text-sm mb-1">화면 공유 준비 중</div>
+                <div className="text-[#DCDDDE] text-sm mb-1">화메라 공유 준비 중</div>
                 <div className="text-[#72767D] text-xs">잠시만 기다려주세요...</div>
                 <div className="text-[#72767D] text-xs mt-2">
                   스트림: {screenShareStream ? '있음' : '없음'}
@@ -339,7 +333,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
       {/* 디버깅 정보 (개발 중에만 표시) */}
       {isLocal && isScreenSharing && (
         <div className="absolute top-2 left-2 bg-black/70 text-white text-xs p-2 rounded">
-          화면 공유 스트림: {screenShareStream ? '있음' : '없음'}
+          화메라 공유 스트림: {screenShareStream ? '있음' : '없음'}
           <br />
           비디오 트랙: {screenShareStream?.getVideoTracks().length || 0}개
           <br />
@@ -354,61 +348,84 @@ export const CameraView: React.FC<CameraViewProps> = ({
       {/* 사용자 정보 오버레이 */}
       <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3">
         <div className="flex items-center justify-between">
+          {/* 왼쪽 - 사용자 정보 */}
           <div className="flex items-center space-x-2">
             <div className="w-2 h-2 bg-green-500 rounded-full"></div>
             <span className="text-white text-sm font-medium">{userName}</span>
             {isLocal && <span className="text-[#72767D] text-xs">(나)</span>}
             {isLocal && isScreenSharing && (
-              <span className="text-[#72767D] text-xs">화면 공유 중</span>
+              <span className="text-[#72767D] text-xs">화메라 공유 중</span>
             )}
           </div>
           
-          {/* 컨트롤 버튼들 */}
-          {isLocal && (
-            <div className="flex items-center space-x-1">
-              <button
-                onClick={onToggleMic}
-                className={`p-1.5 rounded transition-colors ${
-                  isMicOn 
-                    ? 'bg-[#36393F] text-[#DCDDDE] hover:bg-[#40444B]' 
-                    : 'bg-red-500 text-white'
-                }`}
-                title={isMicOn ? "마이크 끄기" : "마이크 켜기"}
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C13.1 2 14 2.9 14 4V8C14 9.1 13.1 10 12 10C10.9 10 10 9.1 10 8V4C10 2.9 10.9 2 12 2ZM18 10V8C18 4.69 15.31 2 12 2C8.69 2 6 4.69 6 8V10C6 13.31 8.69 16 12 16C15.31 16 18 13.31 18 10ZM12 18C8.69 18 6 20.69 6 24H18C18 20.69 15.31 18 12 18Z"/>
-                </svg>
-              </button>
-              
-              <button
-                onClick={onToggleCamera}
-                className={`p-1.5 rounded transition-colors ${
-                  isCameraOn 
-                    ? 'bg-[#36393F] text-[#DCDDDE] hover:bg-[#40444B]' 
-                    : 'bg-red-500 text-white'
-                }`}
-                title={isScreenSharing ? "카메라로 전환" : (isCameraOn ? "카메라 끄기" : "카메라 켜기")}
-              >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
-                </svg>
-              </button>
+          {/* 오른쪽 - 모든 컨트롤 버튼들을 하나의 그룹으로 */}
+          <div className="flex items-center space-x-1">
+            {/* 로컬 사용자 컨트롤 버튼들 */}
+            {isLocal && (
+              <>
+                <button
+                  onClick={onToggleMic}
+                  className={`p-1.5 rounded transition-colors ${
+                    isMicOn 
+                      ? 'bg-[#36393F] text-[#DCDDDE] hover:bg-[#40444B]' 
+                      : 'bg-red-500 text-white'
+                  }`}
+                  title={isMicOn ? "마이크 끄기" : "마이크 켜기"}
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C13.1 2 14 2.9 14 4V8C14 9.1 13.1 10 12 10C10.9 10 10 9.1 10 8V4C10 2.9 10.9 2 12 2ZM18 10V8C18 4.69 15.31 2 12 2C8.69 2 6 4.69 6 8V10C6 13.31 8.69 16 12 16C15.31 16 18 13.31 18 10ZM12 18C8.69 18 6 20.69 6 24H18C18 20.69 15.31 18 12 18Z"/>
+                  </svg>
+                </button>
+                
+                <button
+                  onClick={onToggleCamera}
+                  className={`p-1.5 rounded transition-colors ${
+                    isCameraOn 
+                      ? 'bg-[#36393F] text-[#DCDDDE] hover:bg-[#40444B]' 
+                      : 'bg-red-500 text-white'
+                  }`}
+                  title={isScreenSharing ? "카메라로 전환" : (isCameraOn ? "카메라 끄기" : "카메라 켜기")}
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/>
+                  </svg>
+                </button>
 
+                <button
+                  onClick={isScreenSharing ? onStopScreenShareRequest : onToggleScreenShare}
+                  className={`p-1.5 rounded transition-colors ${
+                    isScreenSharing
+                      ? 'bg-red-500 text-white hover:bg-red-600'
+                      : 'bg-[#36393F] text-[#DCDDDE] hover:bg-[#40444B]'
+                  }`}
+                  title={isScreenSharing ? "화메라 공유 중지" : "화메라 공유"}
+                >
+                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5l-1 1v2h8v-2l-1-1h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H3V5h18v10z"/>
+                  </svg>
+                </button>
+              </>
+            )}
+
+            {/* 전체 화면 버튼 - 모든 사용자에게 표시 */}
+            {onFullscreen && (
               <button
-                onClick={onToggleScreenShare}
-                className={`p-1.5 rounded transition-colors ${
-                  isScreenSharing
-                    ? 'bg-red-500 text-white hover:bg-red-600'
-                    : 'bg-[#36393F] text-[#DCDDDE] hover:bg-[#40444B]'
-                }`}
-                title={isScreenSharing ? "화면 공유 중지" : "화면 공유"}
+                onClick={() => onFullscreen({ 
+                  userName, 
+                  isLocal, 
+                  isScreenSharing,
+                  screenShareStream: isScreenSharing ? screenShareStream : null,
+                  cameraStream: isCameraOn ? (videoRef.current?.srcObject as MediaStream) : null
+                })}
+                className="p-1.5 rounded transition-colors bg-[#5865F2] text-white hover:bg-[#4752c4]"
+                title="전체 화면으로 보기 (ESC로 종료)"
               >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5l-1 1v2h8v-2l-1-1h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H3V5h18v10z"/>
+                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M3 4a1 1 0 011-1h4a1 1 0 010 2H6.414l2.293 2.293a1 1 0 11-1.414 1.414L5 6.414V8a1 1 0 01-2 0V4zm9 1a1 1 0 010-2h4a1 1 0 011 1v4a1 1 0 01-2 0V6.414l-2.293 2.293a1 1 0 11-1.414-1.414L13.586 5H12z" clipRule="evenodd" />
                 </svg>
               </button>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 

@@ -13,20 +13,22 @@ interface CameraUser {
 }
 
 interface CameraLayoutProps {
-  localUser: CameraUser;
-  remoteUsers: CameraUser[];
-  onToggleCamera?: () => void;
-  onCameraStartRequest?: () => void; // 카메라 시작 요청 (확인 모달 열기)
-  onToggleMic?: () => void;
-  onToggleScreenShare?: () => void;
-  onUserClick?: (userId: string) => void;
-  selectedUserId?: string | null;
-  onSelectedUserChange?: (userId: string | null) => void;
-  layout?: 'single' | 'grid' | 'side';
-  onLayoutChange?: (layout: 'single' | 'grid' | 'side') => void;
-  userOrder?: string[]; // 사용자 순서를 제어하는 배열 (userId들의 순서)
-  onClose?: () => void; // 닫기 핸들러 - 선택된 화면 닫기 또는 카메라/화면공유 종료
+  localUser: any;
+  remoteUsers: any[];
+  onToggleCamera: () => void;
+  onCameraStartRequest: () => void;
+  onToggleMic: () => void;
+  onToggleScreenShare: () => void;
+  onStopScreenShareRequest?: () => void; // 화면 공유 중지 요청 (확인 모달 열기)
+  onUserClick: (userId: string) => void;
+  selectedUserId: string | null;
+  onSelectedUserChange: (userId: string | null) => void;
+  layout: 'single' | 'grid' | 'side';
+  onLayoutChange: (layout: 'single' | 'grid' | 'side') => void;
+  userOrder: string[];
+  onClose: () => void;
   onRemoveUserFromView?: (userId: string) => void; // 사용자 화면에서 제거 핸들러
+  onFullscreen?: (userInfo: { userName: string; isLocal: boolean; isScreenSharing: boolean; screenShareStream?: MediaStream | null; cameraStream?: MediaStream | null }) => void; // 사용자 정보 전달
 }
 
 export const CameraLayout: React.FC<CameraLayoutProps> = ({
@@ -36,6 +38,7 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
   onCameraStartRequest,
   onToggleMic,
   onToggleScreenShare,
+  onStopScreenShareRequest,
   // onUserClick, // 현재 사용하지 않음
   selectedUserId,
   onSelectedUserChange,
@@ -43,7 +46,8 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
   onLayoutChange,
   userOrder,
   onClose,
-  onRemoveUserFromView
+  onRemoveUserFromView,
+  onFullscreen
 }) => {
   const [internalLayout, setInternalLayout] = useState<'single' | 'grid' | 'side'>('single');
   const [internalSelectedUser, setInternalSelectedUser] = useState<string | null>(null);
@@ -207,10 +211,12 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
               onCameraStartRequest={onCameraStartRequest}
               onToggleMic={onToggleMic}
               onToggleScreenShare={onToggleScreenShare}
+              onStopScreenShareRequest={onStopScreenShareRequest}
               isCameraOn={localUser.isCameraOn}
               isMicOn={localUser.isMicOn}
               isScreenSharing={localUser.isScreenSharing}
               screenShareStream={localUser.screenShareStream}
+              onFullscreen={(userInfo) => onFullscreen?.(userInfo)}
             />
           </div>
         </div>
@@ -248,10 +254,12 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
               onCameraStartRequest={displayUser.isLocal ? onCameraStartRequest : undefined}
               onToggleMic={displayUser.isLocal ? onToggleMic : undefined}
               onToggleScreenShare={displayUser.isLocal ? onToggleScreenShare : undefined}
+              onStopScreenShareRequest={onStopScreenShareRequest}
               isCameraOn={displayUser.isCameraOn}
               isMicOn={displayUser.isMicOn}
               isScreenSharing={displayUser.isScreenSharing}
               screenShareStream={displayUser.screenShareStream}
+              onFullscreen={(userInfo) => onFullscreen?.(userInfo)}
             />
           </div>
         </div>
@@ -277,10 +285,12 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
               onCameraStartRequest={user.isLocal ? onCameraStartRequest : undefined}
               onToggleMic={user.isLocal ? onToggleMic : undefined}
               onToggleScreenShare={user.isLocal ? onToggleScreenShare : undefined}
+              onStopScreenShareRequest={onStopScreenShareRequest}
               isCameraOn={user.isCameraOn}
               isMicOn={user.isMicOn}
               isScreenSharing={user.isScreenSharing}
               screenShareStream={user.screenShareStream}
+              onFullscreen={(userInfo) => onFullscreen?.(userInfo)}
             />
             
             {/* 사용자 선택 표시 */}
@@ -317,10 +327,12 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
             onToggleCamera={mainUser.isLocal ? onToggleCamera : undefined}
             onToggleMic={mainUser.isLocal ? onToggleMic : undefined}
             onToggleScreenShare={mainUser.isLocal ? onToggleScreenShare : undefined}
+            onStopScreenShareRequest={onStopScreenShareRequest}
             isCameraOn={mainUser.isCameraOn}
             isMicOn={mainUser.isMicOn}
             isScreenSharing={mainUser.isScreenSharing}
             screenShareStream={mainUser.screenShareStream}
+            onFullscreen={(userInfo) => onFullscreen?.(userInfo)}
           />
         </div>
         
@@ -343,10 +355,12 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
                   onCameraStartRequest={user.isLocal ? onCameraStartRequest : undefined}
                   onToggleMic={user.isLocal ? onToggleMic : undefined}
                   onToggleScreenShare={user.isLocal ? onToggleScreenShare : undefined}
+                  onStopScreenShareRequest={onStopScreenShareRequest}
                   isCameraOn={user.isCameraOn}
                   isMicOn={user.isMicOn}
                   isScreenSharing={user.isScreenSharing}
                   screenShareStream={user.screenShareStream}
+                  onFullscreen={(userInfo) => onFullscreen?.(userInfo)}
                 />
               </div>
             ))}
