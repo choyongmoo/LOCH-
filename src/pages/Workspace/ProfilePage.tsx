@@ -104,7 +104,7 @@ const ProfilePage = () => {
       const { data } = await supabase.auth.getUser();
       const userId = data.user?.id;
       const userEmail = data.user?.email ?? null;
-      console.log("탈퇴 요청 userId:", userId); // ← 콘솔 출력 추가
+      // ← 콘솔 출력 추가
       if (!userId) {
         setDeleteError("로그인 정보가 없습니다.");
         return;
@@ -175,7 +175,11 @@ const ProfilePage = () => {
       await upsertProfile({ nickname: trimmed });
       setProfileName(trimmed);
       setShowNicknameModal(false);
-      try { window.dispatchEvent(new CustomEvent('friends-updated')); } catch {}
+      // 프로필 업데이트 이벤트 발생
+      try { 
+        window.dispatchEvent(new CustomEvent('friends-updated')); 
+        window.dispatchEvent(new CustomEvent('profile-updated')); 
+      } catch {}
     } catch {
       setNickError("별명 저장 중 오류가 발생했습니다.");
     } finally {
@@ -211,7 +215,11 @@ const ProfilePage = () => {
       await upsertProfile({ accent_color: value });
       setProfileColor(value);
       setShowColorModal(false);
-      try { window.dispatchEvent(new CustomEvent('friends-updated')); } catch {}
+      // 프로필 업데이트 이벤트 발생
+      try { 
+        window.dispatchEvent(new CustomEvent('friends-updated')); 
+        window.dispatchEvent(new CustomEvent('profile-updated')); 
+      } catch {}
     } catch {
       setColorError("색상 저장 중 오류가 발생했습니다.");
     } finally {

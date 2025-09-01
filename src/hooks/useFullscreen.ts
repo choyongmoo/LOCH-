@@ -10,8 +10,6 @@ export const useFullscreen = () => {
     const targetPanel = panels.find(p => p.id === panelId);
     if (!targetPanel) return;
 
-    console.log('전체화면 진입:', panelId, targetPanel);
-
     try {
       // 원본 패널 상태 저장
       setOriginalPanels([...panels]);
@@ -41,16 +39,12 @@ export const useFullscreen = () => {
           setIsBrowserFullscreen(true);
         }
       } catch (error) {
-        console.log('브라우저 전체화면은 지원되지 않지만, 패널 전체화면은 활성화됩니다.');
-      }
+        }
     } catch (error) {
-      console.error('전체화면 진입 실패:', error);
-    }
+      }
   }, []);
 
   const exitFullscreen = useCallback(async () => {
-    console.log('전체화면 종료');
-    
     try {
       // 브라우저 전체화면 종료
       if (document.exitFullscreen) {
@@ -63,8 +57,7 @@ export const useFullscreen = () => {
         await (document as any).msExitFullscreen();
       }
     } catch (error) {
-      console.error('브라우저 전체화면 종료 실패:', error);
-    } finally {
+      } finally {
       setIsBrowserFullscreen(false);
       setFullscreenPanel(null);
       setOriginalPanels([]);
@@ -84,7 +77,6 @@ export const useFullscreen = () => {
     
     // 사용자가 ESC 키나 브라우저 UI로 전체화면을 종료한 경우
     if (!isFullscreen && fullscreenPanel) {
-      console.log('브라우저 전체화면 종료 감지, 패널 전체화면도 종료');
       setFullscreenPanel(null);
       setOriginalPanels([]);
     }
@@ -93,7 +85,6 @@ export const useFullscreen = () => {
   // ESC 키 감지
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (event.key === 'Escape' && fullscreenPanel) {
-      console.log('ESC 키 감지, 전체화면 종료');
       exitFullscreen();
     }
   }, [fullscreenPanel, exitFullscreen]);

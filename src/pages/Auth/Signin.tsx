@@ -51,8 +51,7 @@ export const Signin = () => {
           }
         }
       } catch (err) {
-        console.warn("auth callback 처리 실패", err);
-      }
+        }
     };
 
     void handleAuthCallbackInSignin();
@@ -78,7 +77,6 @@ export const Signin = () => {
         navigate("/workspace", { replace: true });
       }
     } catch (err) {
-      console.error(err);
       setError("로그인 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
@@ -99,7 +97,6 @@ export const Signin = () => {
         },
       });
     } catch (err) {
-      console.error(err);
       setError("Google 로그인에 실패했습니다.");
     }
   };

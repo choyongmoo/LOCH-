@@ -13,14 +13,10 @@ export const usePanels = () => {
   useEffect(() => {
     if (panels.length !== 4 || pendingSplitCol === null) return;
     
-    console.log('4개 화면 분할 완료, pendingSplitCol:', pendingSplitCol);
-    
     if (pendingSplitCol === 0) {
-      console.log('왼쪽 col 리사이저 초기화');
       setRowSizesLeft([50, 50]);
     }
     if (pendingSplitCol === 1) {
-      console.log('오른쪽 col 리사이저 초기화');
       setRowSizesRight([50, 50]);
     }
     setPendingSplitCol(null);
@@ -28,11 +24,8 @@ export const usePanels = () => {
 
   const handlePanelSplit = (panelId: number, _direction: 'row' | 'col') => {
     if (panels.length >= 4) {
-      console.log('최대 4개 화면 도달, 분할 불가');
       return;
     }
-    
-    console.log('패널 분할 시작:', panelId, '현재 패널 수:', panels.length);
     
     setPanels(prev => {
       const target = prev.find(p => p.id === panelId);
@@ -41,7 +34,6 @@ export const usePanels = () => {
       
       // 1개 → 2개: 좌우 분할
       if (prev.length === 1) {
-        console.log('1개 → 2개: 좌우 분할');
         setColSizes([50, 50]);
         setRowSizesLeft([100, 0]);
         setRowSizesRight([100, 0]);
@@ -54,7 +46,6 @@ export const usePanels = () => {
       // 2개 → 3개: 한쪽만 상하 분할
       if (prev.length === 2) {
         const isLeft = target.col === 0;
-        console.log('2개 → 3개: 상하 분할, isLeft:', isLeft);
         setRowSizesLeft([50, 50]);
         setRowSizesRight([50, 50]);
         if (isLeft) {
@@ -74,16 +65,12 @@ export const usePanels = () => {
       
       // 3개 → 4개: 남은 쪽 아래에 새 패널 생성 (로직 단순화)
       if (prev.length === 3) {
-        console.log('3개 → 4개: 4개 분할 시작');
         // 각 col별 패널 개수 확인
         const lefts = prev.filter(p => p.col === 0);
         const rights = prev.filter(p => p.col === 1);
         
-        console.log('분할 전 상태 - lefts:', lefts.length, 'rights:', rights.length);
-        
         if (lefts.length === 1 && rights.length === 2) {
           // 왼쪽이 1개, 오른쪽이 2개 → 왼쪽 아래에 새 패널
-          console.log('왼쪽 아래에 새 패널 생성');
           const newPanels = [
             { ...lefts[0], row: 0, rowSpan: 1, col: 0, colSpan: 1 },
             { id: newId, app: undefined, title: undefined, row: 1, rowSpan: 1, col: 0, colSpan: 1 },
@@ -93,7 +80,6 @@ export const usePanels = () => {
           return newPanels;
         } else if (rights.length === 1 && lefts.length === 2) {
           // 오른쪽이 1개, 왼쪽이 2개 → 오른쪽 아래에 새 패널
-          console.log('오른쪽 아래에 새 패널 생성');
           const newPanels = [
             ...lefts.map((p, i) => ({ ...p, row: i, rowSpan: 1, col: 0, colSpan: 1 })),
             { ...rights[0], row: 0, rowSpan: 1, col: 1, colSpan: 1 },
@@ -103,7 +89,6 @@ export const usePanels = () => {
           return newPanels;
         } else {
           // 예외: 이미 2:2라면 기존 로직 유지
-          console.log('예외: 2:2 분할');
           const grid = [[0, 0], [0, 1], [1, 0], [1, 1]];
           const used = prev.map(p => `${p.row},${p.col}`);
           const empty = grid.find(([r, c]) => !used.includes(`${r},${c}`));
@@ -119,7 +104,6 @@ export const usePanels = () => {
 
   const handlePanelClose = (panelId: number, onlyNum?: number) => {
     if (panelId === -1) {
-      console.log('모든 패널 닫기');
       setPanels([]);
       setColSizes([100, 0]);
       setRowSizesLeft([100, 0]);
@@ -127,7 +111,6 @@ export const usePanels = () => {
       return;
     }
     if (panelId === -2 && onlyNum !== undefined) {
-      console.log('다른 패널들 닫기, 남은 패널:', onlyNum);
       setPanels(prev => {
         const remainingPanel = prev.find(p => p.id === onlyNum);
         if (!remainingPanel) return [];
@@ -140,8 +123,6 @@ export const usePanels = () => {
       });
       return;
     }
-    
-    console.log('패널 닫기:', panelId);
     
     setPanels(prev => {
       const next = prev.filter(p => p.id !== panelId);
@@ -204,14 +185,12 @@ export const usePanels = () => {
   };
 
   const handleResize = (type: 'col' | 'rowLeft' | 'rowRight', values: number[]) => {
-    console.log('리사이저 조정:', type, values);
     if (type === 'col') setColSizes(values);
     else if (type === 'rowLeft') setRowSizesLeft(values);
     else if (type === 'rowRight') setRowSizesRight(values);
   };
 
   const createInitialPanel = () => {
-    console.log('초기 패널 생성');
     setPanels([{ id: 1, app: undefined, title: undefined, row: 0, col: 0, rowSpan: 2, colSpan: 2 }]);
     setColSizes([100, 0]);
     setRowSizesLeft([50, 50]);

@@ -46,8 +46,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
         setSelectedVideoDevice(videoInputs[0].deviceId);
       }
     } catch (error) {
-      console.error('비디오 장치를 가져오는데 실패했습니다:', error);
-    }
+      }
   };
 
   useEffect(() => {

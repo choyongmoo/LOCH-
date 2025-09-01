@@ -71,12 +71,10 @@ export const Signup = () => {
         try {
           await supabase.auth.signOut();
         } catch (err) {
-          console.warn("signOut 실패", err);
-        }
+          }
         window.location.href = "/signin";
       }
     } catch (err) {
-      console.error(err);
       setError("회원가입 중 오류가 발생했습니다.");
     } finally {
       setSubmitting(false);

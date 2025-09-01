@@ -63,8 +63,7 @@ const MiniSidebar = () => {
       setIsNameModalOpen(false);
       window.dispatchEvent(new Event('meetings-updated'));
     } else {
-      console.error(error);
-    }
+      }
   };
 
   const reloadMeetings = useCallback(async (): Promise<void> => {

@@ -39,7 +39,6 @@ export const useInstanceManagement = (
   const confirmDelete = () => {
     if (selectedInstance && setInstances) {
       setInstances(prev => prev.filter(instance => instance.id !== selectedInstance.id));
-      console.log('인스턴스 삭제:', selectedInstance.id);
       setShowDeleteConfirm(false);
       setShowInstanceModal(false);
       setSelectedInstance(null);
@@ -65,7 +64,6 @@ export const useInstanceManagement = (
         ));
       }
       
-      console.log('인스턴스 제목 변경:', selectedInstance.id, editingTitle);
       setShowInstanceModal(false);
       setSelectedInstance(null);
       setEditingTitle('');

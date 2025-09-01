@@ -61,7 +61,8 @@ export const ServerSidebar: React.FC<ServerSidebarProps> = ({
       <div className="flex flex-col items-center space-y-2 h-full">
         {/* 내 프로필 */}
         <div 
-          className="relative w-10 h-10 rounded-full bg-[#5865F2] flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity mt-1"
+          className="relative w-10 h-10 rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity mt-1"
+          style={{ backgroundColor: userProfile.accentColor || "#5865F2" }}
           onClick={onOpenMyProfile}
           title={`${userProfile.name} (나)`}
         >

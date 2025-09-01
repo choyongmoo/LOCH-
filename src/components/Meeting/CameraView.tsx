@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useLayoutEffect, useState } from 'react';
 
 interface CameraViewProps {
   userName: string;
@@ -13,6 +13,7 @@ interface CameraViewProps {
   isMicOn?: boolean;
   isScreenSharing?: boolean;
   screenShareStream?: MediaStream | null;
+  accentColor?: string; // 사용자 정의 색상
   onFullscreen?: (userInfo: { userName: string; isLocal: boolean; isScreenSharing: boolean; screenShareStream?: MediaStream | null; cameraStream?: MediaStream | null }) => void; // 사용자 정보 전달
 }
 
@@ -29,6 +30,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
   isMicOn = true,
   isScreenSharing = false,
   screenShareStream = null,
+  accentColor,
   onFullscreen
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -43,20 +45,16 @@ export const CameraView: React.FC<CameraViewProps> = ({
     if (isLocal && isCameraOn && !isScreenSharing) {
       startLocalCamera();
     } else if (isLocal && isScreenSharing) {
-      // 화면 공유 중에는 카메라 스트림 정리하고 로딩 상태 해제
+      // 화면 공유 중에는 카메라 스트림 정리
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
         setStream(null);
       }
-      // 화면 공유 시작 시 즉시 로딩 완료 처리
       setIsLoading(false);
-      // 화면 공유 시작 시 에러 상태 초기화 (카메라 오류에서 화면 공유로 전환)
       setError(null);
     } else if (isLocal && !isCameraOn && !isScreenSharing) {
-      // 카메라도 꺼져있고 화면 공유도 하지 않는 상태에서는 로딩 상태 해제
       setIsLoading(false);
     } else if (!isLocal) {
-      // 원격 사용자의 경우 시뮬레이션 (실제로는 WebRTC로 구현)
       simulateRemoteCamera();
     }
 
@@ -87,10 +85,9 @@ export const CameraView: React.FC<CameraViewProps> = ({
         setIsLoading(false);
       };
       
-      const handleError = (e: Event) => {
-        console.error('화메라 공유 비디오 오류:', e);
-        setIsLoading(false);
-      };
+             const handleError = (e: Event) => {
+         setIsLoading(false);
+       };
       
       videoRef.current.addEventListener('loadedmetadata', handleLoadedMetadata);
       videoRef.current.addEventListener('canplay', handleCanPlay);
@@ -106,6 +103,13 @@ export const CameraView: React.FC<CameraViewProps> = ({
     }
   }, [screenShareStream, isLocal, isScreenSharing]);
 
+  // 스트림이 변경될 때마다 비디오 요소에 연결 (DOM 업데이트 직후)
+  useLayoutEffect(() => {
+    if (stream && videoRef.current && isLocal && !isScreenSharing) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [stream, isLocal, isScreenSharing]);
+
   const startLocalCamera = async () => {
     try {
       setIsLoading(true);
@@ -119,14 +123,34 @@ export const CameraView: React.FC<CameraViewProps> = ({
         },
         audio: false
       });
-
+      
       setStream(mediaStream);
       
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-      }
+      // 사용자 상호작용 기반으로 비디오 재생 시작
+      setTimeout(async () => {
+        if (videoRef.current) {
+          videoRef.current.srcObject = mediaStream;
+          
+          try {
+            await videoRef.current.play();
+          } catch (error) {
+            // 재생 실패 시 조용히 처리
+          }
+        } else {
+          setTimeout(async () => {
+            if (videoRef.current) {
+              videoRef.current.srcObject = mediaStream;
+              
+              try {
+                await videoRef.current.play();
+              } catch (error) {
+                // 재생 실패 시 조용히 처리
+              }
+            }
+          }, 100);
+        }
+      }, 0);
     } catch (err) {
-      console.error('카메라 접근 실패:', err);
       setError('카메라에 접근할 수 없습니다.');
     } finally {
       setIsLoading(false);
@@ -145,6 +169,11 @@ export const CameraView: React.FC<CameraViewProps> = ({
   };
 
   const getRandomColor = (name: string) => {
+    // 사용자 정의 색상이 있으면 우선 사용
+    if (accentColor) {
+      return accentColor;
+    }
+    
     const colors = [
       '#5865F2', '#57F287', '#FEE75C', '#EB459E', 
       '#ED4245', '#FAA61A', '#747F8D', '#43B581'
@@ -161,9 +190,9 @@ export const CameraView: React.FC<CameraViewProps> = ({
       setError(null);
       try {
         await onToggleScreenShare();
-      } catch (error) {
-        console.error('화메라 공유 오류:', error);
-      } finally {
+             } catch (error) {
+         // 화면 공유 오류 시 조용히 처리
+       } finally {
         setIsScreenShareLoading(false);
       }
     }
@@ -270,18 +299,25 @@ export const CameraView: React.FC<CameraViewProps> = ({
     );
   }
 
+
+
   return (
     <div className="relative w-full h-full bg-[#2F3136] rounded-lg overflow-hidden">
-      {/* 비디오 요소 */}
-      {isLocal && stream && !isScreenSharing ? (
+      {/* 비디오 요소 - 항상 렌더링하되 스트림이 있을 때만 표시 */}
+      {isLocal && !isScreenSharing && (
         <video
           ref={videoRef}
-          autoPlay
           playsInline
           muted={isLocal}
           className="w-full h-full object-cover"
+          style={{ 
+            display: stream ? 'block' : 'none'
+          }}
+
         />
-      ) : isLocal && isScreenSharing ? (
+      )}
+      
+      {isLocal && isScreenSharing && (
         <>
           {screenShareStream ? (
             <video
@@ -296,10 +332,9 @@ export const CameraView: React.FC<CameraViewProps> = ({
               onCanPlay={() => {
                 setIsLoading(false);
               }}
-              onError={(e) => {
-                console.error('화메라 공유 비디오 오류:', e);
-                setIsLoading(false);
-              }}
+                             onError={(e) => {
+                 setIsLoading(false);
+               }}
             />
           ) : (
             <div className="w-full h-full flex items-center justify-center bg-gray-900">
@@ -314,7 +349,9 @@ export const CameraView: React.FC<CameraViewProps> = ({
             </div>
           )}
         </>
-      ) : !isLocal ? (
+      )}
+      
+      {!isLocal && (
         // 원격 사용자 시뮬레이션 (더미 데이터 테스트용)
         <div 
           className="w-full h-full flex items-center justify-center"
@@ -328,7 +365,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
             </div>
           </div>
         </div>
-      ) : null}
+      )}
 
       {/* 디버깅 정보 (개발 중에만 표시) */}
       {isLocal && isScreenSharing && (
@@ -398,7 +435,7 @@ export const CameraView: React.FC<CameraViewProps> = ({
                       ? 'bg-red-500 text-white hover:bg-red-600'
                       : 'bg-[#36393F] text-[#DCDDDE] hover:bg-[#40444B]'
                   }`}
-                  title={isScreenSharing ? "화메라 공유 중지" : "화메라 공유"}
+                  title={isScreenSharing ? "화메라 공유 중지" : "화메라 공유 (브라우저 알림이 표시될 수 있습니다)"}
                 >
                   <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h5l-1 1v2h8v-2l-1-1h5c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H3V5h18v10z"/>

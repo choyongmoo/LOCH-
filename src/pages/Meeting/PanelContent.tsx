@@ -23,8 +23,6 @@ export const PanelContent = ({
   onFullscreen,
 }: PanelContentProps & { maxPanelsReached?: boolean }) => {
   // 디버깅: onFullscreen prop 값 확인
-  console.log('PanelContent render:', { num, onFullscreen: !!onFullscreen, onFullscreenType: typeof onFullscreen });
-  
   // 상태 없음, props로만 동작
   return (
     <div

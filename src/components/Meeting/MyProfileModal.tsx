@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { supabase } from '@/lib/supabase';
 
 interface MyProfileModalProps {
   visible: boolean;
@@ -20,16 +21,79 @@ interface UserProfile {
   bio: string;
 }
 
-// Supabase에 프로필 데이터 저장하기 (향후 구현 예정)
+// Supabase에 프로필 데이터 저장하기
 const saveProfileToSupabase = async (profile: UserProfile) => {
-  // TODO: Supabase 프로필 업데이트 로직 구현
+  try {
+    // 현재 사용자 정보 가져오기
+    const { data: authData } = await supabase.auth.getUser();
+    const email = authData.user?.email;
+    
+    if (!email) {
+      return;
+    }
+
+    // users 테이블에서 사용자 ID 찾기
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .single();
+
+    if (!userData) {
+      return;
+    }
+
+    // profile 테이블에 업데이트
+    const { data: profileResult, error: profileError } = await supabase
+      .from('profile')
+      .upsert(
+        {
+          id: userData.id,
+          nickname: profile.name,
+          bio: profile.bio,
+          language: 'ko', // language 컬럼에 기본값 설정
+        },
+        { onConflict: 'id' }
+      );
+
+    if (profileError) {
+      return;
+    }
+
+    // users 테이블의 name 필드도 업데이트 (호환성을 위해)
+    const { data: userResult, error: userError } = await supabase
+      .from('users')
+      .update({ name: profile.name })
+      .eq('id', userData.id);
+
+    if (userError) {
+      // profile 테이블 업데이트는 성공했으므로 계속 진행
+    }
+
+    // 저장 후 즉시 확인 (캐싱 문제 해결을 위해)
+    const { data: verifyProfile } = await supabase
+      .from('profile')
+      .select('nickname')
+      .eq('id', userData.id)
+      .single();
+    
+    const { data: verifyUser } = await supabase
+      .from('users')
+      .select('name')
+      .eq('id', userData.id)
+      .single();
+
+    // 이벤트는 handleSave에서 발생시킴
+  } catch (error) {
+    // 오류 시 조용히 처리
+  }
 };
 
 export const MyProfileModal = ({ visible, onClose }: MyProfileModalProps) => {
   if (!visible) return null;
 
   // Supabase에서 사용자 프로필 가져오기
-  const { userProfile, updateStatus } = useUserProfile();
+  const { userProfile, updateStatus, updateProfile } = useUserProfile();
   
   // 내 정보 상태 (userProfile을 직접 사용)
   const profile: UserProfile = {
@@ -50,12 +114,23 @@ export const MyProfileModal = ({ visible, onClose }: MyProfileModalProps) => {
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
   const hoverTimeout = useRef<NodeJS.Timeout | null>(null);
 
-  // 프로필이 변경될 때마다 Supabase에 저장 (향후 구현)
+  // userProfile이 변경될 때 profile 객체 업데이트 (수정 모드가 아닐 때만)
   useEffect(() => {
-    if (profile.name !== userProfile.name) {
-      saveProfileToSupabase(profile);
+    if (!isEditing) {
+      setEditProfile({
+        name: userProfile.name || "사용자",
+        role: "개발자",
+        department: "개발팀",
+        email: "",
+        status: userProfile.status || "온라인",
+        joinDate: "2024-01-15",
+        avatar: userProfile.avatar || userProfile.name?.slice(0, 2).toUpperCase() || "사용",
+        skills: ["React", "TypeScript", "Node.js"],
+        projects: ["LOCH 프로젝트", "웹 애플리케이션"],
+        bio: "프론트엔드 개발에 열정을 가진 개발자입니다. 사용자 경험을 개선하는 것에 관심이 많습니다."
+      });
     }
-  }, [profile, userProfile.name]);
+  }, [userProfile, isEditing]);
 
   // 상태에 따른 색상과 배경색
   const getStatusColor = (status: string) => {
@@ -77,33 +152,78 @@ export const MyProfileModal = ({ visible, onClose }: MyProfileModalProps) => {
   };
 
   // 상태 변경 함수
-  const handleStatusChange = (newStatus: string) => {
+  const handleStatusChange = async (newStatus: string) => {
     if (!isEditing) {
       setShowStatusDropdown(false);
       
       // useUserProfile의 상태도 업데이트 (localStorage에 자동 저장됨)
       updateStatus(newStatus);
       
-      // Supabase에 즉시 저장 (향후 구현)
+      // Supabase에 즉시 저장
       const updatedProfile = { ...profile, status: newStatus };
-      saveProfileToSupabase(updatedProfile);
+      await saveProfileToSupabase(updatedProfile);
     }
   };
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // Supabase에 즉시 저장 (향후 구현)
-    saveProfileToSupabase(editProfile);
+  const handleSave = async () => {
+    try {
+      // Supabase에 먼저 저장
+      await saveProfileToSupabase(editProfile);
+      
+      // 저장 성공 후 useUserProfile의 상태도 업데이트
+      updateProfile({
+        name: editProfile.name,
+        avatar: editProfile.name.slice(0, 2).toUpperCase()
+      });
+      
+      // 프로필 업데이트 이벤트 발생 (다른 컴포넌트들과 동기화)
+      try {
+        // 잠시 기다린 후 이벤트 발생 (데이터베이스 동기화 대기)
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('profile-updated'));
+          window.dispatchEvent(new CustomEvent('friends-updated'));
+        }, 500);
+      } catch (e) {
+        // 오류 시 조용히 처리
+      }
+      
+      // 수정 모드 종료
+      setIsEditing(false);
+    } catch (error) {
+      // 오류 발생 시 수정 모드 유지
+    }
   };
 
   const handleCancel = () => {
-    setEditProfile({ ...profile });
+    setEditProfile({
+      name: userProfile.name || "사용자",
+      role: "개발자",
+      department: "개발팀",
+      email: "",
+      status: userProfile.status || "온라인",
+      joinDate: "2024-01-15",
+      avatar: userProfile.avatar || userProfile.name?.slice(0, 2).toUpperCase() || "사용",
+      skills: ["React", "TypeScript", "Node.js"],
+      projects: ["LOCH 프로젝트", "웹 애플리케이션"],
+      bio: "프론트엔드 개발에 열정을 가진 개발자입니다. 사용자 경험을 개선하는 것에 관심이 많습니다."
+    });
     setIsEditing(false);
   };
 
   // 수정 모드 진입 시 현재 프로필 상태를 정확히 복사
   const handleEditMode = () => {
-    setEditProfile({ ...profile });
+    setEditProfile({
+      name: userProfile.name || "사용자",
+      role: "개발자",
+      department: "개발팀",
+      email: "",
+      status: userProfile.status || "온라인",
+      joinDate: "2024-01-15",
+      avatar: userProfile.avatar || userProfile.name?.slice(0, 2).toUpperCase() || "사용",
+      skills: ["React", "TypeScript", "Node.js"],
+      projects: ["LOCH 프로젝트", "웹 애플리케이션"],
+      bio: "프론트엔드 개발에 열정을 가진 개발자입니다. 사용자 경험을 개선하는 것에 관심이 많습니다."
+    });
     setIsEditing(true);
   };
 

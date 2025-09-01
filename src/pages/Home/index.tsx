@@ -26,8 +26,7 @@ export const Home = () => {
           behavior: "smooth",
         });
       } else {
-        console.warn(`🚨 ID '${id}'를 가진 요소를 찾을 수 없습니다.`);
-      }
+        }
     };
 
    

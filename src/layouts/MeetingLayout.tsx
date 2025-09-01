@@ -129,14 +129,7 @@ export const MeetingLayout = () => {
 
   // 디버깅: 실제 데이터 확인
   useEffect(() => {
-    console.log('🔍 MeetingLayout 디버깅:');
-    console.log('meetingId:', meetingId);
-    console.log('meeting:', meeting);
-    console.log('participants:', participants);
-    console.log('meetingMessages:', meetingMessages);
-    console.log('currentUserId:', currentUserId);
-    console.log('supabaseMembers:', supabaseMembers);
-    console.log('supabaseMessages:', supabaseMessages);
+
   }, [meetingId, meeting, participants, meetingMessages, currentUserId, supabaseMembers, supabaseMessages]);
 
   // 이제 조건부 반환 처리

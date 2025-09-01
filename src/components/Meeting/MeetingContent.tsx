@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { SlideNotification } from '@/components/Meeting/SlideNotification';
 import { ServerSidebar } from '@/components/Meeting/ServerSidebar';
 import { ChatBox } from '@/components/Meeting/ChatBox';
@@ -25,6 +25,7 @@ interface Member {
   isScreenSharing: boolean;
   avatar?: string;
   status?: string;
+  accentColor?: string; // 사용자 정의 색상
 }
 
 
@@ -173,7 +174,32 @@ export const MeetingContent: React.FC<MeetingContentProps> = ({
   const [activeTab, setActiveTab] = useState<string>('general'); // 'general' 또는 사용자 이름
   const [privateMessages, setPrivateMessages] = useState<{[key: string]: any[]}>({});
   const [unreadMessages, setUnreadMessages] = useState<{[key: string]: number}>({}); // 읽지 않은 메시지 수
-  const [unreadGeneralMessages, setUnreadGeneralMessages] = useState<number>(1); // 전체 채팅 읽지 않은 메시지 수 (시스템 메시지로 시작)
+  const [unreadGeneralMessages, setUnreadGeneralMessages] = useState<number>(0); // 전체 채팅 읽지 않은 메시지 수 (시스템 메시지는 카운트하지 않음)
+  const [lastMessageCount, setLastMessageCount] = useState<number>(0); // 마지막으로 확인한 메시지 수
+
+  // 새로운 메시지가 추가될 때 읽지 않은 메시지 카운트 증가
+  useEffect(() => {
+    if (chatMessages.length > lastMessageCount) {
+      // 새로 추가된 메시지들 확인
+      const newMessages = chatMessages.slice(lastMessageCount);
+      const nonSystemMessages = newMessages.filter(msg => msg.user !== '시스템');
+      
+      // 현재 사용자가 보낸 메시지는 제외 (내가 보낸 메시지는 즉시 읽은 것으로 처리)
+      const currentUserName = userProfile?.name || '나';
+      const otherUserMessages = nonSystemMessages.filter(msg => msg.user !== currentUserName);
+      
+      if (otherUserMessages.length > 0 && activeTab === 'general') {
+        setUnreadGeneralMessages(prev => prev + otherUserMessages.length);
+      }
+      
+      setLastMessageCount(chatMessages.length);
+    }
+  }, [chatMessages, lastMessageCount, activeTab, userProfile]);
+
+  // 초기 메시지 수 설정
+  useEffect(() => {
+    setLastMessageCount(chatMessages.length);
+  }, []);
 
   // 화면 분할 옵션 비활성화 여부 확인
   const isSplitViewDisabled = selectedRemoteUser && (
@@ -295,7 +321,8 @@ export const MeetingContent: React.FC<MeetingContentProps> = ({
     isMicOn: !isMicMuted,
     isActive: true,
     isScreenSharing: isLocalScreenSharing,
-    screenShareStream: screenShareStream
+    screenShareStream: screenShareStream,
+    accentColor: userProfile.accentColor
   };
 
   // 전체 참가자 목록 생성 (로컬 사용자 + 원격 사용자들) - 객체 배열로 변환
@@ -309,7 +336,8 @@ export const MeetingContent: React.FC<MeetingContentProps> = ({
       isActive: true,
       isScreenSharing: isLocalScreenSharing,
       avatar: userProfile.avatar,
-      status: userProfile.status
+      status: userProfile.status,
+      accentColor: userProfile.accentColor
     },
     ...actualRemoteUsers.map(user => ({
       id: user.id,
@@ -336,7 +364,8 @@ export const MeetingContent: React.FC<MeetingContentProps> = ({
         isActive: true,
         isScreenSharing: isLocalScreenSharing,
         avatar: userProfile.avatar,
-        status: userProfile.status
+        status: userProfile.status,
+        accentColor: userProfile.accentColor
       },
       ...actualRemoteUsers.map(user => ({
         id: user.id,
@@ -350,7 +379,32 @@ export const MeetingContent: React.FC<MeetingContentProps> = ({
         status: "온라인"
       }))
     ]);
-  }, [userProfile.status, userProfile.name, userProfile.avatar, isMicMuted, isLocalScreenSharing, actualRemoteUsers]);
+  }, [userProfile.status, userProfile.name, userProfile.avatar, userProfile.accentColor, isMicMuted, isLocalScreenSharing]);
+
+  // actualRemoteUsers 변경 시 allMembers 업데이트 (메모이제이션으로 무한 렌더링 방지)
+  const memoizedRemoteUsers = useMemo(() => actualRemoteUsers, [actualRemoteUsers.length, actualRemoteUsers.map(u => u.id).join(',')]);
+  
+  useEffect(() => {
+    setAllMembers(prev => {
+      const localMember = prev.find(member => member.isLocal);
+      if (!localMember) return prev;
+      
+      return [
+        localMember,
+        ...memoizedRemoteUsers.map(user => ({
+          id: user.id,
+          name: user.name,
+          isLocal: false,
+          isCameraOn: user.isCameraOn || false,
+          isMicOn: user.isMicOn || true,
+          isActive: user.isActive || true,
+          isScreenSharing: user.isScreenSharing || false,
+          avatar: user.name.slice(0, 2).toUpperCase(),
+          status: "온라인"
+        }))
+      ];
+    });
+  }, [memoizedRemoteUsers]);
 
   // 사용자 전체화면 상태 관리
   const [isUserFullscreenActive, setIsUserFullscreenActive] = useState(false);
@@ -416,7 +470,7 @@ export const MeetingContent: React.FC<MeetingContentProps> = ({
       if (event.key === 'Escape') {
         // 사용자 전체화면이 활성화되어 있으면 먼저 종료
         if (userFullscreenInfo) {
-          console.log('MeetingContent: ESC 키 감지, 사용자 전체화면 종료');
+  
           handleExitUserFullscreen();
           return;
         }
@@ -588,7 +642,7 @@ export const MeetingContent: React.FC<MeetingContentProps> = ({
 
           {/* 채팅 박스 - 오른쪽 하단에 고정 */}
           {isChatOpen && (
-            <div className="fixed bottom-20 right-4 z-50">
+            <div className="fixed right-4 z-50" style={{ top: '400px', position: 'fixed' }}>
               <ChatBox
                 messages={chatMessages}
                 input={chatInput}

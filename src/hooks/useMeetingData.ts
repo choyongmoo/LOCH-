@@ -27,8 +27,7 @@ export const useMeetingData = (meetingId: string) => {
         setCurrentUserId(userData.id);
       }
     } catch (err) {
-      console.error('사용자 정보 로드 실패:', err);
-    }
+      }
   }, []);
 
   // 회의방 정보 로드
@@ -50,8 +49,7 @@ export const useMeetingData = (meetingId: string) => {
       setMeeting(data);
     } catch (err) {
       setError('회의방 정보를 불러올 수 없습니다.');
-      console.error('회의방 로드 실패:', err);
-    }
+      }
   }, [meetingId]);
 
   // 참가자 목록 로드
@@ -94,8 +92,7 @@ export const useMeetingData = (meetingId: string) => {
 
       setParticipants(participantsList);
     } catch (err) {
-      console.error('참가자 목록 로드 실패:', err);
-    }
+      }
   }, [meetingId, currentUserId]);
 
   // 메시지 로드
@@ -125,8 +122,7 @@ export const useMeetingData = (meetingId: string) => {
       if (error) throw error;
       setMessages(data || []);
     } catch (err) {
-      console.error('메시지 로드 실패:', err);
-    }
+      }
   }, [meetingId]);
 
   // 회의방 참가
@@ -172,8 +168,7 @@ export const useMeetingData = (meetingId: string) => {
       // 참가자 목록 새로고침
       await loadParticipants();
     } catch (err) {
-      console.error('회의방 참가 실패:', err);
-    }
+      }
   }, [meetingId, currentUserId, loadParticipants]);
 
   // 회의방 나가기
@@ -192,8 +187,7 @@ export const useMeetingData = (meetingId: string) => {
 
       if (error) throw error;
     } catch (err) {
-      console.error('회의방 나가기 실패:', err);
-    }
+      }
   }, [meetingId, currentUserId]);
 
   // 메시지 전송
@@ -216,8 +210,7 @@ export const useMeetingData = (meetingId: string) => {
       // 메시지 목록 새로고침
       await loadMessages();
     } catch (err) {
-      console.error('메시지 전송 실패:', err);
-    }
+      }
   }, [meetingId, currentUserId, loadMessages]);
 
   // 실시간 구독 설정

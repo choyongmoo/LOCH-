@@ -11,6 +11,7 @@ interface Member {
   isScreenSharing: boolean;
   avatar?: string;
   status?: string; // 상태 필드 추가
+  accentColor?: string; // 사용자 정의 색상
 }
 
 interface MembersBarProps {
@@ -62,7 +63,10 @@ export const MembersBar = ({ members, onOpenDetails, onUserClick, onStartPrivate
             >
               {/* 멤버 아바타 */}
               <div className="relative mr-3">
-                <div className="w-8 h-8 rounded-full bg-[#5865F2] text-white flex items-center justify-center text-sm font-semibold">
+                <div 
+                  className="w-8 h-8 rounded-full text-white flex items-center justify-center text-sm font-semibold"
+                  style={{ backgroundColor: member.accentColor || "#5865F2" }}
+                >
                   {member.avatar || member.name.slice(0, 2).toUpperCase()}
                 </div>
                                  {/* 온라인 상태 표시 */}

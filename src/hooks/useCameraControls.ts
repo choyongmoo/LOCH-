@@ -51,7 +51,6 @@ export const useCameraControls = ({ onAppCreate, onAppRemove, remoteUsers = [] }
 
   // 다른 사용자 카메라 관련 핸들러들
   const handleSingleView = (selectedRemoteUser: any) => {
-    console.log('handleSingleView 실행:', selectedRemoteUser);
     // 단일 화면으로 해당 사용자 카메라 표시
     setSelectedCameraUser(selectedRemoteUser.id);
     setCameraLayout('single');
@@ -60,13 +59,11 @@ export const useCameraControls = ({ onAppCreate, onAppRemove, remoteUsers = [] }
     
     // 카메라 인스턴스 생성 (다른 사용자 화면을 표시하므로 항상 필요)
     if (onAppCreate) {
-      console.log('카메라 인스턴스 생성 (단일 뷰)');
       onAppCreate('C');
     }
   };
 
   const handleSplitView = (selectedRemoteUser: any) => {
-    console.log('handleSplitView 실행:', selectedRemoteUser);
     // 화면 분할로 해당 사용자 카메라 추가 (그리드 모드)
     setSelectedCameraUser(null); // 선택 해제하여 모든 사용자 표시
     setCameraLayout('grid');
@@ -86,20 +83,15 @@ export const useCameraControls = ({ onAppCreate, onAppRemove, remoteUsers = [] }
     
     // 새 사용자를 마지막에 추가
     const finalOrder = [...filteredOrder, selectedRemoteUser.id];
-    console.log('분할 뷰 userOrder 설정:', finalOrder);
     setUserOrder(finalOrder);
     
     // 카메라 인스턴스 생성 (다른 사용자 화면을 표시하므로 항상 필요)
     if (onAppCreate) {
-      console.log('카메라 인스턴스 생성 (분할 뷰)');
       onAppCreate('C');
     }
   };
 
   const handleReplaceView = (selectedRemoteUser: any) => {
-    console.log('handleReplaceView 실행:', selectedRemoteUser);
-    console.log('현재 상태:', { selectedCameraUser, userOrder, cameraLayout });
-    
     // 화면 개수와 상관없이 일관된 로직 적용
     if (userOrder.length > 0) {
       // 현재 선택된 사용자가 있는 경우 (사이드 화면 버튼 눌린 상태)
@@ -110,8 +102,6 @@ export const useCameraControls = ({ onAppCreate, onAppRemove, remoteUsers = [] }
         
         if (targetUserIndex !== -1 && selectedUserIndex !== -1) {
           // 이미 표시중인 사용자의 경우 위치 교환 (화면 개수와 상관없이)
-          console.log('위치 교환:', selectedCameraUser, '<->', selectedRemoteUser.id);
-          
           const newUserOrder = [...userOrder];
           // 두 사용자의 위치를 교환
           newUserOrder[selectedUserIndex] = selectedRemoteUser.id;
@@ -121,8 +111,6 @@ export const useCameraControls = ({ onAppCreate, onAppRemove, remoteUsers = [] }
           setSelectedCameraUser(selectedRemoteUser.id);
         } else {
           // 새로운 사용자의 경우 선택된 위치에 교체 (화면 개수와 상관없이)
-          console.log('선택된 위치에 화면 교체:', selectedCameraUser, '->', selectedRemoteUser.id);
-          
           const newUserOrder = userOrder.map(userId => 
             userId === selectedCameraUser ? selectedRemoteUser.id : userId
           );
@@ -136,8 +124,6 @@ export const useCameraControls = ({ onAppCreate, onAppRemove, remoteUsers = [] }
         const firstRemoteUserIndex = userOrder.findIndex(userId => userId !== 'local');
         
         if (firstRemoteUserIndex !== -1) {
-          console.log('첫 번째 원격 사용자 위치에 화면 교체:', userOrder[firstRemoteUserIndex], '->', selectedRemoteUser.id);
-          
           const newUserOrder = [...userOrder];
           newUserOrder[firstRemoteUserIndex] = selectedRemoteUser.id;
           
@@ -145,8 +131,6 @@ export const useCameraControls = ({ onAppCreate, onAppRemove, remoteUsers = [] }
           setSelectedCameraUser(selectedRemoteUser.id);
         } else {
           // 모든 화면이 로컬 사용자인 경우 (일반적이지 않은 상황)
-          console.log('로컬 사용자만 있는 상태에서 새 사용자 추가:', selectedRemoteUser.id);
-          
           const newUserOrder = [...userOrder, selectedRemoteUser.id];
           setUserOrder(newUserOrder);
           setSelectedCameraUser(selectedRemoteUser.id);
@@ -157,7 +141,6 @@ export const useCameraControls = ({ onAppCreate, onAppRemove, remoteUsers = [] }
       setCameraLayout(cameraLayout);
     } else {
       // userOrder가 비어있는 경우 새 사용자로 단일 화면 시작
-      console.log('새 사용자로 단일 화면 시작:', selectedRemoteUser.id);
       setSelectedCameraUser(selectedRemoteUser.id);
       setCameraLayout('single');
       setUserOrder(['local', selectedRemoteUser.id]);
@@ -171,8 +154,6 @@ export const useCameraControls = ({ onAppCreate, onAppRemove, remoteUsers = [] }
 
   // 사용자를 화면에서 제거하는 핸들러
   const handleRemoveUserFromView = (userId: string) => {
-    console.log('사용자 화면에서 제거:', userId);
-    
     // userOrder에서 해당 사용자 제거
     const newUserOrder = userOrder.filter(id => id !== userId);
     setUserOrder(newUserOrder);
@@ -188,8 +169,7 @@ export const useCameraControls = ({ onAppCreate, onAppRemove, remoteUsers = [] }
       setSelectedCameraUser(null);
     }
     
-    console.log('제거 후 userOrder:', newUserOrder);
-  };
+    };
 
   return {
     isLocalCameraOn,
