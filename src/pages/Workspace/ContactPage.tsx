@@ -177,6 +177,37 @@ const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
     }
   };
 
+  // URL을 하이퍼링크로 변환하는 함수
+  const renderMessageWithLinks = (text: string) => {
+    // URL 패턴 매칭 (http://, https://, localhost 등)
+    const urlRegex = /(https?:\/\/[^\s]+|localhost:\d+\/[^\s]*)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part.startsWith('http') ? part : `http://${part}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: theme === 'dark' ? '#00b4d8' : '#2563eb',
+              textDecoration: 'underline',
+              wordBreak: 'break-all'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
+  };
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', background: theme === 'dark' ? '#313338' : '#f4f4f4', flex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', padding: '16px', borderBottom: theme === 'dark' ? '1px solid #23272a' : '1px solid #e5e7eb', gap: 12, background: theme === 'dark' ? '#23272a' : '#fff' }}>
@@ -203,7 +234,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
                   fontSize: 15,
                 }}
               >
-                {msg.text}
+                {renderMessageWithLinks(msg.text)}
               </div>
               <span style={{ fontSize: 11, color: theme === 'dark' ? '#888' : '#999', marginTop: 2 }}>
                 {new Date(msg.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
