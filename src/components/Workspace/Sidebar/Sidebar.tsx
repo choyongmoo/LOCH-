@@ -84,10 +84,12 @@ export default function CustomSidebar() {
                     >
                       회의
                     </SidebarMenuButton>
-                    <br />
                     <SidebarMenuButton
-                      className={location.pathname.startsWith("/product") ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
-                    >
+                      onClick={() => navigate("/")}>
+                      돌아가기
+                    </SidebarMenuButton>
+                    <br />
+                    <SidebarMenuButton>
                       내 제품
                     </SidebarMenuButton>
                     <SidebarMenuSub>    
