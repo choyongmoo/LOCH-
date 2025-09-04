@@ -58,7 +58,7 @@ const WorkspaceLayout = () => {
 
   return (
     <SidebarProvider>
-      <div className="flex h-screen relative">
+      <div className="flex h-screen relative overflow-x-auto">
         {/* 첫 번째 사이드바 */}
         <div className="w-14 bg-[#0f172a] flex-shrink-0">
           <MiniSidebar />
@@ -70,8 +70,10 @@ const WorkspaceLayout = () => {
         </div>
 
         {/* 메인 콘텐츠 + 슬라이드 패널 영역 */}
-        <div className="flex-1 relative overflow-visible bg-[#1C1D26] min-h-screen">
-          <Outlet />
+        <div className="flex-1 relative h-screen overflow-y-auto bg-[#1C1D26]">
+          <div className="min-w-[1600px] max-w-[1600px] min-h-full mx-auto">
+            <Outlet />
+          </div>
         </div>
       </div>
     </SidebarProvider>

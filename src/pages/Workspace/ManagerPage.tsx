@@ -3,6 +3,7 @@ import GroupItem from "@/components/Workspace/Sidebar/GroupItem";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/common/ui/skeleton";
 import { useNavigate } from "react-router-dom";
+import { Settings, X as XIcon } from "lucide-react";
 
 const ManagerPage = () => {
   type MeetingRow = { id: string; room_name: string; description: string | null; host: string };
@@ -13,6 +14,7 @@ const ManagerPage = () => {
   const [leaveError, setLeaveError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [skeletonCount, setSkeletonCount] = useState<number>(0);
+  const [myUuid, setMyUuid] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -23,6 +25,7 @@ const ManagerPage = () => {
         // 내 유저 PK 조회
         const { data: auth } = await supabase.auth.getUser();
         const uuid = auth.user?.id ?? null;
+        setMyUuid(uuid);
         let userPk: number | null = null;
         if (uuid) {
           const { data: userRow } = await supabase
@@ -205,18 +208,47 @@ const ManagerPage = () => {
             <div className="w-32 text-sm text-gray-800 dark:text-gray-200 truncate flex items-center justify-center gap-1">
               <span>{hostNames[m.host] ?? `${m.host?.slice(0, 8)}…`}</span>
             </div>
-            <div className="w-8 flex items-center justify-end">
-              <button
-                type="button"
-                aria-label="leave"
-                className="opacity-0 group-hover:opacity-100 transition text-xs text-gray-400 hover:text-red-500"
-                onClick={(e) => {
-                  e.stopPropagation(); // 부모 클릭 이벤트 방지
-                  setLeaveTarget(m);
-                }}
-              >
-                x
-              </button>
+            <div className="w-8 flex flex-col items-end justify-center gap-1">
+              {myUuid && m.host === myUuid ? (
+                <>
+                  <button
+                    type="button"
+                    aria-label="settings"
+                    className="opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-gray-600"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                    title="설정"
+                  >
+                    <Settings className="w-4 h-4" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="leave"
+                    className="opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-red-500"
+                    onClick={(e) => {
+                      e.stopPropagation(); // 부모 클릭 이벤트 방지
+                      setLeaveTarget(m);
+                    }}
+                    title="서버 나가기"
+                  >
+                    <XIcon className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  aria-label="leave"
+                  className="opacity-0 group-hover:opacity-100 transition text-sm text-gray-400 hover:text-red-500 font-semibold"
+                  onClick={(e) => {
+                    e.stopPropagation(); // 부모 클릭 이벤트 방지
+                    setLeaveTarget(m);
+                  }}
+                  title="서버 나가기"
+                >
+                  x
+                </button>
+              )}
             </div>
           </div>
         ))

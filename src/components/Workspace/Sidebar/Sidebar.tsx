@@ -67,29 +67,14 @@ export default function CustomSidebar() {
             <SidebarGroup>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => navigate("/workspace/home")}
-                      className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${(["/workspace", "/workspace/home", "/"].includes(location.pathname))
-                          ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20"
-                          : ""}`}
-                    >
-                      홈
-                    </SidebarMenuButton>
-                    <br />
+                  <SidebarMenuItem> 
                     <SidebarMenuButton
                       onClick={() => navigate("/meeting")}
-                      className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/meeting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
+                      className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/meeting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2  ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
                     >
                       회의
                     </SidebarMenuButton>
-                    <br />
-                    <SidebarMenuButton
-                      onClick={() => navigate("/")}
-                      className="bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10">
-                      돌아가기
-                    </SidebarMenuButton>
-                    <br />
+                    
                     <SidebarMenuButton className="hover:bg-transparent dark:hover:bg-transparent focus:bg-transparent active:bg-transparent cursor-default">
                       내 제품
                     </SidebarMenuButton>
@@ -110,11 +95,21 @@ export default function CustomSidebar() {
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
+                          onClick={() => navigate("/workspace/home")}
+                          className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${(["/workspace", "/workspace/home", "/"].includes(location.pathname))
+                            ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20"
+                            : ""}`}
+                        >
+                          홈
+                        </SidebarMenuSubButton>
+                      </SidebarMenuSubItem>
+                      <SidebarMenuSubItem>
+                        <SidebarMenuSubButton
                           onClick={() => {navigate("/workspace/profile");}}
                           className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/workspace/profile" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
                         >
-                      프로필
-                    </SidebarMenuSubButton>
+                          프로필
+                        </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton

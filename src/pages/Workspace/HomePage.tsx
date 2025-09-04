@@ -1,7 +1,214 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Skeleton } from "@/components/common/ui/skeleton";
+import GroupItem from "@/components/Workspace/Sidebar/GroupItem";
 import { Link } from "react-router";
 import { supabase } from "@/lib/supabase";
+
+type SimpleMeeting = { id: string; room_name: string; created_at?: string };
+
+function RecentServers() {
+  const [list, setList] = useState<SimpleMeeting[]>([]);
+
+  const reload = useCallback(async () => {
+    try {
+      // 현재 유저
+      const { data: auth } = await supabase.auth.getUser();
+      const uuid = auth.user?.id ?? null;
+      let userPk: number | null = null;
+      if (uuid) {
+        const { data: userRow } = await supabase
+          .from("users")
+          .select("id")
+          .eq("email", auth.user?.email ?? "")
+          .maybeSingle();
+        userPk = (userRow as { id: number } | null)?.id ?? null;
+      }
+
+      // 내가 멤버인 미팅들
+      let meetingIds: string[] = [];
+      if (userPk) {
+        const { data: mm } = await supabase
+          .from("meeting_members")
+          .select("meeting_id")
+          .eq("user_id", userPk);
+        meetingIds = (mm ?? []).map((r: { meeting_id: string }) => r.meeting_id);
+      }
+
+      // 내가 멤버이거나 호스트인 미팅 목록
+      const ids = meetingIds.length > 0 ? meetingIds : ["00000000-0000-0000-0000-000000000000"]; // in 보호
+      const { data } = await supabase
+        .from("meetings")
+        .select("id, room_name, created_at, host")
+        .in("id", ids)
+        .order("created_at", { ascending: false });
+
+      let combined = (data ?? []) as Array<{ id: string; room_name: string; created_at?: string; host?: string }>;
+      if (uuid) {
+        const { data: hosted } = await supabase
+          .from("meetings")
+          .select("id, room_name, created_at, host")
+          .eq("host", uuid)
+          .order("created_at", { ascending: false });
+        const map = new Map<string, SimpleMeeting>();
+        combined.forEach((m) => map.set(m.id, { id: m.id, room_name: m.room_name, created_at: m.created_at }));
+        (hosted ?? []).forEach((m) => { if (!map.has(m.id)) map.set(m.id, { id: m.id, room_name: m.room_name, created_at: m.created_at }); });
+        combined = Array.from(map.values()).sort((a, b) => (new Date(b.created_at ?? 0).getTime() - new Date(a.created_at ?? 0).getTime()));
+      }
+
+      setList(combined.slice(0, 3));
+    } catch {
+      setList([]);
+    }
+  }, []);
+
+  useEffect(() => {
+    void reload();
+    const meetingsCh = supabase
+      .channel("realtime:home:meetings")
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'meetings' }, () => { void reload(); })
+      .subscribe();
+    const mmCh = supabase
+      .channel("realtime:home:meeting_members")
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'meeting_members' }, () => { void reload(); })
+      .subscribe();
+    const handleLocal = () => { void reload(); };
+    window.addEventListener('meetings-updated', handleLocal as EventListener);
+    return () => { supabase.removeChannel(meetingsCh); supabase.removeChannel(mmCh); window.removeEventListener('meetings-updated', handleLocal as EventListener); };
+  }, [reload]);
+
+  return (
+    <div className="flex gap-4 mb-4 min-h-[72px]">
+      {list.map((m) => (
+        <Link key={m.id} to={`/meeting/${m.id}`} className="flex flex-col items-center w-16 flex-none">
+          <GroupItem name={m.room_name} title={m.room_name} />
+          <span className="text-xs font-bold text-gray-700 dark:text-gray-200 text-center w-full">
+            {m.room_name && m.room_name.length > 4 ? `${m.room_name.slice(0, 4)}…` : m.room_name}
+          </span>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+function ParticipantsCard({ meetingId, title, fixedHeight }: { meetingId?: string | null; title?: string; fixedHeight?: number }) {
+  const [participants, setParticipants] = useState<Array<{ id: number; nickname: string; accent_color: string }>>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [showAll, setShowAll] = useState<boolean>(false);
+
+  useEffect(() => {
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const email = auth.user?.email ?? null;
+        if (!email) { setParticipants([]); return; }
+
+        // 내 PK
+        const { data: me } = await supabase.from('users').select('id').eq('email', email).maybeSingle();
+        const myId = (me?.id as number | undefined) ?? null;
+        if (!myId) { setParticipants([]); return; }
+
+        // 타겟 미팅: 전달되면 사용, 없으면 내가 속한 최신 미팅
+        let targetMeeting: string | null = meetingId ?? null;
+        if (!targetMeeting) {
+          const { data: mm } = await supabase.from('meeting_members').select('meeting_id').eq('user_id', myId);
+          const meetingIds = (mm ?? []).map((r: { meeting_id: string }) => r.meeting_id);
+          if (meetingIds.length > 0) {
+            const { data: mrows } = await supabase
+              .from('meetings')
+              .select('id, created_at')
+              .in('id', meetingIds)
+              .order('created_at', { ascending: false })
+              .limit(1);
+            targetMeeting = (mrows && (mrows as Array<{ id: string }>)[0]?.id) ?? null;
+          }
+        }
+        if (!targetMeeting) { setParticipants([]); return; }
+
+        // 참여자 user_ids
+        const { data: members } = await supabase.from('meeting_members').select('user_id').eq('meeting_id', targetMeeting);
+        const userIds = (members ?? []).map((r: { user_id: number }) => r.user_id);
+        if (userIds.length === 0) { setParticipants([]); return; }
+
+        const [{ data: usersRows }, { data: profiles }] = await Promise.all([
+          supabase.from('users').select('id, name, email').in('id', userIds),
+          supabase.from('profile').select('id, nickname, accent_color').in('id', userIds),
+        ]);
+        const pmap = new Map<number, { nickname: string | null; accent_color: string | null }>();
+        (profiles ?? []).forEach((p: { id: number; nickname: string | null; accent_color: string | null }) => pmap.set(p.id, { nickname: p.nickname, accent_color: p.accent_color }));
+        const list = (usersRows ?? []).map((u: { id: number; name: string | null; email: string | null }) => {
+          const prof = pmap.get(u.id);
+          const nickname = (prof?.nickname && prof.nickname.trim()) ? prof.nickname : (u.name && u.name.trim()) ? u.name : (u.email ?? `사용자 #${u.id}`);
+          const accent = (prof?.accent_color && /^#([0-9a-fA-F]{6})$/.test(prof.accent_color)) ? prof.accent_color : '#7e22ce';
+          return { id: u.id, nickname, accent_color: accent };
+        });
+        setParticipants(list);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, [meetingId]);
+
+  return (
+    <div
+      className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-8 flex flex-col items-start justify-start"
+      style={fixedHeight ? { height: `${fixedHeight}px`, overflow: "auto" } : undefined}
+    >
+      <div className="w-full flex items-center justify-between mb-4">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{title ? `${title} 참여자 목록` : '서버 참여자'}</h1>
+        <button onClick={() => setShowAll(true)} className="inline-flex items-center justify-center border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-1 text-sm font-bold hover:bg-gray-100 dark:hover:bg-[#23242e] transition">...</button>
+      </div>
+      {loading ? (
+        <div className="flex flex-col gap-3 w-full">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#23242e]" />
+              <Skeleton className="h-4 w-40" />
+            </div>
+          ))}
+        </div>
+      ) : participants.length === 0 ? (
+        <div className="text-sm text-gray-500 dark:text-gray-300">참여자 정보가 없습니다.</div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
+          {participants.slice(0, 6).map((p) => (
+            <div key={p.id} className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: p.accent_color }}>
+                {p.nickname.charAt(0).toUpperCase()}
+              </div>
+              <span className="text-sm text-gray-800 dark:text-gray-100">{p.nickname}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {showAll && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowAll(false)} />
+          <div className="relative bg-white dark:bg-[#1a1d21] w-full max-w-lg rounded-xl shadow-2xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold text-gray-900 dark:text-white">전체 참여자</h3>
+              <button onClick={() => setShowAll(false)} className="text-sm text-gray-500 hover:underline">닫기</button>
+            </div>
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
+              {participants.map((p) => (
+                <div key={`all-${p.id}`} className="flex items-center gap-3 p-2 border rounded-lg">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center text-white text-sm font-bold" style={{ backgroundColor: p.accent_color }}>
+                    {p.nickname.charAt(0).toUpperCase()}
+                  </div>
+                  <span className="text-sm text-gray-800 dark:text-gray-100">{p.nickname}</span>
+                </div>
+              ))}
+              {participants.length === 0 && (
+                <div className="text-sm text-gray-500 dark:text-gray-300 text-center">참여자 정보가 없습니다.</div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 export default function HomePage() {
   const [email, setEmail] = useState<string | null>(null);
@@ -121,17 +328,28 @@ export default function HomePage() {
         });
         if (accepted.size === 0) { setFriends([]); return; }
 
-        // profile에서 표시 정보 가져오기
+        // users + profile 병합(프로필이 아직 없는 친구도 표시)
         const ids = Array.from(accepted);
-        const { data: profiles } = await supabase
-          .from('profile')
-          .select('id, nickname, accent_color')
-          .in('id', ids);
-        const rows = (profiles ?? []).map((p: { id: number; nickname: string | null; accent_color: string | null }) => ({
-          id: p.id,
-          nickname: (p.nickname && p.nickname.trim()) ? p.nickname : `사용자 #${p.id}`,
-          accent_color: (typeof p.accent_color === 'string' && /^#([0-9a-fA-F]{6})$/.test(p.accent_color)) ? p.accent_color : '#7e22ce'
-        }));
+        const [{ data: usersRows }, { data: profiles }] = await Promise.all([
+          supabase.from('users').select('id, name, email').in('id', ids),
+          supabase.from('profile').select('id, nickname, accent_color').in('id', ids),
+        ]);
+        const profileMap = new Map<number, { nickname: string | null; accent_color: string | null }>();
+        (profiles ?? []).forEach((p: { id: number; nickname: string | null; accent_color: string | null }) => {
+          profileMap.set(p.id, { nickname: p.nickname, accent_color: p.accent_color });
+        });
+        const rows = (usersRows ?? []).map((u: { id: number; name: string | null; email: string | null }) => {
+          const prof = profileMap.get(u.id);
+          const nickname = (prof?.nickname && prof.nickname.trim())
+            ? prof.nickname
+            : (u.name && u.name.trim())
+              ? u.name
+              : (u.email ?? `사용자 #${u.id}`);
+          const accent = (prof?.accent_color && /^#([0-9a-fA-F]{6})$/.test(prof.accent_color))
+            ? prof.accent_color
+            : '#7e22ce';
+          return { id: u.id, nickname, accent_color: accent };
+        });
         setFriends(rows);
       } catch {
         setFriends([]);
@@ -155,6 +373,9 @@ export default function HomePage() {
   const MAX_STORE = 10; // 모달에서 최대 10개까지 표시
   const [recentPages, setRecentPages] = useState<Array<{ path: string; ts: number }>>([]);
   const [showAllModal, setShowAllModal] = useState(false);
+  const [participantsView, setParticipantsView] = useState<{ meetingId: string; meetingName: string } | null>(null);
+  const introCardRef = useRef<HTMLDivElement | null>(null);
+  const [introCardHeight, setIntroCardHeight] = useState<number | null>(null);
 
   const formatVisitedAt = (ts: number): string => {
     const d = new Date(ts);
@@ -200,6 +421,43 @@ export default function HomePage() {
     // 이메일이 바뀌면 키가 달라지므로 재구독/재로딩
   }, [email, loadRecentPages]);
 
+  // MiniSidebar에서 show-participants 이벤트를 수신하면 왼쪽 첫 카드만 참여자 카드로 전환
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const ce = e as CustomEvent<{ meetingId: string; meetingName: string }>; 
+      setParticipantsView({ meetingId: ce.detail.meetingId, meetingName: ce.detail.meetingName });
+      try { localStorage.setItem('home:selectedMeeting', JSON.stringify({ meetingId: ce.detail.meetingId, meetingName: ce.detail.meetingName })); } catch { /* no-op */ }
+    };
+    window.addEventListener('show-participants', handler as EventListener);
+    return () => window.removeEventListener('show-participants', handler as EventListener);
+  }, []);
+
+  // 초기 로드시 저장된 선택 복원
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem('home:selectedMeeting');
+      if (raw) {
+        const parsed = JSON.parse(raw) as { meetingId: string; meetingName: string };
+        if (parsed?.meetingId) {
+          setParticipantsView({ meetingId: parsed.meetingId, meetingName: parsed.meetingName });
+        }
+      }
+    } catch { /* ignore */ }
+  }, []);
+
+  // 설명 카드 실제 높이를 측정해서 저장 (참여자 카드에 동일 적용)
+  useEffect(() => {
+    const measure = () => {
+      if (introCardRef.current) {
+        const rect = introCardRef.current.getBoundingClientRect();
+        if (rect.height > 0) setIntroCardHeight(Math.round(rect.height));
+      }
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
+
   return (
     <div className="bg-gray-50 dark:bg-[#18191c] min-h-screen grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
       {/* 왼쪽: 기존 메인 콘텐츠 */}
@@ -239,25 +497,36 @@ export default function HomePage() {
         
         {/* 2단 가로 카드 레이아웃 */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch w-full ml-2 lg:ml-4 mt-2 lg:mt-4">
-          {/* 왼쪽 카드: Loch 설명 */}
-          <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-8 flex flex-col items-start justify-start">
-            <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
-              Loch
-            </h1>
-            <p className="text-sm text-gray-500 dark:text-gray-300 mb-6">
-              안녕하세요 Team Loch 입니다! 저희는 졸업작품으로 Discord와 Zoom을 참고로 
-              <br/>
-              음성 채팅을 이용해 자동으로 회의록이 작성되는 프로그램을 만들었습니다.
-              <br/>
-              <br/>
-              만들어진 회의록을 github에 업로드 할 수 있게 하여 회의록을 공유할 수 있게 하였습니다.
-              <br/>
-              <br/>
-              봐주셔서 감사합니다!!
-              <br/>
-              팀장: 조용무 팀원: 임현성, 황자준, 오택현
-            </p>
-          </div>
+          {/* 왼쪽 카드: 설명 또는 참여자 */}
+          {participantsView ? (
+            <ParticipantsCard
+              meetingId={participantsView.meetingId}
+              title={participantsView.meetingName}
+              fixedHeight={introCardHeight ?? undefined}
+            />
+          ) : (
+            <div
+              ref={introCardRef}
+              className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-8 flex flex-col items-start justify-start"
+            >
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
+                Loch
+              </h1>
+              <p className="text-sm text-gray-500 dark:text-gray-300 mb-6">
+                안녕하세요 Team Loch 입니다! 저희는 졸업작품으로 Discord와 Zoom을 참고로 
+                <br/>
+                음성 채팅을 이용해 자동으로 회의록이 작성되는 프로그램을 만들었습니다.
+                <br/>
+                <br/>
+                만들어진 회의록을 github에 업로드 할 수 있게 하여 회의록을 공유할 수 있게 하였습니다.
+                <br/>
+                <br/>
+                봐주셔서 감사합니다!!
+                <br/>
+                팀장: 조용무 팀원: 임현성, 황자준, 오택현
+              </p>
+            </div>
+          )}
 
           {/* 오른쪽 카드: 내 친구 미리보기 */}
           <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-8 flex flex-col">
@@ -402,28 +671,8 @@ export default function HomePage() {
         </div>
         {/* 미팅 정보 블록 */}
         <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-6 flex flex-col items-center text-center ml-4">
-          <div className="flex gap-4 mb-4">
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-1">
-                <svg width='24' height='24' fill='none'><rect x='4' y='4' width='16' height='16' rx='8' fill='#2563eb'/><path d='M12 8v8M8 12h8' stroke='white' strokeWidth='2' strokeLinecap='round'/></svg>
-              </div>
-              <span className="text-xs text-gray-700 dark:text-gray-200">그룹 A</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-1">
-                <svg width='24' height='24' fill='none'><rect x='4' y='4' width='16' height='16' rx='8' fill='#2563eb'/><path d='M12 8v8M8 12h8' stroke='white' strokeWidth='2' strokeLinecap='round'/></svg>
-              </div>
-              <span className="text-xs text-gray-700 dark:text-gray-200">그룹 B</span>
-            </div>
-            <div className="flex flex-col items-center">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-1">
-                <svg width='24' height='24' fill='none'><rect x='4' y='4' width='16' height='16' rx='8' fill='#2563eb'/><path d='M12 8v8M8 12h8' stroke='white' strokeWidth='2' strokeLinecap='round'/></svg>
-              </div>
-              <span className="text-xs text-gray-700 dark:text-gray-200">그룹 C</span>
-            </div>
-          
-          </div>
-          <div className="text-xs text-gray-500 dark:text-gray-300 mb-1">서버 관리</div>
+          <RecentServers />
+          <Link to="/workspace/manager" className="text-xs text-gray-500 dark:text-gray-300 mb-1 hover:underline cursor-pointer">서버 관리</Link>
           <div className="text-lg font-bold text-gray-800 dark:text-white mb-2 tracking-widest">서버를 관리해 보세요! <button className="ml-1 text-xs text-gray-400"></button>
           </div>
         </div>
