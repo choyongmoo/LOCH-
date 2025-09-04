@@ -70,47 +70,48 @@ export default function CustomSidebar() {
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       onClick={() => navigate("/workspace/home")}
-                      className={
-                        (["/workspace", "/workspace/home", "/"].includes(location.pathname))
-                          ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold"
-                          : ""
-                      }
+                      className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${(["/workspace", "/workspace/home", "/"].includes(location.pathname))
+                          ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20"
+                          : ""}`}
                     >
                       홈
                     </SidebarMenuButton>
+                    <br />
                     <SidebarMenuButton
                       onClick={() => navigate("/meeting")}
-                      className={location.pathname === "/meeting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                      className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/meeting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
                     >
                       회의
                     </SidebarMenuButton>
+                    <br />
                     <SidebarMenuButton
-                      onClick={() => navigate("/")}>
+                      onClick={() => navigate("/")}
+                      className="bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10">
                       돌아가기
                     </SidebarMenuButton>
                     <br />
-                    <SidebarMenuButton>
+                    <SidebarMenuButton className="hover:bg-transparent dark:hover:bg-transparent focus:bg-transparent active:bg-transparent cursor-default">
                       내 제품
                     </SidebarMenuButton>
                     <SidebarMenuSub>    
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                            onClick={() => navigate("/workspace/mun")}
-                          className={location.pathname === "/workspace/mun" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                          className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/workspace/mun" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
                         >
                           문서
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   
-                    <SidebarMenuButton>
+                    <SidebarMenuButton className="hover:bg-transparent dark:hover:bg-transparent focus:bg-transparent active:bg-transparent cursor-default">
                       내 계정
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                           onClick={() => {navigate("/workspace/profile");}}
-                          className={location.pathname === "/workspace/profile" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                          className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/workspace/profile" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
                         >
                       프로필
                     </SidebarMenuSubButton>
@@ -118,7 +119,7 @@ export default function CustomSidebar() {
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                           onClick={() => navigate("/workspace/setting")}
-                          className={location.pathname === "/workspace/setting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                          className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/workspace/setting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
                         >
                           설정
                         </SidebarMenuSubButton>
@@ -126,7 +127,7 @@ export default function CustomSidebar() {
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                           onClick={() => navigate("/workspace/contact")}
-                          className={location.pathname === "/workspace/contact" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                          className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/workspace/contact" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
                         >
                           개인 연락처
                         </SidebarMenuSubButton>
@@ -135,7 +136,7 @@ export default function CustomSidebar() {
                        <SidebarMenuSubItem>
                            <SidebarMenuSubButton
                              onClick={() => navigate("/workspace/friends/requests")}
-                             className={`pl-8 text-sm ${location.pathname === "/workspace/friends/requests" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}`}
+                             className={`pl-8 text-sm bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/workspace/friends/requests" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
                            >
                              <div className="flex items-center justify-between w-full">
                                <span>친구 수신함</span>
@@ -150,14 +151,14 @@ export default function CustomSidebar() {
                   </SidebarMenuItem>
                   <SidebarMenuItem>
 
-                    <SidebarMenuButton>
+                    <SidebarMenuButton className="hover:bg-transparent dark:hover:bg-transparent focus:bg-transparent active:bg-transparent cursor-default">
                       관리자
                     </SidebarMenuButton>
                     <SidebarMenuSub>
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
                           onClick={() => navigate("/workspace/manager")}  
-                          className={location.pathname === "/workspace/manager" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                          className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/workspace/manager" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
                         >
                           서버 관리
                         </SidebarMenuSubButton>

@@ -433,7 +433,7 @@ export default function ContactPage() {
           .select('id,name,email')
           .in('id', ids);
         // profile 정보도 함께 불러오기
-        const { data: profiles } = await (await import("@/lib/supabase")).supabase
+        const { data: profiles } = await (await import("@/lib/supabase")).supabase  
           .from('profile')
           .select('id, nickname, accent_color')
           .in('id', ids);
@@ -503,6 +503,11 @@ export default function ContactPage() {
     (async () => {
       try {
         const { supabase } = await import("@/lib/supabase");
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        supabase.realtime.setAuth(session.access_token);
+
         // 1) 대화방(conversations) 찾기/만들기
         const a = Math.min(myId, friendId);
         const b = Math.max(myId, friendId);
