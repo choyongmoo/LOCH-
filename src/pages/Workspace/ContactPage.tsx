@@ -593,7 +593,7 @@ export default function ContactPage() {
 
       const channel = supabase
         .channel(`dm-inbox:${myId}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages'}, (payload: { new: { sender_id: number; receiver_id: number; content?: string | null; created_at?: string | null } }) => {
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${myId}` }, (payload: { new: { sender_id: number; receiver_id: number; content?: string | null; created_at?: string | null } }) => {
           const row = payload.new;
           const senderId = row.sender_id as number;
           const text = (row.content ?? '') as string;
@@ -602,6 +602,23 @@ export default function ContactPage() {
           setMessages(prev => {
             const updated = { ...prev, [senderId]: [ ...(prev[senderId] || []), msg ] };
             try { localStorage.setItem(`dm:${myId}:${senderId}`, JSON.stringify(updated[senderId])); } catch { /* no-op */ }
+            return updated;
+          });
+        })
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `sender_id=eq.${myId}` }, (payload: { new: { sender_id: number; receiver_id: number; content?: string | null; created_at?: string | null } }) => {
+          const row = payload.new;
+          const otherId = row.receiver_id as number;
+          const text = (row.content ?? '') as string;
+          const ts = new Date(row.created_at ?? Date.now()).getTime();
+          const msg: Message = { sender: 'me', text, timestamp: ts };
+          setMessages(prev => {
+            const current = prev[otherId] || [];
+            const last = current[current.length - 1];
+            if (last && last.sender === 'me' && last.text === text && Math.abs((last.timestamp ?? 0) - ts) < 5000) {
+              return prev;
+            }
+            const updated = { ...prev, [otherId]: [ ...current, msg ] };
+            try { localStorage.setItem(`dm:${myId}:${otherId}`, JSON.stringify(updated[otherId])); } catch { /* no-op */ }
             return updated;
           });
         })
