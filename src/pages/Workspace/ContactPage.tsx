@@ -586,9 +586,14 @@ export default function ContactPage() {
     let cleanup: (() => void) | null = null;
     (async () => {
       const { supabase } = await import("@/lib/supabase");
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { console.warn("no session for realtime"); return; }
+      supabase.realtime.setAuth(session.access_token);
+
       const channel = supabase
         .channel(`dm-inbox:${myId}`)
-        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${myId}` }, (payload: { new: { sender_id: number; receiver_id: number; content?: string | null; created_at?: string | null } }) => {
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages'}, (payload: { new: { sender_id: number; receiver_id: number; content?: string | null; created_at?: string | null } }) => {
           const row = payload.new;
           const senderId = row.sender_id as number;
           const text = (row.content ?? '') as string;
@@ -600,7 +605,9 @@ export default function ContactPage() {
             return updated;
           });
         })
-        .subscribe();
+        .subscribe((status) => {
+          console.log("[RT] dm-inbox status:", status);
+        });
       cleanup = () => { supabase.removeChannel(channel); };
     })();
     return () => { if (cleanup) cleanup(); };
