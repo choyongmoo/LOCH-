@@ -2,7 +2,7 @@ import React from "react";
 
 const MunPage = () => {
   return (
-    <div className="min-h-screen w-402 bg-gray-100 dark:bg-[#18191c] px-5 py-6">
+    <div className="h-screen w-full min-w-0 overflow-hidden bg-gray-100 dark:bg-[#18191c] px-4 md:px-5 py-6">
       {/* 상단 버튼 */}
       <div className="flex gap-4 mb-8 flex-wrap">
         <button className="flex items-center gap-2 border border-gray-200 dark:border-[#23242e] rounded-lg px-4 py-2 bg-white dark:bg-[#23242e] hover:bg-gray-50 dark:hover:bg-[#23242e]/80 text-gray-800 dark:text-gray-100 text-base font-medium">

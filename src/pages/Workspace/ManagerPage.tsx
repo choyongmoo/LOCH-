@@ -147,7 +147,7 @@ const ManagerPage = () => {
   }, [reloadMeetings]);
 
   return (
-    <div className="min-h-screen w-402 bg-gray-100 dark:bg-[#18191c] px-5 py-6">
+    <div className="h-screen w-full min-w-0 bg-gray-100 dark:bg-[#18191c] px-4 md:px-5 py-6 flex flex-col overflow-hidden">
       {/* 테이블 헤더 */}
       <div className="flex items-center px-2 py-2 text-gray-500 dark:text-gray-400 text-sm border-b border-gray-200 dark:border-[#23242e]">
         <div className="w-8"></div>
@@ -156,103 +156,105 @@ const ManagerPage = () => {
         <div className="w-32 text-center">관리자</div>
         <div className="w-8 text-right"></div>
       </div>
-      {/* 테이블 바디 */}
-      {loading ? (
-        skeletonCount > 0 ? (
-          <>
-            {Array.from({ length: Math.max(0, skeletonCount) }).map((_, i) => (
-              <div key={i} className="flex items-center px-2 py-3 border-b border-gray-200 dark:border-[#23242e]">
-                <div className="w-8" />
-                <div className="flex-1 flex items-center gap-3 min-w-0">
-                  <Skeleton className="w-10 h-10 rounded-md" />
-                  <Skeleton className="h-4 w-28" />
+      {/* 스크롤 영역 */}
+      <div className="flex-1 overflow-y-auto">
+        {loading ? (
+          skeletonCount > 0 ? (
+            <>
+              {Array.from({ length: Math.max(0, skeletonCount) }).map((_, i) => (
+                <div key={i} className="flex items-center px-2 py-3 border-b border-gray-200 dark:border-[#23242e]">
+                  <div className="w-8" />
+                  <div className="flex-1 flex items-center gap-3 min-w-0">
+                    <Skeleton className="w-10 h-10 rounded-md" />
+                    <Skeleton className="h-4 w-28" />
+                  </div>
+                  <div className="flex-3 pr-4">
+                    <Skeleton className="h-4 w-48" />
+                  </div>
+                  <div className="w-32 flex items-center justify-center">
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                  <div className="w-8" />
                 </div>
-                <div className="flex-3 pr-4">
-                  <Skeleton className="h-4 w-48" />
-                </div>
-                <div className="w-32 flex items-center justify-center">
-                  <Skeleton className="h-4 w-16" />
-                </div>
-                <div className="w-8" />
-              </div>
-            ))}
-          </>
-        ) : (
+              ))}
+            </>
+          ) : (
+            <div className="flex items-center px-2 py-6 text-sm text-gray-500 dark:text-gray-400">
+              <div className="w-8" />
+              <div className="flex-1">아직 생성된 서버가 없습니다.</div>
+            </div>
+          )
+        ) : rows.length === 0 ? (
           <div className="flex items-center px-2 py-6 text-sm text-gray-500 dark:text-gray-400">
             <div className="w-8" />
             <div className="flex-1">아직 생성된 서버가 없습니다.</div>
           </div>
-        )
-      ) : rows.length === 0 ? (
-        <div className="flex items-center px-2 py-6 text-sm text-gray-500 dark:text-gray-400">
-          <div className="w-8" />
-          <div className="flex-1">아직 생성된 서버가 없습니다.</div>
-        </div>
-      ) : (
-        rows.map((m) => (
-          <div
-            key={m.id}
-            className="group flex items-center px-2 py-3 border-b border-gray-200 dark:border-[#23242e] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2A2B32]"
-            onClick={() => navigate(`/meeting/${m.id}`)}
-          >
-            <div className="w-8" />
-            <div className="flex-1 flex items-center gap-3 min-w-0">
-              <GroupItem name={m.room_name} />
-              <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                {m.room_name}
+        ) : (
+          rows.map((m) => (
+            <div
+              key={m.id}
+              className="group flex items-center px-2 py-3 border-b border-gray-200 dark:border-[#23242e] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2A2B32]"
+              onClick={() => navigate(`/meeting/${m.id}`)}
+            >
+              <div className="w-8" />
+              <div className="flex-1 flex items-center gap-3 min-w-0">
+                <GroupItem name={m.room_name} />
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                  {m.room_name}
+                </div>
               </div>
-            </div>
-            <div className="flex-3 text-sm text-gray-700 dark:text-gray-300 pr-4 truncate">
-              {m.description || "-"}
-            </div>
-            <div className="w-32 text-sm text-gray-800 dark:text-gray-200 truncate flex items-center justify-center gap-1">
-              <span>{hostNames[m.host] ?? `${m.host?.slice(0, 8)}…`}</span>
-            </div>
-            <div className="w-8 flex flex-col items-end justify-center gap-1">
-              {myUuid && m.host === myUuid ? (
-                <>
-                  <button
-                    type="button"
-                    aria-label="settings"
-                    className="opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-gray-600"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                    }}
-                    title="설정"
-                  >
-                    <Settings className="w-4 h-4" />
-                  </button>
+              <div className="flex-3 text-sm text-gray-700 dark:text-gray-300 pr-4 truncate">
+                {m.description || "-"}
+              </div>
+              <div className="w-32 text-sm text-gray-800 dark:text-gray-200 truncate flex items-center justify-center gap-1">
+                <span>{hostNames[m.host] ?? `${m.host?.slice(0, 8)}…`}</span>
+              </div>
+              <div className="w-8 flex flex-col items-end justify-center gap-1">
+                {myUuid && m.host === myUuid ? (
+                  <>
+                    <button
+                      type="button"
+                      aria-label="settings"
+                      className="opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-gray-600"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                      }}
+                      title="설정"
+                    >
+                      <Settings className="w-4 h-4" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="leave"
+                      className="opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-red-500"
+                      onClick={(e) => {
+                        e.stopPropagation(); // 부모 클릭 이벤트 방지
+                        setLeaveTarget(m);
+                      }}
+                      title="서버 나가기"
+                    >
+                      <XIcon className="w-4 h-4" />
+                    </button>
+                  </>
+                ) : (
                   <button
                     type="button"
                     aria-label="leave"
-                    className="opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-red-500"
+                    className="opacity-0 group-hover:opacity-100 transition text-sm text-gray-400 hover:text-red-500 font-semibold"
                     onClick={(e) => {
                       e.stopPropagation(); // 부모 클릭 이벤트 방지
                       setLeaveTarget(m);
                     }}
                     title="서버 나가기"
                   >
-                    <XIcon className="w-4 h-4" />
+                    x
                   </button>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  aria-label="leave"
-                  className="opacity-0 group-hover:opacity-100 transition text-sm text-gray-400 hover:text-red-500 font-semibold"
-                  onClick={(e) => {
-                    e.stopPropagation(); // 부모 클릭 이벤트 방지
-                    setLeaveTarget(m);
-                  }}
-                  title="서버 나가기"
-                >
-                  x
-                </button>
-              )}
+                )}
+              </div>
             </div>
-          </div>
-        ))
-      )}
+          ))
+        )}
+      </div>
       {leaveTarget && (
         <div>
           <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setLeaveTarget(null)} />

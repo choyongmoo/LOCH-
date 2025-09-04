@@ -403,8 +403,8 @@ const ProfilePage = () => {
     };
   }, []);
   return (
-    <div className="h-screen w-402 flex justify-start items-start bg-[#f8fafc] dark:bg-[#18191c] p-0 m-0">
-      <div className="w-full max-w-400 p-8">
+    <div className="h-screen w-full min-w-0 flex justify-start items-start bg-[#f8fafc] dark:bg-[#18191c] p-0 m-0 overflow-hidden">
+      <div className="w-full max-w-none p-4 md:p-6 lg:p-8 overflow-hidden">
         {/* 상단 프로필 */}
         <div className="flex items-center gap-8 mb-8 w-full max-w-none">
           {/* 프로필 이니셜 */}

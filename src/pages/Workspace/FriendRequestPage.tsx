@@ -92,7 +92,7 @@ export default function FriendRequestPage() {
   }, []);
 
   return (
-    <div className="min-h-screen w-402 bg-gray-100 dark:bg-[#18191c] px-5 py-6">
+    <div className="h-screen w-full min-w-0 overflow-hidden bg-gray-100 dark:bg-[#18191c] px-4 md:px-5 py-6">
       <h1 className="text-2xl font-bold mb-4">친구 요청</h1>
       {error && <Paragraph className="text-red-500 text-sm mb-3">{error}</Paragraph>}
       {loading ? (

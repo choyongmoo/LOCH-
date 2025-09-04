@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Skeleton } from "@/components/common/ui/skeleton";
 import GroupItem from "@/components/Workspace/Sidebar/GroupItem";
 import { Link } from "react-router";
 import { supabase } from "@/lib/supabase";
+import { useBreakpoint } from "@/hooks/useBreakpoint";
 
 type SimpleMeeting = { id: string; room_name: string; created_at?: string };
 
@@ -94,6 +95,8 @@ function ParticipantsCard({ meetingId, title, fixedHeight }: { meetingId?: strin
   const [participants, setParticipants] = useState<Array<{ id: number; nickname: string; accent_color: string }>>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [showAll, setShowAll] = useState<boolean>(false);
+  const [expectedCount, setExpectedCount] = useState<number>(0);
+  const [countReady, setCountReady] = useState<boolean>(false);
 
   useEffect(() => {
     const load = async () => {
@@ -123,9 +126,32 @@ function ParticipantsCard({ meetingId, title, fixedHeight }: { meetingId?: strin
             targetMeeting = (mrows && (mrows as Array<{ id: string }>)[0]?.id) ?? null;
           }
         }
-        if (!targetMeeting) { setParticipants([]); return; }
+        // 캐시된 예상 인원 즉시 반영 (로딩 중 스켈레톤 개수 정확도 향상)
+        if (targetMeeting) {
+          try {
+            const cached = localStorage.getItem(`home:memberCount:${targetMeeting}`);
+            if (cached != null) {
+              const n = Number(cached);
+              if (!Number.isNaN(n)) setExpectedCount(n);
+            }
+          } catch { /* ignore */ }
+        }
+        if (!targetMeeting) { setParticipants([]); setCountReady(true); setExpectedCount(0); return; }
 
-        // 참여자 user_ids
+        // 먼저 정확한 인원 수(count)만 빠르게 조회해 스켈레톤 크기 확정
+        try {
+          const { count } = await supabase
+            .from('meeting_members')
+            .select('user_id', { count: 'exact', head: true })
+            .eq('meeting_id', targetMeeting);
+          const n = (count ?? 0);
+          setExpectedCount(n);
+          try { localStorage.setItem(`home:memberCount:${targetMeeting}`, String(n)); } catch { /* ignore */ }
+        } finally {
+          setCountReady(true);
+        }
+
+        // 실제 참여자 id 목록 로드 후 상세 표시
         const { data: members } = await supabase.from('meeting_members').select('user_id').eq('meeting_id', targetMeeting);
         const userIds = (members ?? []).map((r: { user_id: number }) => r.user_id);
         if (userIds.length === 0) { setParticipants([]); return; }
@@ -159,16 +185,16 @@ function ParticipantsCard({ meetingId, title, fixedHeight }: { meetingId?: strin
         <h1 className="text-2xl font-bold text-gray-800 dark:text-white">{title ? `${title} 참여자 목록` : '서버 참여자'}</h1>
         <button onClick={() => setShowAll(true)} className="inline-flex items-center justify-center border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-1 text-sm font-bold hover:bg-gray-100 dark:hover:bg-[#23242e] transition">...</button>
       </div>
-      {loading ? (
+      {loading && countReady ? (
         <div className="flex flex-col gap-3 w-full">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: Math.max(0, expectedCount) }).map((_, i) => (
             <div key={i} className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-[#23242e]" />
               <Skeleton className="h-4 w-40" />
             </div>
           ))}
         </div>
-      ) : participants.length === 0 ? (
+      ) : loading ? null : participants.length === 0 ? (
         <div className="text-sm text-gray-500 dark:text-gray-300">참여자 정보가 없습니다.</div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
@@ -211,6 +237,7 @@ function ParticipantsCard({ meetingId, title, fixedHeight }: { meetingId?: strin
 }
 
 export default function HomePage() {
+  const { up, down } = useBreakpoint({ debounceMs: 120 });
   const [email, setEmail] = useState<string | null>(null);
   const [profileName, setProfileName] = useState<string | null>(null);
   const [profileColor, setProfileColor] = useState<string | null>(null);
@@ -458,12 +485,21 @@ export default function HomePage() {
     return () => window.removeEventListener('resize', measure);
   }, []);
 
+  const rightPanelWidthClass = useMemo(() => {
+    if (up["2xl"]) return "lg:grid-cols-[1fr_420px]";
+    if (up.xl) return "lg:grid-cols-[1fr_380px]";
+    if (up.lg) return "lg:grid-cols-[1fr_340px]";
+    return "";
+  }, [up]);
+
+  const pagePaddingClass = useMemo(() => (down.md ? "gap-4" : "gap-6"), [down.md]);
+
   return (
-    <div className="bg-gray-50 dark:bg-[#18191c] min-h-screen grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-6">
+    <div className={`bg-gray-50 dark:bg-[#18191c] h-screen overflow-hidden grid grid-cols-1 ${rightPanelWidthClass} ${pagePaddingClass} px-0`}> 
       {/* 왼쪽: 기존 메인 콘텐츠 */}
       <div>
         {/* 기존 상단 카드, 2단 카드, 활동 등 기존 코드 전체 */}
-        <div className="ml-2 lg:ml-4 mt-2 lg:mt-4">
+        <div className="ml-0 lg:ml-2 mt-2 lg:mt-4">
           <div className="bg-white dark:bg-[#1a1d21] rounded-2xl shadow-xl p-6 mb-6 flex items-center justify-between">
             {/* 왼쪽: 프로필, 이름, 소개글*/}
             <div className="flex items-center gap-6">
@@ -496,7 +532,7 @@ export default function HomePage() {
         </div>
         
         {/* 2단 가로 카드 레이아웃 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch w-full ml-2 lg:ml-4 mt-2 lg:mt-4">
+        <div className={`grid grid-cols-1 ${up.md ? "md:grid-cols-2" : ""} ${down.md ? "gap-4" : "gap-6"} items-stretch w-full ml-0 lg:ml-2 mt-2 lg:mt-4`}>
           {/* 왼쪽 카드: 설명 또는 참여자 */}
           {participantsView ? (
             <ParticipantsCard
@@ -529,7 +565,7 @@ export default function HomePage() {
           )}
 
           {/* 오른쪽 카드: 내 친구 미리보기 */}
-          <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-8 flex flex-col">
+          <div className={`bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl ${down.md ? "p-5" : "p-8"} flex flex-col`}>
             <h3 className="text-lg font-bold text-gray-800 dark:text-white mb-3">내 친구</h3>
             {isFriendsLoading ? (
               <div className="flex flex-col gap-3">
@@ -566,8 +602,8 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="w-full px-1 pt-1">
-          <div className="bg-white dark:bg-[#1a1d21] rounded-2xl shadow-xl p-6 ml-2 lg:ml-4 mt-2 lg:mt-4">
+        <div className="w-full px-0 pt-1">
+          <div className={`bg-white dark:bg-[#1a1d21] rounded-2xl shadow-xl ${down.md ? "p-4" : "p-6"} ml-0 lg:ml-2 mt-2 lg:mt-4`}>
             {/* 상단: 제목 + 버튼 */}
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-baseline gap-3">

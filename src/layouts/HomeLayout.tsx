@@ -15,7 +15,7 @@ export const HomeLayout = () => {
         <div className="p-8 pt-10 relative z-10">
           <Navbar />
         </div>
-        <div className="w-6xl flex-grow">
+        <div className="w-full max-w-6xl flex-grow px-4 md:px-6 lg:px-8">
           <Outlet />
         </div>
       </div>

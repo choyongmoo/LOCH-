@@ -631,7 +631,7 @@ export default function ContactPage() {
   }, [myId]);
 
   return (
-    <div className={theme === 'dark' ? 'theme-dark' : 'theme-light'} style={{ display: 'flex', height: '100vh', width: 'calc(83.7vw)', background: theme === 'dark' ? '#313338' : '#f4f4f4', position: 'relative' }}>
+    <div className={theme === 'dark' ? 'theme-dark' : 'theme-light'} style={{ display: 'flex', height: '100vh', width: '100%', background: theme === 'dark' ? '#313338' : '#f4f4f4', position: 'relative', overflow: 'hidden' }}>
       <FriendsSidebar selectedFriend={selectedFriend} onSelect={setSelectedFriend} onOpenAdd={() => setShowAdd(true)} friends={friends} onDelete={askRemoveFriend} />
       <div style={{ flex: 1, minWidth: 0 }}>
         {selectedFriendObj ? (

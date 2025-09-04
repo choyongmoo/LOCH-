@@ -177,7 +177,7 @@ const MiniSidebar = () => {
     };
   }, [reloadMeetings]);
   return (
-    <div className="min-h-screen flex flex-col items-center py-4 w-14 bg-gray-100 dark:bg-[#1E1F2B] border-r border-gray-300 dark:border-gray-700">
+    <div className="h-full flex flex-col items-center py-4 w-14 bg-gray-100 dark:bg-[#1E1F2B] border-r border-gray-300 dark:border-gray-700">
       {/* 그룹 리스트 */}
       <div className="flex flex-col items-center gap-0 mb-0 font-bold">
         {loading ? (
@@ -191,7 +191,7 @@ const MiniSidebar = () => {
         ) : (
           <>
             {meetings.slice(0, 15).map((m) => (
-              <GroupItem key={m.id} name={m.room_name} />
+              <GroupItem key={m.id} name={m.room_name} onClick={() => setConfirmNavigate({ open: true, meetingId: m.id, meetingName: m.room_name })} />
             ))}
             {meetings.length > 15 && (
               <button
@@ -250,10 +250,9 @@ const MiniSidebar = () => {
                     <button
                       key={`all-${m.id}`}
                       className="flex items-center gap-2 p-2 rounded hover:bg-gray-100 dark:hover:bg-[#23242e] text-left"
-                      onClick={() => { setShowAllServers(false); navigate(`/meeting/${m.id}`); }}
-                      title={m.room_name}
+                      onClick={() => { setShowAllServers(false); setConfirmNavigate({ open: true, meetingId: m.id, meetingName: m.room_name }); }}
                     >
-                      <GroupItem name={m.room_name} />
+                      <GroupItem name={m.room_name} title="" />
                       <span className="text-sm text-gray-800 dark:text-gray-200 truncate">
                         {m.room_name}
                       </span>
