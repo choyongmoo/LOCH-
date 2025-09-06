@@ -1,4 +1,6 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+import { supabase } from "@/lib/supabase";
 import { About } from "./About";
 import { Tech } from "./Tech";
 import { Team } from "./Team";
@@ -7,36 +9,35 @@ import { Button } from "@/components/common/ui/button";
 import dashboardIllustration from "@/assets/landing/dashboard2.svg";
 
 export const Home = () => {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const navigate = useNavigate();
 
-  document.title = "LOCH";
-  
   useEffect(() => {
-  if (typeof window !== "undefined" && (window as any).__scrollTo) {
-    const id = (window as any).__scrollTo;
-    delete (window as any).__scrollTo;
+    document.title = "LOCH";
 
-    const scrollToElement = () => {
-      const el = document.getElementById(id);
-      if (el) {
-        const yOffset = -80; 
-        const y = el.getBoundingClientRect().top + window.scrollY + yOffset;
+    supabase.auth.getUser().then(({ data }) => {
+      setLoggedIn(!!data.user);
+    });
 
-        window.scrollTo({
-          top: y,
-          behavior: "smooth",
-        });
-      } else {
-        }
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setLoggedIn(!!session?.user);
+    });
+
+    return () => {
+      authListener.subscription.unsubscribe();
     };
+  }, []);
 
-   
-    setTimeout(scrollToElement, 600);
-  }
-}, []);
+  const handleStart = () => {
+    if (loggedIn) {
+      navigate("/workspace"); 
+    } else {
+      navigate("/signin"); 
+    }
+  };
 
   return (
     <>
-      {/* 메인 히어로 섹션 */}
       <section className="relative w-full h-screen flex items-center transition-colors duration-300">
         <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-20 px-8 h-full place-items-center -translate-y-24">
           <div className="space-y-8">
@@ -46,15 +47,15 @@ export const Home = () => {
             <h1 className="text-[60px] font-extrabold leading-[1.1] text-gray-900 dark:text-white">
               Streamline your workflow
             </h1>
-            
+
             <div className="mt-10">
               <Button
                 size="lg"
                 className="px-10 py-6 text-lg bg-black text-white hover:bg-gray-900 rounded-xl shadow-md 
                 dark:bg-white dark:text-black dark:hover:bg-gray-200 transition"
-                asChild
+                onClick={handleStart}
               >
-                <a href="/signup">지금 시작하기 →</a>
+                지금 시작하기 →
               </Button>
             </div>
           </div>
@@ -68,7 +69,6 @@ export const Home = () => {
         </div>
       </section>
       
-      {/* 하위 섹션들 */}
       <About />
       <Tech />
       <Team />
