@@ -19,11 +19,17 @@ const MiniSidebar = () => {
   const [showAllServers, setShowAllServers] = useState<boolean>(false);
   const [serverSearch, setServerSearch] = useState<string>("");
   const [confirmNavigate, setConfirmNavigate] = useState<{ open: boolean; meetingId: string | null; meetingName: string | null }>({ open: false, meetingId: null, meetingName: null });
+  const [confirmLogoutOpen, setConfirmLogoutOpen] = useState<boolean>(false);
+  const [myUserPk, setMyUserPk] = useState<number | null>(null);
   const [newGroupName, setNewGroupName] = useState<string>("");
   const [newGroupDescription, setNewGroupDescription] = useState<string>("");
   const { toggleTheme } = useThemeStore();
   const handleLogout = async () => {
     try {
+      try {
+        localStorage.removeItem('home:selectedMeeting');
+        Object.keys(localStorage).forEach((k) => { if (k.startsWith('home:memberCount:')) localStorage.removeItem(k); });
+      } catch { /* ignore */ }
       await supabase.auth.signOut();
     } finally {
       navigate("/");
@@ -89,6 +95,7 @@ const MiniSidebar = () => {
           .eq("user_uuid", uuid)
           .maybeSingle();
         userPk = (userRow as { id: number } | null)?.id ?? null;
+        setMyUserPk(userPk);
       }
 
       // 내 멤버십 meeting_ids
@@ -162,7 +169,23 @@ const MiniSidebar = () => {
     // meeting_members 변경도 반영
     const mmChannel = supabase
       .channel("realtime:meeting_members:mini")
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'meeting_members' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'meeting_members' }, (payload) => {
+        // 멤버십 변경 시 현재 선택 초기화(홈 카드와 동기화)
+        try {
+          const raw = localStorage.getItem('home:selectedMeeting');
+          if (raw) {
+            const parsed = JSON.parse(raw) as { meetingId?: string } | null;
+            const newRow = payload.new as { meeting_id?: string; user_id?: number } | null;
+            const oldRow = payload.old as { meeting_id?: string; user_id?: number } | null;
+            const changedMeetingId = newRow?.meeting_id ?? oldRow?.meeting_id ?? null;
+            const changedUserId = newRow?.user_id ?? oldRow?.user_id ?? null;
+            if (parsed?.meetingId && changedMeetingId === parsed.meetingId && myUserPk != null && changedUserId === myUserPk) {
+              localStorage.removeItem('home:selectedMeeting');
+              Object.keys(localStorage).forEach((k) => { if (k.startsWith('home:memberCount:')) localStorage.removeItem(k); });
+              window.dispatchEvent(new CustomEvent('show-participants', { detail: { meetingId: '', meetingName: '' } }));
+            }
+          }
+        } catch { /* ignore */ }
         void reloadMeetings();
       })
       .subscribe();
@@ -175,7 +198,7 @@ const MiniSidebar = () => {
       supabase.removeChannel(mmChannel);
       window.removeEventListener('meetings-updated', handleUpdated);
     };
-  }, [reloadMeetings]);
+  }, [reloadMeetings, myUserPk]);
   return (
     <div className="h-full flex flex-col items-center py-4 w-14 bg-gray-100 dark:bg-[#1E1F2B] border-r border-gray-300 dark:border-gray-700">
       {/* 그룹 리스트 */}
@@ -219,7 +242,7 @@ const MiniSidebar = () => {
 
       {/* 로그아웃(전원) 버튼 - 맨 아래 */}
       <div className="mt-auto pointer-events-auto mb-2">
-        <Button variant="outline" size="icon" onClick={handleLogout} title="로그아웃">
+        <Button variant="outline" size="icon" onClick={() => setConfirmLogoutOpen(true)} title="로그아웃">
           <Power />
         </Button>
       </div>
@@ -288,6 +311,23 @@ const MiniSidebar = () => {
                 } catch { /* no-op */ }
                 setConfirmNavigate({ open: false, meetingId: null, meetingName: null });
               }}>예</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 로그아웃 확인 모달 */}
+      {confirmLogoutOpen && (
+        <div>
+          <div
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={() => setConfirmLogoutOpen(false)}
+          />
+          <div className="fixed top-1/2 left-1/2 w-[320px] bg-white dark:bg-[#2F3136] p-4 rounded-md shadow-lg transform -translate-x-1/2 -translate-y-1/2 z-50">
+            <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">로그아웃하시겠습니까?</h3>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setConfirmLogoutOpen(false)}>취소</Button>
+              <Button onClick={() => { setConfirmLogoutOpen(false); void handleLogout(); }}>예</Button>
             </div>
           </div>
         </div>

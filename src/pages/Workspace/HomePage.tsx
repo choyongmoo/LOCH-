@@ -247,6 +247,7 @@ export default function HomePage() {
   const [isProfileLoading, setIsProfileLoading] = useState<boolean>(true);
   // 사용자 PK가 필요하면 확장 예정
   // const [userPk, setUserPk] = useState<number | null>(null);
+  const lastUserIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     const loadFromDatabase = async () => {
@@ -313,7 +314,25 @@ export default function HomePage() {
 
     void loadFromDatabase();
 
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
+      const newUserId = session?.user?.id ?? null;
+      const prevUserId = lastUserIdRef.current;
+      if (event === 'SIGNED_OUT') {
+        try {
+          localStorage.removeItem('home:selectedMeeting');
+          Object.keys(localStorage).forEach((k) => { if (k.startsWith('home:memberCount:')) localStorage.removeItem(k); });
+        } catch { /* ignore */ }
+        setParticipantsView(null);
+      } else if (event === 'SIGNED_IN') {
+        if (prevUserId && newUserId && prevUserId !== newUserId) {
+          try {
+            localStorage.removeItem('home:selectedMeeting');
+            Object.keys(localStorage).forEach((k) => { if (k.startsWith('home:memberCount:')) localStorage.removeItem(k); });
+          } catch { /* ignore */ }
+          setParticipantsView(null);
+        }
+      }
+      lastUserIdRef.current = newUserId;
       void loadFromDatabase();
     });
     return () => {
@@ -451,9 +470,15 @@ export default function HomePage() {
   // MiniSidebar에서 show-participants 이벤트를 수신하면 왼쪽 첫 카드만 참여자 카드로 전환
   useEffect(() => {
     const handler = (e: Event) => {
-      const ce = e as CustomEvent<{ meetingId: string; meetingName: string }>; 
-      setParticipantsView({ meetingId: ce.detail.meetingId, meetingName: ce.detail.meetingName });
-      try { localStorage.setItem('home:selectedMeeting', JSON.stringify({ meetingId: ce.detail.meetingId, meetingName: ce.detail.meetingName })); } catch { /* no-op */ }
+      const ce = e as CustomEvent<{ meetingId: string; meetingName: string }>;
+      const { meetingId, meetingName } = ce.detail;
+      if (!meetingId) {
+        setParticipantsView(null);
+        try { localStorage.removeItem('home:selectedMeeting'); } catch { /* ignore */ }
+        return;
+      }
+      setParticipantsView({ meetingId, meetingName });
+      try { localStorage.setItem('home:selectedMeeting', JSON.stringify({ meetingId, meetingName })); } catch { /* no-op */ }
     };
     window.addEventListener('show-participants', handler as EventListener);
     return () => window.removeEventListener('show-participants', handler as EventListener);
@@ -471,6 +496,37 @@ export default function HomePage() {
       }
     } catch { /* ignore */ }
   }, []);
+
+  // 선택된 서버가 여전히 내 멤버십인지 검증 (서버 관리에서 탈퇴 후 홈으로 돌아오면 초기화)
+  useEffect(() => {
+    const verifyMembership = async () => {
+      if (!participantsView?.meetingId) return;
+      try {
+        const { data: auth } = await supabase.auth.getUser();
+        const emailFromAuth = auth.user?.email ?? null;
+        if (!emailFromAuth) return;
+        const { data: me } = await supabase
+          .from('users')
+          .select('id')
+          .eq('email', emailFromAuth)
+          .order('id', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        const myId = (me?.id as number | undefined) ?? null;
+        if (!myId) return;
+        const { count } = await supabase
+          .from('meeting_members')
+          .select('user_id', { count: 'exact', head: true })
+          .eq('meeting_id', participantsView.meetingId)
+          .eq('user_id', myId);
+        if (!count || count === 0) {
+          setParticipantsView(null);
+          try { localStorage.removeItem('home:selectedMeeting'); } catch { /* ignore */ }
+        }
+      } catch { /* ignore */ }
+    };
+    void verifyMembership();
+  }, [participantsView]);
 
   // 설명 카드 실제 높이를 측정해서 저장 (참여자 카드에 동일 적용)
   useEffect(() => {

@@ -168,6 +168,8 @@ interface ChatBoxProps {
 const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
   const [input, setInput] = useState("");
   const { theme } = useThemeStore();
+  const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
+  const listRef = React.useRef<HTMLDivElement | null>(null);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,6 +178,15 @@ const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
       setInput("");
     }
   };
+
+  // 메시지 변경 시 최신 메시지로 스크롤
+  React.useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } else if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [messages]);
 
   // URL을 하이퍼링크로 변환하는 함수
   const renderMessageWithLinks = (text: string) => {
@@ -216,7 +227,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
         </div>
         <span style={{ color: theme === 'dark' ? '#fff' : '#23272a', fontWeight: 600, fontSize: 18 }}>{friend.name}</span>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {messages.length === 0 ? (
           <span style={{ color: theme === 'dark' ? '#aaa' : '#666', textAlign: 'center', marginTop: 40 }}>메시지가 없습니다. 대화를 시작해보세요!</span>
         ) : (
@@ -242,6 +253,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
             </div>
           ))
         )}
+        <div ref={messagesEndRef} />
       </div>
       <form onSubmit={handleSend} style={{ display: 'flex', padding: '16px', borderTop: theme === 'dark' ? '1px solid #23272a' : '1px solid #e5e7eb', background: theme === 'dark' ? '#23272a' : '#fff' }}>
         <input
