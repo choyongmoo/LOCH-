@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { Input } from "@/components/common/ui/input";
 import GroupItem from "@/components/Workspace/Sidebar/GroupItem";
 import { supabase } from "@/lib/supabase";
 import { Skeleton } from "@/components/common/ui/skeleton";
@@ -15,6 +16,12 @@ const ManagerPage = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [skeletonCount, setSkeletonCount] = useState<number>(0);
   const [myUuid, setMyUuid] = useState<string | null>(null);
+  // create server modal
+  const [createOpen, setCreateOpen] = useState<boolean>(false);
+  const [creating, setCreating] = useState<boolean>(false);
+  const [createName, setCreateName] = useState<string>("");
+  const [createDesc, setCreateDesc] = useState<string>("");
+  const [createError, setCreateError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -40,14 +47,14 @@ const ManagerPage = () => {
         let meetingIds: string[] = [];
         if (userPk) {
           const { data: mm } = await supabase
-            .from("meeting_members")
-            .select("meeting_id")
+            .from("server_members")
+            .select("server_id")
             .eq("user_id", userPk);
-          meetingIds = (mm ?? []).map((r: { meeting_id: string }) => r.meeting_id);
+          meetingIds = (mm ?? []).map((r: { server_id: string }) => r.server_id);
         }
 
         const { data } = await supabase
-          .from("meetings")
+          .from("servers")
           .select("id, room_name, description, host, created_at")
           .in("id", meetingIds.length > 0 ? meetingIds : ["00000000-0000-0000-0000-000000000000"]) // in 빈배열 보호
           .order("created_at", { ascending: true });
@@ -55,7 +62,7 @@ const ManagerPage = () => {
         let list = (data ?? []) as MeetingRec[];
         if (uuid) {
           const { data: hosted } = await supabase
-            .from("meetings")
+            .from("servers")
             .select("id, room_name, description, host, created_at")
             .eq("host", uuid)
             .order("created_at", { ascending: true });
@@ -101,10 +108,10 @@ const ManagerPage = () => {
   useEffect(() => {
     void reloadMeetings();
     const channel = supabase
-      .channel("realtime:meetings:manager")
+      .channel("realtime:servers:manager")
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'meetings' },
+        { event: 'INSERT', schema: 'public', table: 'servers' },
         (payload) => {
           const r = payload.new as MeetingRow;
           setRows((prev) => (prev.some((m) => m.id === r.id) ? prev : [...prev, r]));
@@ -112,7 +119,7 @@ const ManagerPage = () => {
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'meetings' },
+        { event: 'UPDATE', schema: 'public', table: 'servers' },
         (payload) => {
           const r = payload.new as MeetingRow;
           setRows((prev) => prev.map((m) => (m.id === r.id ? r : m)));
@@ -120,7 +127,7 @@ const ManagerPage = () => {
       )
       .on(
         'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'meetings' },
+        { event: 'DELETE', schema: 'public', table: 'servers' },
         (payload) => {
           const oldId = (payload.old as { id: string }).id;
           setRows((prev) => prev.filter((m) => m.id !== oldId));
@@ -130,14 +137,14 @@ const ManagerPage = () => {
 
     // meeting_members 변경도 반영
     const mmChannel = supabase
-      .channel("realtime:meeting_members:manager")
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'meeting_members' }, () => {
+      .channel("realtime:server_members:manager")
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'server_members' }, () => {
         void reloadMeetings();
       })
       .subscribe();
 
     const handleUpdated = (): void => { void reloadMeetings(); };
-    window.addEventListener('meetings-updated', handleUpdated);
+    window.addEventListener('meetings-updated', handleUpdated); // 이벤트명은 호환 유지
 
     return () => {
       supabase.removeChannel(channel);
@@ -179,18 +186,11 @@ const ManagerPage = () => {
               ))}
             </>
           ) : (
-            <div className="flex items-center px-2 py-6 text-sm text-gray-500 dark:text-gray-400">
-              <div className="w-8" />
-              <div className="flex-1">아직 생성된 서버가 없습니다.</div>
-            </div>
+            <></>
           )
-        ) : rows.length === 0 ? (
-          <div className="flex items-center px-2 py-6 text-sm text-gray-500 dark:text-gray-400">
-            <div className="w-8" />
-            <div className="flex-1">아직 생성된 서버가 없습니다.</div>
-          </div>
         ) : (
-          rows.map((m) => (
+          <>
+            {rows.map((m) => (
             <div
               key={m.id}
               className="group flex items-center px-2 py-3 border-b border-gray-200 dark:border-[#23242e] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2A2B32]"
@@ -252,9 +252,89 @@ const ManagerPage = () => {
                 )}
               </div>
             </div>
-          ))
+            ))}
+            {/* plus row to add new server (항상 표시) */}
+            <div className="flex items-center px-2 py-4 border-b border-gray-200 dark:border-[#23242e]">
+              <div className="w-8" />
+              <div className="flex-1 flex items-center justify-center min-w-0">
+                <div
+                  className="w-10 h-10 rounded-md bg-gray-200 dark:bg-[#2A2B32] text-gray-700 dark:text-gray-200 flex items-center justify-center cursor-pointer hover:bg-gray-300 dark:hover:bg-[#343746]"
+                  onClick={() => { setCreateOpen(true); setCreateError(null); }}
+                  title="서버 추가"
+                >
+                  +
+                </div>
+              </div>
+              <div className="w-8" />
+            </div>
+          </>
         )}
       </div>
+      {/* create modal */}
+      {createOpen && (
+        <div>
+          <div className="fixed inset-0 bg-black/50 z-40" onClick={() => { if (!creating) { setCreateOpen(false); setCreateName(""); setCreateDesc(""); } }} />
+          <div className="fixed top-1/2 left-1/2 w-[360px] max-w-[90vw] bg-white dark:bg-[#23242e] p-5 rounded-md shadow-lg transform -translate-x-1/2 -translate-y-1/2 z-50">
+            <div className="text-lg font-semibold text-gray-900 dark:text-white mb-3">서버 추가</div>
+            {createError && (
+              <div className="text-xs text-red-500 mb-2">{createError}</div>
+            )}
+            <div className="space-y-3">
+              <div>
+                <label className="text-sm text-gray-600 dark:text-gray-300">이름</label>
+                <Input value={createName} onChange={(e) => setCreateName(e.target.value)} placeholder="서버 이름" />
+              </div>
+              <div>
+                <label className="text-sm text-gray-600 dark:text-gray-300">소개</label>
+                <Input value={createDesc} onChange={(e) => setCreateDesc(e.target.value)} placeholder="서버 소개(선택)" />
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                className="px-3 py-1 rounded border border-gray-300 dark:border-gray-600 text-sm"
+                onClick={() => { if (!creating) { setCreateOpen(false); setCreateName(""); setCreateDesc(""); } }}
+                disabled={creating}
+              >
+                취소
+              </button>
+              <button
+                className="px-3 py-1 rounded bg-gray-900 text-white dark:bg-white dark:text-black text-sm disabled:opacity-60"
+                disabled={creating || !createName.trim()}
+                onClick={async () => {
+                  setCreating(true);
+                  setCreateError(null);
+                  try {
+                    const name = createName.trim();
+                    const description = createDesc.trim();
+                    const { data: auth } = await supabase.auth.getUser();
+                    const host = auth.user?.id ?? null;
+                    const { data, error } = await supabase
+                      .from('servers')
+                      .insert({ room_name: name, description: description || null, host })
+                      .select('id, room_name, description, host')
+                      .single();
+                    if (error) throw error;
+                    if (data) {
+                      if (host) {
+                        try { await supabase.from('server_members').insert({ server_id: data.id, user_id: host }); } catch { /* ignore */ }
+                      }
+                      setRows((prev) => ([...prev, { id: data.id, room_name: data.room_name, description: data.description, host: data.host }]));
+                      window.dispatchEvent(new Event('meetings-updated'));
+                      setCreateOpen(false); setCreateName(""); setCreateDesc("");
+                    }
+                  } catch {
+                    setCreateError('생성에 실패했습니다.');
+                  } finally {
+                    setCreating(false);
+                  }
+                }}
+              >
+                생성
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       {leaveTarget && (
         <div>
           <div className="fixed inset-0 bg-black/50 z-40" onClick={() => setLeaveTarget(null)} />
@@ -293,12 +373,12 @@ const ManagerPage = () => {
                     const userId = (userRow as { id: number } | null)?.id;
                     if (!userId) throw new Error("유저 정보가 없습니다.");
                     await supabase
-                      .from("meeting_members")
+                      .from("server_members")
                       .delete()
-                      .eq("meeting_id", leaveTarget.id)
+                      .eq("server_id", leaveTarget.id)
                       .eq("user_id", userId);
                     await supabase
-                      .from("meetings")
+                      .from("servers")
                       .delete()
                       .eq("id", leaveTarget.id);
                     setRows((prev) => prev.filter((r) => r.id !== leaveTarget.id));

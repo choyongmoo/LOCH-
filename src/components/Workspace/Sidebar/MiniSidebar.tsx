@@ -20,7 +20,7 @@ const MiniSidebar = () => {
   const [serverSearch, setServerSearch] = useState<string>("");
   const [confirmNavigate, setConfirmNavigate] = useState<{ open: boolean; meetingId: string | null; meetingName: string | null }>({ open: false, meetingId: null, meetingName: null });
   const [confirmLogoutOpen, setConfirmLogoutOpen] = useState<boolean>(false);
-  const [myUserPk, setMyUserPk] = useState<number | null>(null);
+  const [myUserUuid, setMyUserUuid] = useState<string | null>(null);
   const [newGroupName, setNewGroupName] = useState<string>("");
   const [newGroupDescription, setNewGroupDescription] = useState<string>("");
   const { toggleTheme } = useThemeStore();
@@ -55,24 +55,16 @@ const MiniSidebar = () => {
     const host = userData?.user?.id ?? "unknown";
 
     const { data } = await supabase
-      .from("meetings")
+      .from("servers")
       .insert({ room_name: name, description: description || null, host })
       .select("id, room_name, description")
       .single();
 
     if (data) {
-      // 내가 속한 meeting_members에 추가
-      const { data: usersRow } = await supabase
-        .from("users")
-        .select("id")
-        .eq("user_uuid", host)
-        .maybeSingle();
-      const userPk = (usersRow as { id: number } | null)?.id;
-      if (userPk) {
-        await supabase
-          .from("meeting_members")
-          .insert({ meeting_id: data.id, user_id: userPk });
-      }
+      // 내가 속한 server_members에 추가 (user_id는 uuid)
+      await supabase
+        .from("server_members")
+        .insert({ server_id: data.id, user_id: host });
       setMeetings((prev) => [...prev, data]);
       setNewGroupName("");
       setNewGroupDescription("");
@@ -87,30 +79,21 @@ const MiniSidebar = () => {
       // 현재 유저
       const { data: auth } = await supabase.auth.getUser();
       const uuid = auth.user?.id ?? null;
-      let userPk: number | null = null;
-      if (uuid) {
-        const { data: userRow } = await supabase
-          .from("users")
-          .select("id")
-          .eq("user_uuid", uuid)
-          .maybeSingle();
-        userPk = (userRow as { id: number } | null)?.id ?? null;
-        setMyUserPk(userPk);
-      }
+      setMyUserUuid(uuid);
 
       // 내 멤버십 meeting_ids
       let meetingIds: string[] = [];
-      if (userPk) {
+      if (uuid) {
         const { data: mm } = await supabase
-          .from("meeting_members")
-          .select("meeting_id")
-          .eq("user_id", userPk);
-        meetingIds = (mm ?? []).map((r: { meeting_id: string }) => r.meeting_id);
+          .from("server_members")
+          .select("server_id")
+          .eq("user_id", uuid);
+        meetingIds = (mm ?? []).map((r: { server_id: string }) => r.server_id);
       }
 
       // 내 서버 목록: 내가 멤버이거나(host이거나)
       const { data } = await supabase
-        .from("meetings")
+        .from("servers")
         .select("id, room_name, description, host, created_at")
         .in("id", meetingIds.length > 0 ? meetingIds : ["00000000-0000-0000-0000-000000000000"]) // in은 빈 배열 불가
         .order("created_at", { ascending: true });
@@ -118,7 +101,7 @@ const MiniSidebar = () => {
       let list = (data ?? []) as MeetingRec[];
       if (uuid) {
         const { data: hosted } = await supabase
-          .from("meetings")
+          .from("servers")
           .select("id, room_name, description, host, created_at")
           .eq("host", uuid)
           .order("created_at", { ascending: true });
@@ -139,10 +122,10 @@ const MiniSidebar = () => {
     void reloadMeetings();
     // Realtime subscription for meetings
     const channel = supabase
-      .channel("realtime:meetings:mini")
+      .channel("realtime:servers:mini")
       .on(
         'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'meetings' },
+        { event: 'INSERT', schema: 'public', table: 'servers' },
         (payload) => {
           const newRow = payload.new as { id: string; room_name: string; description: string | null };
           setMeetings((prev) => (prev.some((m) => m.id === newRow.id) ? prev : [...prev, newRow]));
@@ -150,7 +133,7 @@ const MiniSidebar = () => {
       )
       .on(
         'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'meetings' },
+        { event: 'UPDATE', schema: 'public', table: 'servers' },
         (payload) => {
           const updated = payload.new as { id: string; room_name: string; description: string | null };
           setMeetings((prev) => prev.map((m) => (m.id === updated.id ? { id: updated.id, room_name: updated.room_name, description: updated.description } : m)));
@@ -158,7 +141,7 @@ const MiniSidebar = () => {
       )
       .on(
         'postgres_changes',
-        { event: 'DELETE', schema: 'public', table: 'meetings' },
+        { event: 'DELETE', schema: 'public', table: 'servers' },
         (payload) => {
           const oldRow = payload.old as { id: string };
           setMeetings((prev) => prev.filter((m) => m.id !== oldRow.id));
@@ -166,20 +149,20 @@ const MiniSidebar = () => {
       )
       .subscribe();
 
-    // meeting_members 변경도 반영
+    // server_members 변경도 반영
     const mmChannel = supabase
-      .channel("realtime:meeting_members:mini")
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'meeting_members' }, (payload) => {
+      .channel("realtime:server_members:mini")
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'server_members' }, (payload) => {
         // 멤버십 변경 시 현재 선택 초기화(홈 카드와 동기화)
         try {
           const raw = localStorage.getItem('home:selectedMeeting');
           if (raw) {
             const parsed = JSON.parse(raw) as { meetingId?: string } | null;
-            const newRow = payload.new as { meeting_id?: string; user_id?: number } | null;
-            const oldRow = payload.old as { meeting_id?: string; user_id?: number } | null;
-            const changedMeetingId = newRow?.meeting_id ?? oldRow?.meeting_id ?? null;
+            const newRow = payload.new as { server_id?: string; user_id?: string } | null;
+            const oldRow = payload.old as { server_id?: string; user_id?: string } | null;
+            const changedServerId = newRow?.server_id ?? oldRow?.server_id ?? null;
             const changedUserId = newRow?.user_id ?? oldRow?.user_id ?? null;
-            if (parsed?.meetingId && changedMeetingId === parsed.meetingId && myUserPk != null && changedUserId === myUserPk) {
+            if (parsed?.meetingId && changedServerId === parsed.meetingId && myUserUuid != null && changedUserId === myUserUuid) {
               localStorage.removeItem('home:selectedMeeting');
               Object.keys(localStorage).forEach((k) => { if (k.startsWith('home:memberCount:')) localStorage.removeItem(k); });
               window.dispatchEvent(new CustomEvent('show-participants', { detail: { meetingId: '', meetingName: '' } }));
@@ -198,7 +181,7 @@ const MiniSidebar = () => {
       supabase.removeChannel(mmChannel);
       window.removeEventListener('meetings-updated', handleUpdated);
     };
-  }, [reloadMeetings, myUserPk]);
+  }, [reloadMeetings, myUserUuid]);
   return (
     <div className="h-full flex flex-col items-center py-4 w-14 bg-gray-100 dark:bg-[#1E1F2B] border-r border-gray-300 dark:border-gray-700">
       {/* 그룹 리스트 */}
@@ -300,6 +283,7 @@ const MiniSidebar = () => {
           <div className="fixed top-1/2 left-1/2 w-[320px] bg-white dark:bg-[#2F3136] p-4 rounded-md shadow-lg transform -translate-x-1/2 -translate-y-1/2 z-50">
             <h3 className="text-lg font-semibold mb-3 text-gray-900 dark:text-white">이동하시겠습니까?</h3>
             <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">선택한 서버 참여자를 홈에서 보여줍니다: {confirmNavigate.meetingName}</div>
+            <div className="text-sm text-gray-600 dark:text-gray-300 mb-4">회의를 누르시면 선택한 서버 회의방으로 이동됩니다.</div>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setConfirmNavigate({ open: false, meetingId: null, meetingName: null })}>취소</Button>
               <Button onClick={() => {
@@ -307,6 +291,9 @@ const MiniSidebar = () => {
                   if (confirmNavigate.meetingId) {
                     try { localStorage.setItem('home:selectedMeeting', JSON.stringify({ meetingId: confirmNavigate.meetingId, meetingName: confirmNavigate.meetingName || '' })); } catch { /* no-op */ }
                     window.dispatchEvent(new CustomEvent('show-participants', { detail: { meetingId: confirmNavigate.meetingId, meetingName: confirmNavigate.meetingName || '' } }));
+                    try { window.focus(); } catch { /* ignore */ }
+                    // 홈으로 이동하여 소개 카드가 참여자 카드로 전환되도록 보장
+                    navigate('/workspace/home');
                   }
                 } catch { /* no-op */ }
                 setConfirmNavigate({ open: false, meetingId: null, meetingName: null });

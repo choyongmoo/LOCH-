@@ -1,8 +1,9 @@
 // src/pages/Workspace/ProfilePage.tsx
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router";
 import { supabase } from "@/lib/supabase";
 import { Input } from "@/components/common/ui/input";
+import { Mic } from "lucide-react";
 import { Button } from "@/components/common/ui/button";
 import { Paragraph } from "@/components/common/ui/Paragraph";
 import {
@@ -43,12 +44,28 @@ const ProfilePage = () => {
   const [micSelect, setMicSelect] = useState<string>("");
   const [micLoading, setMicLoading] = useState(false);
   const [micError, setMicError] = useState<string | null>(null);
+  // 마이크 테스트 모달/상태
+  const [showMicTestModal, setShowMicTestModal] = useState(false);
+  const micCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const rafRef = useRef<number | null>(null);
+  const [isMicTesting, setIsMicTesting] = useState<boolean>(false);
+  const [micTestLabel, setMicTestLabel] = useState<string>("");
+  const [micDeviceId, setMicDeviceId] = useState<string | null>(null);
+  // 프로필 테스트에서는 장치 변경 모달을 별도로 두지 않고 즉시 선택 목록을 띄우므로 상태 생략
   // 현재 로그인한 사용자의 public.users PK (int8)
   const [userPk, setUserPk] = useState<number | null>(null);
   const navigate = useNavigate();
 
   const handleSignOutAndRedirect = async (): Promise<void> => {
     try {
+      try {
+        localStorage.removeItem('home:selectedMeeting');
+        Object.keys(localStorage).forEach((k) => { if (k.startsWith('home:memberCount:')) localStorage.removeItem(k); });
+        window.dispatchEvent(new CustomEvent('show-participants', { detail: { meetingId: '', meetingName: '' } }));
+      } catch { /* ignore */ }
       await supabase.auth.signOut();
     } finally {
       navigate("/", { replace: true });
@@ -121,7 +138,13 @@ const ProfilePage = () => {
       try {
         const key = `recentWorkspacePages:${userEmail ?? "anonymous"}`;
         localStorage.removeItem(key);
-      } catch {}
+        // 홈 참여자 선택 및 캐시 초기화
+        try {
+          localStorage.removeItem('home:selectedMeeting');
+          Object.keys(localStorage).forEach((k) => { if (k.startsWith('home:memberCount:')) localStorage.removeItem(k); });
+          window.dispatchEvent(new CustomEvent('show-participants', { detail: { meetingId: '', meetingName: '' } }));
+        } catch { /* ignore */ }
+      } catch { /* ignore */ }
       await supabase.auth.signOut();
       navigate("/", { replace: true });
     } catch {
@@ -179,7 +202,7 @@ const ProfilePage = () => {
       try { 
         window.dispatchEvent(new CustomEvent('friends-updated')); 
         window.dispatchEvent(new CustomEvent('profile-updated')); 
-      } catch {}
+      } catch { /* ignore */ }
     } catch {
       setNickError("별명 저장 중 오류가 발생했습니다.");
     } finally {
@@ -219,7 +242,7 @@ const ProfilePage = () => {
       try { 
         window.dispatchEvent(new CustomEvent('friends-updated')); 
         window.dispatchEvent(new CustomEvent('profile-updated')); 
-      } catch {}
+      } catch { /* ignore */ }
     } catch {
       setColorError("색상 저장 중 오류가 발생했습니다.");
     } finally {
@@ -279,6 +302,118 @@ const ProfilePage = () => {
       setMicLoading(false);
     }
   };
+
+  // ===== 마이크 테스트 (HomePage와 동일한 시각화 로직) =====
+  const drawMicBars = useCallback(() => {
+    const canvas = micCanvasRef.current;
+    const analyser = analyserRef.current;
+    if (!canvas || !analyser) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const resizeCanvasToDisplaySize = () => {
+      const { clientWidth, clientHeight } = canvas;
+      if (canvas.width !== clientWidth || canvas.height !== clientHeight) {
+        canvas.width = clientWidth;
+        canvas.height = clientHeight;
+      }
+    };
+
+    const timeArray = new Uint8Array(analyser.fftSize);
+    let level = 0;
+
+    const render = () => {
+      resizeCanvasToDisplaySize();
+      analyser.getByteTimeDomainData(timeArray);
+      const { width, height } = canvas;
+      ctx.clearRect(0, 0, width, height);
+
+      let sum = 0;
+      for (let i = 0; i < timeArray.length; i++) {
+        const d = timeArray[i] - 128;
+        sum += d * d;
+      }
+      const rms = Math.min(1, Math.sqrt(sum / timeArray.length) / 128);
+      const noiseFloor = 0.02;
+      const mapped = Math.max(0, (rms - noiseFloor) / (1 - noiseFloor));
+      const alpha = mapped >= level ? 0.35 : 0.25;
+      level = level * (1 - alpha) + mapped * alpha;
+
+      ctx.fillStyle = '#2563eb';
+      ctx.fillRect(0, 0, Math.max(0, Math.min(1, level)) * width, height);
+
+      rafRef.current = window.requestAnimationFrame(render);
+    };
+
+    render();
+  }, []);
+
+  const stopMicTest = useCallback(() => {
+    if (rafRef.current != null) {
+      cancelAnimationFrame(rafRef.current);
+      rafRef.current = null;
+    }
+    try { audioContextRef.current?.close().catch(() => { /* ignore */ }); } catch { /* ignore */ }
+    audioContextRef.current = null;
+    analyserRef.current = null;
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((t) => { try { t.stop(); } catch { /* ignore */ } });
+      mediaStreamRef.current = null;
+    }
+    // 캔버스 초기화
+    try {
+      const canvas = micCanvasRef.current;
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        if (ctx) ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    } catch { /* ignore */ }
+    setMicTestLabel("");
+    setIsMicTesting(false);
+  }, []);
+
+  const startMicTest = useCallback(async (targetDeviceId?: string) => {
+    try {
+      const constraints = targetDeviceId
+        ? { audio: { deviceId: { exact: targetDeviceId } as unknown as string }, video: false }
+        : { audio: true, video: false };
+      const stream = await navigator.mediaDevices.getUserMedia(constraints as MediaStreamConstraints);
+      mediaStreamRef.current = stream;
+      try {
+        const track = stream.getAudioTracks()[0];
+        const settings = track?.getSettings?.() ?? {};
+        let label = track?.label ?? "";
+        const deviceId = (settings as { deviceId?: string }).deviceId;
+        if (!label && deviceId && navigator.mediaDevices?.enumerateDevices) {
+          const devices = await navigator.mediaDevices.enumerateDevices();
+          const found = devices.find((d) => d.kind === 'audioinput' && d.deviceId === deviceId);
+          label = found?.label ?? label;
+        }
+        setMicTestLabel(label || "");
+        if (deviceId) setMicDeviceId(deviceId);
+      } catch { /* ignore */ }
+      const AC = (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }).AudioContext
+        || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AC) { setIsMicTesting(false); return; }
+      const ctx = new AC();
+      try { if (ctx.state === 'suspended') { await ctx.resume(); } } catch { /* ignore */ }
+      audioContextRef.current = ctx;
+      const source = ctx.createMediaStreamSource(stream);
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 512;
+      analyser.smoothingTimeConstant = 0.8;
+      source.connect(analyser);
+      analyserRef.current = analyser;
+      setIsMicTesting(true);
+      drawMicBars();
+    } catch {
+      setIsMicTesting(false);
+    }
+  }, [drawMicBars]);
+
+  useEffect(() => {
+    return () => { stopMicTest(); };
+  }, [stopMicTest]);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -488,6 +623,12 @@ const ProfilePage = () => {
               <div className="col-span-1 text-right">
                 <button
                   className="text-blue-600 dark:text-blue-400 text-sm hover:underline"
+                  onClick={() => setShowMicTestModal(true)}
+                >
+                  테스트
+                </button>
+                <button
+                  className="ml-3 text-blue-600 dark:text-blue-400 text-sm hover:underline"
                   onClick={() => setShowMicModal(true)}
                 >
                   변경
@@ -795,6 +936,38 @@ const ProfilePage = () => {
                     </Button>
                   </div>
                 </SheetFooter>
+              </SheetContent>
+            </Sheet>
+
+            {/* Microphone Test modal */}
+            <Sheet open={showMicTestModal} onOpenChange={(v) => { setShowMicTestModal(v); if (!v) stopMicTest(); }}>
+              <SheetContent side="bottom" className="mx-auto w-full max-w-md rounded-t-xl">
+                <SheetHeader>
+                  <SheetTitle>마이크 테스트</SheetTitle>
+                  <SheetDescription>입력 장치 레벨을 확인하세요.</SheetDescription>
+                </SheetHeader>
+                <div className="p-4 pt-0">
+                  <div className="relative h-40">
+                    <div className="absolute top-3 left-3 right-3 flex items-center justify-end gap-2">
+                      <button
+                        className="inline-flex items-center justify-center border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-1 text-xs hover:bg-gray-100 dark:hover:bg-[#23242e] transition"
+                        onClick={() => { if (isMicTesting) { stopMicTest(); } else { void startMicTest(micDeviceId || undefined); } }}
+                      >
+                        {isMicTesting ? '중지' : '마이크 테스트'}
+                      </button>
+                    </div>
+                    <div className="absolute left-3 right-3 bottom-3 top-12 rounded-xl border border-blue-200 dark:border-blue-900 bg-white dark:bg-[#111827] p-4 flex flex-col gap-3">
+                      <div className="flex items-center gap-3">
+                        <Mic className="text-gray-500 dark:text-gray-300" size={18} />
+                        <div className="flex-1 h-6 md:h-7 rounded-full bg-blue-100 dark:bg-blue-950/50 overflow-hidden">
+                          <canvas ref={micCanvasRef} className="w-full h-full block" />
+                        </div>
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-300 truncate">장치: {micTestLabel}</div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">마이크를 테스트 해보세요!</div>
+                    </div>
+                  </div>
+                </div>
               </SheetContent>
             </Sheet>
 
