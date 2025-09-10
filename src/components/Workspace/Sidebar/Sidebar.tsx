@@ -1,3 +1,5 @@
+import { OthLogo } from "@/components/common/OthLogo";
+import { ScrollArea } from "@/components/common/ui/scroll-area";
 import {
   Sidebar,
   SidebarContent,
@@ -9,13 +11,11 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/common/ui/sidebar"
-import { ScrollArea } from "@/components/common/ui/scroll-area"
-import { useNavigate, useLocation } from "react-router";
-import React from "react";
+} from "@/components/common/ui/sidebar";
 import { supabase } from "@/lib/supabase";
-import { OthLogo } from "@/components/common/OthLogo";
-
+import React from "react";
+import { useLocation, useNavigate } from "react-router";
+import { MeetingButton } from "./MeetingButton";
 
 export default function CustomSidebar() {
   const navigate = useNavigate();
@@ -26,7 +26,10 @@ export default function CustomSidebar() {
     try {
       const { data: authData } = await supabase.auth.getUser();
       const email = authData.user?.email ?? null;
-      if (!email) { setPendingCount(0); return; }
+      if (!email) {
+        setPendingCount(0);
+        return;
+      }
       const { data: me } = await supabase
         .from("users")
         .select("id")
@@ -35,7 +38,10 @@ export default function CustomSidebar() {
         .limit(1)
         .maybeSingle();
       const myId = (me?.id as number | undefined) ?? null;
-      if (!myId) { setPendingCount(0); return; }
+      if (!myId) {
+        setPendingCount(0);
+        return;
+      }
       const { data: rows } = await supabase
         .from("friend_requests")
         .select("id")
@@ -49,126 +55,147 @@ export default function CustomSidebar() {
 
   React.useEffect(() => {
     void loadPendingCount();
-    const handle = () => { void loadPendingCount(); };
-    window.addEventListener('friends-updated', handle as EventListener);
+    const handle = () => {
+      void loadPendingCount();
+    };
+    window.addEventListener("friends-updated", handle as EventListener);
     const { data: sub } = supabase.auth.onAuthStateChange(() => void loadPendingCount());
     return () => {
-      window.removeEventListener('friends-updated', handle as EventListener);
+      window.removeEventListener("friends-updated", handle as EventListener);
       sub.subscription.unsubscribe();
     };
   }, [loadPendingCount]);
   return (
-      <Sidebar className="min-h-screen bg-[#111827] w-full !static !max-h-none font-bold">
-        <div className="flex items-center justify-center py-6">
-          <OthLogo />
-        </div>
-        <SidebarContent>
-          <ScrollArea className="h-full">
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      onClick={() => navigate("/workspace/home")}
-                      className={
-                        (["/workspace", "/workspace/home", "/"].includes(location.pathname))
-                          ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold"
-                          : ""
-                      }
-                    >
-                      홈
-                    </SidebarMenuButton>
-                    <SidebarMenuButton
-                      onClick={() => navigate("/meeting")}
-                      className={location.pathname === "/meeting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
-                    >
-                      회의
-                    </SidebarMenuButton>
-                    <br />
-                    <SidebarMenuButton
-                      className={location.pathname.startsWith("/product") ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
-                    >
-                      내 제품
-                    </SidebarMenuButton>
-                    <SidebarMenuSub>    
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                           onClick={() => navigate("/workspace/mun")}
-                          className={location.pathname === "/workspace/mun" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
-                        >
-                          문서
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  
-                    <SidebarMenuButton>
-                      내 계정
-                    </SidebarMenuButton>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          onClick={() => {navigate("/workspace/profile");}}
-                          className={location.pathname === "/workspace/profile" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
-                        >
-                      프로필
-                    </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          onClick={() => navigate("/workspace/setting")}
-                          className={location.pathname === "/workspace/setting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
-                        >
-                          설정
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          onClick={() => navigate("/workspace/contact")}
-                          className={location.pathname === "/workspace/contact" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
-                        >
-                          개인 연락처
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                       {(location.pathname === "/workspace/contact" || location.pathname === "/workspace/friends/requests") && (
-                       <SidebarMenuSubItem>
-                           <SidebarMenuSubButton
-                             onClick={() => navigate("/workspace/friends/requests")}
-                             className={`pl-8 text-sm ${location.pathname === "/workspace/friends/requests" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}`}
-                           >
-                             <div className="flex items-center justify-between w-full">
-                               <span>친구 수신함</span>
-                               {pendingCount > 0 && (
-                                 <span className="ml-2 text-xs font-bold">{pendingCount}</span>
-                               )}
-                             </div>
-                           </SidebarMenuSubButton>
-                         </SidebarMenuSubItem>
-                       )}
-                    </SidebarMenuSub>
-                  </SidebarMenuItem>
-                  <SidebarMenuItem>
+    <Sidebar className="min-h-screen bg-[#111827] w-full !static !max-h-none font-bold">
+      <div className="flex items-center justify-center py-6">
+        <OthLogo />
+      </div>
+      <SidebarContent>
+        <ScrollArea className="h-full">
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <div className="px-2 py-2">
+                    <div className="flex w-full items-center justify-center">
+                      <MeetingButton />
+                    </div>
+                  </div>
+                  <SidebarMenuButton
+                    onClick={() => navigate("/workspace/home")}
+                    className={
+                      ["/workspace", "/workspace/home", "/"].includes(location.pathname)
+                        ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold"
+                        : ""
+                    }
+                  >
+                    홈
+                  </SidebarMenuButton>
+                  <br />
+                  <SidebarMenuButton
+                    className={
+                      location.pathname.startsWith("/product")
+                        ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold"
+                        : ""
+                    }
+                  >
+                    내 제품
+                  </SidebarMenuButton>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        onClick={() => navigate("/workspace/mun")}
+                        className={
+                          location.pathname === "/workspace/mun"
+                            ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold"
+                            : ""
+                        }
+                      >
+                        문서
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
 
-                    <SidebarMenuButton>
-                      관리자
-                    </SidebarMenuButton>
-                    <SidebarMenuSub>
+                  <SidebarMenuButton>내 계정</SidebarMenuButton>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        onClick={() => {
+                          navigate("/workspace/profile");
+                        }}
+                        className={
+                          location.pathname === "/workspace/profile"
+                            ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold"
+                            : ""
+                        }
+                      >
+                        프로필
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        onClick={() => navigate("/workspace/setting")}
+                        className={
+                          location.pathname === "/workspace/setting"
+                            ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold"
+                            : ""
+                        }
+                      >
+                        설정
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        onClick={() => navigate("/workspace/contact")}
+                        className={
+                          location.pathname === "/workspace/contact"
+                            ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold"
+                            : ""
+                        }
+                      >
+                        개인 연락처
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                    {(location.pathname === "/workspace/contact" ||
+                      location.pathname === "/workspace/friends/requests") && (
                       <SidebarMenuSubItem>
                         <SidebarMenuSubButton
-                          onClick={() => navigate("/workspace/manager")}  
-                          className={location.pathname === "/workspace/manager" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}
+                          onClick={() => navigate("/workspace/friends/requests")}
+                          className={`pl-8 text-sm ${location.pathname === "/workspace/friends/requests" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold" : ""}`}
                         >
-                          서버 관리
+                          <div className="flex items-center justify-between w-full">
+                            <span>친구 수신함</span>
+                            {pendingCount > 0 && (
+                              <span className="ml-2 text-xs font-bold">{pendingCount}</span>
+                            )}
+                          </div>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
-                    </SidebarMenuSub>
-                  </SidebarMenuItem>
-                  
-                   
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </ScrollArea>
-        </SidebarContent>
-      </Sidebar>
-  )
+                    )}
+                  </SidebarMenuSub>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton>관리자</SidebarMenuButton>
+                  <SidebarMenuSub>
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        onClick={() => navigate("/workspace/manager")}
+                        className={
+                          location.pathname === "/workspace/manager"
+                            ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold"
+                            : ""
+                        }
+                      >
+                        서버 관리
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
+                  </SidebarMenuSub>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        </ScrollArea>
+      </SidebarContent>
+    </Sidebar>
+  );
 }
