@@ -47,8 +47,7 @@ export const useAudioDevices = () => {
         setSelectedOutputDevice(uniqueOutputs[0].deviceId);
       }
     } catch (error) {
-      console.error('오디오 장치를 가져오는데 실패했습니다:', error);
-    }
+      }
   };
 
   useEffect(() => {

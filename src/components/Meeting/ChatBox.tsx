@@ -321,7 +321,7 @@ export const ChatBox = ({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.9, y: 20 }}
       transition={{ duration: 0.3 }}
-      className="bg-[#2F3136] rounded-lg shadow-xl flex flex-col text-white fixed bottom-4 right-4 z-50 border border-[#202225]"
+      className="bg-[#2F3136] rounded-lg shadow-xl flex flex-col text-white fixed right-4 z-50 border border-[#202225]"
       style={{ 
         width: size.width, 
         height: size.height,

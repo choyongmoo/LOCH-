@@ -47,8 +47,6 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
     setDragging(dragState);
     draggingRef.current = dragState;
 
-    console.log('리사이저 드래그 시작:', type, '시작 크기:', startSizes);
-
     const onMouseMove = (ev: MouseEvent) => {
       const dragging = draggingRef.current;
       if (!dragging || !containerRef.current) return;
@@ -80,7 +78,6 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
       }
     };
     const onMouseUp = () => {
-      console.log('리사이저 드래그 종료:', type);
       setDragging(null);
       draggingRef.current = null;
       window.removeEventListener('mousemove', onMouseMove);
@@ -107,18 +104,7 @@ export function ResizableGridLayout({ panels, colSizes, rowSizesLeft, rowSizesRi
   const shouldShowRightRowResizer = rowSizesRight.length > 1 && panels.filter(p => p.col === 1).length >= 2;
   const shouldShowColResizer = colSizes.length > 1 && panels.length > 1;
 
-  // 디버깅을 위한 로그
-  console.log('ResizableGridLayout 상태:', {
-    panelsCount: panels.length,
-    colSizes,
-    rowSizesLeft,
-    rowSizesRight,
-    shouldShowLeftRowResizer,
-    shouldShowRightRowResizer,
-    shouldShowColResizer,
-    leftPanels: panels.filter(p => p.col === 0).length,
-    rightPanels: panels.filter(p => p.col === 1).length
-  });
+
 
   // 동적으로 gridTemplateRows/Columns, 셀 배치
   return (

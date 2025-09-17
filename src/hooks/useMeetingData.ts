@@ -27,8 +27,7 @@ export const useMeetingData = (meetingId: string) => {
         setCurrentUserId(userData.id);
       }
     } catch (err) {
-      console.error('사용자 정보 로드 실패:', err);
-    }
+      }
   }, []);
 
   // 회의방 정보 로드
@@ -41,7 +40,7 @@ export const useMeetingData = (meetingId: string) => {
       }
 
       const { data, error } = await supabase
-        .from('meetings')
+        .from('servers')
         .select('*')
         .eq('id', meetingId)
         .single();
@@ -50,8 +49,7 @@ export const useMeetingData = (meetingId: string) => {
       setMeeting(data);
     } catch (err) {
       setError('회의방 정보를 불러올 수 없습니다.');
-      console.error('회의방 로드 실패:', err);
-    }
+      }
   }, [meetingId]);
 
   // 참가자 목록 로드
@@ -63,7 +61,7 @@ export const useMeetingData = (meetingId: string) => {
       }
 
       const { data, error } = await supabase
-        .from('meeting_members')
+        .from('server_members')
         .select(`
           id,
           meeting_id,
@@ -72,7 +70,7 @@ export const useMeetingData = (meetingId: string) => {
           is_active,
           joined_at,
           left_at,
-          users!meeting_members_user_id_fkey(id, name, email)
+          users!server_members_user_id_fkey(id, name, email)
         `)
         .eq('meeting_id', meetingId)
         .eq('is_active', true);
@@ -94,8 +92,7 @@ export const useMeetingData = (meetingId: string) => {
 
       setParticipants(participantsList);
     } catch (err) {
-      console.error('참가자 목록 로드 실패:', err);
-    }
+      }
   }, [meetingId, currentUserId]);
 
   // 메시지 로드
@@ -107,7 +104,7 @@ export const useMeetingData = (meetingId: string) => {
       }
 
       const { data, error } = await supabase
-        .from('meeting_messages')
+        .from('server_messages')
         .select(`
           id,
           meeting_id,
@@ -116,7 +113,7 @@ export const useMeetingData = (meetingId: string) => {
           message_type,
           receiver_id,
           created_at,
-          users!meeting_messages_sender_id_fkey(id, name, email)
+          users!server_messages_sender_id_fkey(id, name, email)
         `)
         .eq('meeting_id', meetingId)
         .eq('message_type', 'general')
@@ -125,8 +122,7 @@ export const useMeetingData = (meetingId: string) => {
       if (error) throw error;
       setMessages(data || []);
     } catch (err) {
-      console.error('메시지 로드 실패:', err);
-    }
+      }
   }, [meetingId]);
 
   // 회의방 참가
@@ -136,9 +132,9 @@ export const useMeetingData = (meetingId: string) => {
     try {
       // 이미 참가 중인지 확인
       const { data: existingMember } = await supabase
-        .from('meeting_members')
+        .from('server_members')
         .select('id, is_active')
-        .eq('meeting_id', meetingId)
+        .eq('server_id', meetingId)
         .eq('user_id', currentUserId)
         .single();
 
@@ -146,7 +142,7 @@ export const useMeetingData = (meetingId: string) => {
         // 이미 참가 중이면 활성 상태로 업데이트
         if (!existingMember.is_active) {
           const { error } = await supabase
-            .from('meeting_members')
+            .from('server_members')
             .update({ 
               is_active: true,
               left_at: null
@@ -158,7 +154,7 @@ export const useMeetingData = (meetingId: string) => {
       } else {
         // 새로운 참가자 추가
         const { error } = await supabase
-          .from('meeting_members')
+          .from('server_members')
           .insert({
             meeting_id: meetingId,
             user_id: currentUserId,
@@ -172,8 +168,7 @@ export const useMeetingData = (meetingId: string) => {
       // 참가자 목록 새로고침
       await loadParticipants();
     } catch (err) {
-      console.error('회의방 참가 실패:', err);
-    }
+      }
   }, [meetingId, currentUserId, loadParticipants]);
 
   // 회의방 나가기
@@ -182,7 +177,7 @@ export const useMeetingData = (meetingId: string) => {
 
     try {
       const { error } = await supabase
-        .from('meeting_members')
+        .from('server_members')
         .update({ 
           is_active: false,
           left_at: new Date().toISOString()
@@ -192,8 +187,7 @@ export const useMeetingData = (meetingId: string) => {
 
       if (error) throw error;
     } catch (err) {
-      console.error('회의방 나가기 실패:', err);
-    }
+      }
   }, [meetingId, currentUserId]);
 
   // 메시지 전송
@@ -202,7 +196,7 @@ export const useMeetingData = (meetingId: string) => {
 
     try {
       const { error } = await supabase
-        .from('meeting_messages')
+        .from('server_messages')
         .insert({
           meeting_id: meetingId,
           sender_id: currentUserId,
@@ -216,8 +210,7 @@ export const useMeetingData = (meetingId: string) => {
       // 메시지 목록 새로고침
       await loadMessages();
     } catch (err) {
-      console.error('메시지 전송 실패:', err);
-    }
+      }
   }, [meetingId, currentUserId, loadMessages]);
 
   // 실시간 구독 설정
@@ -226,13 +219,13 @@ export const useMeetingData = (meetingId: string) => {
 
     // 참가자 변경 구독
     const participantsChannel = supabase
-      .channel(`meeting_participants_${meetingId}`)
+      .channel(`server_participants_${meetingId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'meeting_members',
+          table: 'server_members',
           filter: `meeting_id=eq.${meetingId}`
         },
         () => {
@@ -243,13 +236,13 @@ export const useMeetingData = (meetingId: string) => {
 
     // 메시지 변경 구독
     const messagesChannel = supabase
-      .channel(`meeting_messages_${meetingId}`)
+      .channel(`server_messages_${meetingId}`)
       .on(
         'postgres_changes',
         {
           event: 'INSERT',
           schema: 'public',
-          table: 'meeting_messages',
+          table: 'server_messages',
           filter: `meeting_id=eq.${meetingId}`
         },
         () => {

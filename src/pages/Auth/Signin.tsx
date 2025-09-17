@@ -22,7 +22,6 @@ export const Signin = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // OAuth / Email-link 콜백 처리 통합
   useEffect(() => {
     const handleAuthCallbackInSignin = async () => {
       try {
@@ -31,7 +30,7 @@ export const Signin = () => {
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (!error) {
-            navigate("/workspace", { replace: true });
+            navigate("/", { replace: true }); 
             return;
           }
         }
@@ -46,13 +45,11 @@ export const Signin = () => {
           });
           if (!error) {
             window.history.replaceState({}, document.title, url.pathname);
-            navigate("/workspace", { replace: true });
+            navigate("/", { replace: true }); 
             return;
           }
         }
-      } catch (err) {
-        console.warn("auth callback 처리 실패", err);
-      }
+      } catch (err) {}
     };
 
     void handleAuthCallbackInSignin();
@@ -75,10 +72,9 @@ export const Signin = () => {
         return;
       }
       if (data.session) {
-        navigate("/workspace", { replace: true });
+        navigate("/", { replace: true }); 
       }
     } catch (err) {
-      console.error(err);
       setError("로그인 중 오류가 발생했습니다.");
     } finally {
       setLoading(false);
@@ -92,14 +88,13 @@ export const Signin = () => {
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/signin`,
-           queryParams: {
-          // 항상 계정 선택 창 표시
-          prompt: "select_account",
-        },
+          queryParams: {
+            
+            prompt: "select_account",
+          },
         },
       });
     } catch (err) {
-      console.error(err);
       setError("Google 로그인에 실패했습니다.");
     }
   };
@@ -144,10 +139,7 @@ export const Signin = () => {
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">비밀번호</Label>
-            <Link
-              to="/forgot-password"
-              className="underline text-sm text-muted-foreground"
-            >
+            <Link to="/forgot-password" className="underline text-sm text-muted-foreground">
               비밀번호를 잊으셨나요?
             </Link>
           </div>
@@ -166,9 +158,7 @@ export const Signin = () => {
       </CardContent>
 
       <CardFooter className="flex flex-col gap-4 pt-2">
-        {error && (
-          <Paragraph className="text-red-500 text-sm">{error}</Paragraph>
-        )}
+        {error && <Paragraph className="text-red-500 text-sm">{error}</Paragraph>}
         <Button className="w-full" onClick={handleEmailSignin} disabled={loading}>
           {loading ? "로그인 중..." : "로그인"}
         </Button>

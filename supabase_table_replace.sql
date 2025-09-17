@@ -1,15 +1,15 @@
--- 기존 meetings 테이블을 새 테이블로 교체하는 SQL 스크립트
+-- 기존 meetings → servers 이름 변경을 반영한 샘플 스키마 스크립트 (참고용)
 -- Supabase SQL Editor에서 실행하세요
 
 -- 1. 기존 meetings 테이블 삭제 (데이터 백업 필요시 먼저 백업하세요)
-DROP TABLE IF EXISTS meetings CASCADE;
+DROP TABLE IF EXISTS servers CASCADE;
 
 -- 2. 새 meetings 테이블 생성
-CREATE TABLE meetings (
+CREATE TABLE servers (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
+    room_name VARCHAR(255) NOT NULL,
     description TEXT,
-    host_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    host TEXT,
     max_participants INTEGER DEFAULT 10,
     status VARCHAR(50) DEFAULT 'scheduled' CHECK (status IN ('scheduled', 'active', 'ended')),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -42,22 +42,22 @@ CREATE TABLE meeting_messages (
 );
 
 -- 5. RLS 정책 설정
-ALTER TABLE meetings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE servers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meeting_members ENABLE ROW LEVEL SECURITY;
 ALTER TABLE meeting_messages ENABLE ROW LEVEL SECURITY;
 
 -- meetings 테이블 정책
-CREATE POLICY "meetings_select_policy" ON meetings
+CREATE POLICY "servers_select_policy" ON servers
     FOR SELECT USING (true);
 
-CREATE POLICY "meetings_insert_policy" ON meetings
-    FOR INSERT WITH CHECK (auth.uid() = host_id);
+CREATE POLICY "servers_insert_policy" ON servers
+    FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
 
-CREATE POLICY "meetings_update_policy" ON meetings
-    FOR UPDATE USING (auth.uid() = host_id);
+CREATE POLICY "servers_update_policy" ON servers
+    FOR UPDATE USING (auth.uid()::text = host);
 
-CREATE POLICY "meetings_delete_policy" ON meetings
-    FOR DELETE USING (auth.uid() = host_id);
+CREATE POLICY "servers_delete_policy" ON servers
+    FOR DELETE USING (auth.uid()::text = host);
 
 -- meeting_members 테이블 정책
 CREATE POLICY "meeting_members_select_policy" ON meeting_members
@@ -77,15 +77,15 @@ CREATE POLICY "meeting_messages_insert_policy" ON meeting_messages
     FOR INSERT WITH CHECK (auth.uid() = sender_id);
 
 -- 6. 인덱스 생성
-CREATE INDEX idx_meetings_host_id ON meetings(host_id);
-CREATE INDEX idx_meetings_status ON meetings(status);
+CREATE INDEX idx_servers_host ON servers(host);
+CREATE INDEX idx_servers_status ON servers(status);
 CREATE INDEX idx_meeting_members_meeting_id ON meeting_members(meeting_id);
 CREATE INDEX idx_meeting_members_user_id ON meeting_members(user_id);
 CREATE INDEX idx_meeting_messages_meeting_id ON meeting_messages(meeting_id);
 CREATE INDEX idx_meeting_messages_created_at ON meeting_messages(created_at);
 
 -- 7. Realtime 활성화
-ALTER PUBLICATION supabase_realtime ADD TABLE meetings;
+ALTER PUBLICATION supabase_realtime ADD TABLE servers;
 ALTER PUBLICATION supabase_realtime ADD TABLE meeting_members;
 ALTER PUBLICATION supabase_realtime ADD TABLE meeting_messages;
 

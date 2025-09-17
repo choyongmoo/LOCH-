@@ -248,7 +248,7 @@ export const UserFullscreenView: React.FC<UserFullscreenViewProps> = ({
   return (
     <div 
       className="w-full h-full flex items-center justify-center relative"
-      style={{ backgroundColor: getRandomColor(targetUser.name) }}
+      style={{ backgroundColor: targetUser.accentColor || getRandomColor(targetUser.name) }}
     >
       {/* 상단 우측 - 온라인 상태 표시 */}
       <div className="absolute top-4 right-4">

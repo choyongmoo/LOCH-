@@ -168,6 +168,8 @@ interface ChatBoxProps {
 const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
   const [input, setInput] = useState("");
   const { theme } = useThemeStore();
+  const messagesEndRef = React.useRef<HTMLDivElement | null>(null);
+  const listRef = React.useRef<HTMLDivElement | null>(null);
 
   const handleSend = (e: React.FormEvent) => {
     e.preventDefault();
@@ -175,6 +177,46 @@ const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
       onSend(input);
       setInput("");
     }
+  };
+
+  // 메시지 변경 시 최신 메시지로 스크롤
+  React.useEffect(() => {
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    } else if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [messages]);
+
+  // URL을 하이퍼링크로 변환하는 함수
+  const renderMessageWithLinks = (text: string) => {
+    // URL 패턴 매칭 (http://, https://, localhost 등)
+    const urlRegex = /(https?:\/\/[^\s]+|localhost:\d+\/[^\s]*)/g;
+    const parts = text.split(urlRegex);
+    
+    return parts.map((part, index) => {
+      if (urlRegex.test(part)) {
+        return (
+          <a
+            key={index}
+            href={part.startsWith('http') ? part : `http://${part}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              color: theme === 'dark' ? '#00b4d8' : '#2563eb',
+              textDecoration: 'underline',
+              wordBreak: 'break-all'
+            }}
+            onClick={(e) => {
+              e.stopPropagation();
+            }}
+          >
+            {part}
+          </a>
+        );
+      }
+      return part;
+    });
   };
 
   return (
@@ -185,7 +227,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
         </div>
         <span style={{ color: theme === 'dark' ? '#fff' : '#23272a', fontWeight: 600, fontSize: 18 }}>{friend.name}</span>
       </div>
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div ref={listRef} style={{ flex: 1, overflowY: 'auto', padding: '16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
         {messages.length === 0 ? (
           <span style={{ color: theme === 'dark' ? '#aaa' : '#666', textAlign: 'center', marginTop: 40 }}>메시지가 없습니다. 대화를 시작해보세요!</span>
         ) : (
@@ -203,7 +245,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
                   fontSize: 15,
                 }}
               >
-                {msg.text}
+                {renderMessageWithLinks(msg.text)}
               </div>
               <span style={{ fontSize: 11, color: theme === 'dark' ? '#888' : '#999', marginTop: 2 }}>
                 {new Date(msg.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' })}
@@ -211,6 +253,7 @@ const ChatBox: React.FC<ChatBoxProps> = ({ friend, messages, onSend }) => {
             </div>
           ))
         )}
+        <div ref={messagesEndRef} />
       </div>
       <form onSubmit={handleSend} style={{ display: 'flex', padding: '16px', borderTop: theme === 'dark' ? '1px solid #23272a' : '1px solid #e5e7eb', background: theme === 'dark' ? '#23272a' : '#fff' }}>
         <input
@@ -402,7 +445,7 @@ export default function ContactPage() {
           .select('id,name,email')
           .in('id', ids);
         // profile 정보도 함께 불러오기
-        const { data: profiles } = await (await import("@/lib/supabase")).supabase
+        const { data: profiles } = await (await import("@/lib/supabase")).supabase  
           .from('profile')
           .select('id, nickname, accent_color')
           .in('id', ids);
@@ -472,6 +515,11 @@ export default function ContactPage() {
     (async () => {
       try {
         const { supabase } = await import("@/lib/supabase");
+
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return;
+        supabase.realtime.setAuth(session.access_token);
+
         // 1) 대화방(conversations) 찾기/만들기
         const a = Math.min(myId, friendId);
         const b = Math.max(myId, friendId);
@@ -550,6 +598,11 @@ export default function ContactPage() {
     let cleanup: (() => void) | null = null;
     (async () => {
       const { supabase } = await import("@/lib/supabase");
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) { console.warn("no session for realtime"); return; }
+      supabase.realtime.setAuth(session.access_token);
+
       const channel = supabase
         .channel(`dm-inbox:${myId}`)
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${myId}` }, (payload: { new: { sender_id: number; receiver_id: number; content?: string | null; created_at?: string | null } }) => {
@@ -564,14 +617,33 @@ export default function ContactPage() {
             return updated;
           });
         })
-        .subscribe();
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages', filter: `sender_id=eq.${myId}` }, (payload: { new: { sender_id: number; receiver_id: number; content?: string | null; created_at?: string | null } }) => {
+          const row = payload.new;
+          const otherId = row.receiver_id as number;
+          const text = (row.content ?? '') as string;
+          const ts = new Date(row.created_at ?? Date.now()).getTime();
+          const msg: Message = { sender: 'me', text, timestamp: ts };
+          setMessages(prev => {
+            const current = prev[otherId] || [];
+            const last = current[current.length - 1];
+            if (last && last.sender === 'me' && last.text === text && Math.abs((last.timestamp ?? 0) - ts) < 5000) {
+              return prev;
+            }
+            const updated = { ...prev, [otherId]: [ ...current, msg ] };
+            try { localStorage.setItem(`dm:${myId}:${otherId}`, JSON.stringify(updated[otherId])); } catch { /* no-op */ }
+            return updated;
+          });
+        })
+        .subscribe((status) => {
+          console.log("[RT] dm-inbox status:", status);
+        });
       cleanup = () => { supabase.removeChannel(channel); };
     })();
     return () => { if (cleanup) cleanup(); };
   }, [myId]);
 
   return (
-    <div className={theme === 'dark' ? 'theme-dark' : 'theme-light'} style={{ display: 'flex', height: '100vh', width: 'calc(83.7vw)', background: theme === 'dark' ? '#313338' : '#f4f4f4', position: 'relative' }}>
+    <div className={theme === 'dark' ? 'theme-dark' : 'theme-light'} style={{ display: 'flex', height: '100vh', width: '100%', background: theme === 'dark' ? '#313338' : '#f4f4f4', position: 'relative', overflow: 'hidden' }}>
       <FriendsSidebar selectedFriend={selectedFriend} onSelect={setSelectedFriend} onOpenAdd={() => setShowAdd(true)} friends={friends} onDelete={askRemoveFriend} />
       <div style={{ flex: 1, minWidth: 0 }}>
         {selectedFriendObj ? (

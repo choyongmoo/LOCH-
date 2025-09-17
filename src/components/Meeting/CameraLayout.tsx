@@ -10,6 +10,7 @@ interface CameraUser {
   isActive: boolean;
   isScreenSharing?: boolean;
   screenShareStream?: MediaStream | null;
+  accentColor?: string; // 사용자 정의 색상
 }
 
 interface CameraLayoutProps {
@@ -216,6 +217,7 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
               isMicOn={localUser.isMicOn}
               isScreenSharing={localUser.isScreenSharing}
               screenShareStream={localUser.screenShareStream}
+              accentColor={localUser.accentColor}
               onFullscreen={(userInfo) => onFullscreen?.(userInfo)}
             />
           </div>
@@ -259,6 +261,7 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
               isMicOn={displayUser.isMicOn}
               isScreenSharing={displayUser.isScreenSharing}
               screenShareStream={displayUser.screenShareStream}
+              accentColor={displayUser.accentColor}
               onFullscreen={(userInfo) => onFullscreen?.(userInfo)}
             />
           </div>
@@ -290,6 +293,7 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
               isMicOn={user.isMicOn}
               isScreenSharing={user.isScreenSharing}
               screenShareStream={user.screenShareStream}
+              accentColor={user.accentColor}
               onFullscreen={(userInfo) => onFullscreen?.(userInfo)}
             />
             
@@ -332,6 +336,7 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
             isMicOn={mainUser.isMicOn}
             isScreenSharing={mainUser.isScreenSharing}
             screenShareStream={mainUser.screenShareStream}
+            accentColor={mainUser.accentColor}
             onFullscreen={(userInfo) => onFullscreen?.(userInfo)}
           />
         </div>
@@ -360,6 +365,7 @@ export const CameraLayout: React.FC<CameraLayoutProps> = ({
                   isMicOn={user.isMicOn}
                   isScreenSharing={user.isScreenSharing}
                   screenShareStream={user.screenShareStream}
+                  accentColor={user.accentColor}
                   onFullscreen={(userInfo) => onFullscreen?.(userInfo)}
                 />
               </div>
