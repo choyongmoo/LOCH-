@@ -1,26 +1,27 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { AuthLayout } from "./layouts/AuthLayout";
 import { HomeLayout } from "./layouts/HomeLayout";
-import { MeetingLayout } from "./layouts/MeetingLayout"
+import { MeetingLayout } from "./layouts/MeetingLayout";
+import WorkspaceLayout from "./layouts/WorkspaceLayout";
 import { Signin } from "./pages/Auth/Signin";
 import { Signup } from "./pages/Auth/Signup";
 import { Home } from "./pages/Home";
 import { About } from "./pages/Home/About";
 import { NotFound } from "./pages/NotFound";
-import ProfilePage from "./pages/Workspace/ProfilePage";
-import HomePage from "./pages/Workspace/HomePage";
-import MunPage from "./pages/Workspace/MunPage";
 import ContactPage from "./pages/Workspace/ContactPage";
 import FriendRequestPage from "./pages/Workspace/FriendRequestPage";
-import WorkspaceLayout from "./layouts/WorkspaceLayout";
+import HomePage from "./pages/Workspace/HomePage";
+import MunPage from "./pages/Workspace/MunPage";
+import ProfilePage from "./pages/Workspace/ProfilePage";
 
-import { Download } from "./pages/Home/Download"; 
-import Docs from "@/pages/Home/Docs"; 
-import DocsDetail from "./pages/Home/Doc/DocsDetail";
-import { ForgotPassword } from "./pages/Auth/ForgotPassword";
 import { ResetPassword } from "@/pages/Auth/ResetPassword";
-import SettingPage from "./pages/Workspace/SettingPage";
+import Docs from "@/pages/Home/Docs";
+import { ForgotPassword } from "./pages/Auth/ForgotPassword";
+import DocsDetail from "./pages/Home/Doc/DocsDetail";
+import { Download } from "./pages/Home/Download";
+import Room from "./pages/Room";
 import ManagerPage from "./pages/Workspace/ManagerPage";
+import SettingPage from "./pages/Workspace/SettingPage";
 
 export const Router = () => {
   return (
@@ -30,8 +31,8 @@ export const Router = () => {
         <Route element={<HomeLayout />}>
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
-          <Route path="download" element={<Download />} /> 
-           <Route path="docs" element={<Docs />} /> 
+          <Route path="download" element={<Download />} />
+          <Route path="docs" element={<Docs />} />
           <Route path="docs/:slug" element={<DocsDetail />} />
         </Route>
 
@@ -39,8 +40,8 @@ export const Router = () => {
         <Route element={<AuthLayout />}>
           <Route path="signin" element={<Signin />} />
           <Route path="signup" element={<Signup />} />
-           <Route path="forgot-password" element={<ForgotPassword />} /> 
-           <Route path="reset-password" element={<ResetPassword />} />
+          <Route path="forgot-password" element={<ForgotPassword />} />
+          <Route path="reset-password" element={<ResetPassword />} />
         </Route>
 
         {/* Workspace Pages */}
@@ -57,6 +58,10 @@ export const Router = () => {
         {/* Meeting Pages */}
         <Route path="meeting" element={<MeetingLayout />} />
         <Route path="meeting/:meetingId" element={<MeetingLayout />} />
+
+        {/* LiveKit Pages */}
+        <Route path="room" element={<Room />} />
+        <Route path="room/:roomId" element={<Room />} />
 
         {/* Fallback Route */}
         <Route path="*" element={<NotFound />} />

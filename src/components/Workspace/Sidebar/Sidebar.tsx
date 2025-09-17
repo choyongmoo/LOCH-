@@ -1,3 +1,5 @@
+import { OthLogo } from "@/components/common/OthLogo";
+import { ScrollArea } from "@/components/common/ui/scroll-area";
 import {
   Sidebar,
   SidebarContent,
@@ -9,15 +11,15 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@/components/common/ui/sidebar"
-import { ScrollArea } from "@/components/common/ui/scroll-area"
-import { useNavigate, useLocation } from "react-router";
-import React from "react";
+} from "@/components/common/ui/sidebar";
 import { supabase } from "@/lib/supabase";
+
+import React from "react";
+import { useLocation, useNavigate } from "react-router";
+import { MeetingButton } from "./MeetingButton";
 import { Input } from "@/components/common/ui/input";
 import { Button } from "@/components/common/ui/button";
 import { OthLogo } from "@/components/common/OthLogo";
-
 
 export default function CustomSidebar() {
   const navigate = useNavigate();
@@ -32,7 +34,10 @@ export default function CustomSidebar() {
     try {
       const { data: authData } = await supabase.auth.getUser();
       const email = authData.user?.email ?? null;
-      if (!email) { setPendingCount(0); return; }
+      if (!email) {
+        setPendingCount(0);
+        return;
+      }
       const { data: me } = await supabase
         .from("users")
         .select("id")
@@ -41,7 +46,10 @@ export default function CustomSidebar() {
         .limit(1)
         .maybeSingle();
       const myId = (me?.id as number | undefined) ?? null;
-      if (!myId) { setPendingCount(0); return; }
+      if (!myId) {
+        setPendingCount(0);
+        return;
+      }
       const { data: rows } = await supabase
         .from("friend_requests")
         .select("id")
@@ -55,11 +63,13 @@ export default function CustomSidebar() {
 
   React.useEffect(() => {
     void loadPendingCount();
-    const handle = () => { void loadPendingCount(); };
-    window.addEventListener('friends-updated', handle as EventListener);
+    const handle = () => {
+      void loadPendingCount();
+    };
+    window.addEventListener("friends-updated", handle as EventListener);
     const { data: sub } = supabase.auth.onAuthStateChange(() => void loadPendingCount());
     return () => {
-      window.removeEventListener('friends-updated', handle as EventListener);
+      window.removeEventListener("friends-updated", handle as EventListener);
       sub.subscription.unsubscribe();
     };
   }, [loadPendingCount]);
@@ -75,6 +85,11 @@ export default function CustomSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   <SidebarMenuItem> 
+                    <div className="px-2 py-2">
+                    <div className="flex w-full items-center justify-center">
+                      <MeetingButton />
+                    </div>
+                  </div>
                     <SidebarMenuButton
                       onClick={async () => {
                         try {
@@ -172,13 +187,16 @@ export default function CustomSidebar() {
                           onClick={() => navigate("/workspace/manager")}  
                           className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/workspace/manager" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
                         >
-                          서버 관리
+                          <div className="flex items-center justify-between w-full">
+                            <span>친구 수신함</span>
+                            {pendingCount > 0 && (
+                              <span className="ml-2 text-xs font-bold">{pendingCount}</span>
+                            )}
+                          </div>
                         </SidebarMenuSubButton>
                       </SidebarMenuSubItem>
                     </SidebarMenuSub>
                   </SidebarMenuItem>
-                  
-                   
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
