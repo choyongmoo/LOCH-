@@ -30,12 +30,14 @@ export const Signin = () => {
         if (code) {
           const { error } = await supabase.auth.exchangeCodeForSession(code);
           if (!error) {
-            navigate("/", { replace: true }); 
+            navigate("/", { replace: true });
             return;
           }
         }
 
-        const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+        const hashParams = new URLSearchParams(
+          window.location.hash.replace(/^#/, "")
+        );
         const accessToken = hashParams.get("access_token");
         const refreshToken = hashParams.get("refresh_token");
         if (accessToken && refreshToken) {
@@ -45,7 +47,7 @@ export const Signin = () => {
           });
           if (!error) {
             window.history.replaceState({}, document.title, url.pathname);
-            navigate("/", { replace: true }); 
+            navigate("/", { replace: true });
             return;
           }
         }
@@ -63,16 +65,17 @@ export const Signin = () => {
     }
     try {
       setLoading(true);
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      const { data, error: signInError } =
+        await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
       if (signInError) {
         setError(signInError.message);
         return;
       }
       if (data.session) {
-        navigate("/", { replace: true }); 
+        navigate("/", { replace: true });
       }
     } catch (err) {
       setError("로그인 중 오류가 발생했습니다.");
@@ -88,14 +91,39 @@ export const Signin = () => {
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/signin`,
-          queryParams: {
-            
-            prompt: "select_account",
-          },
+          queryParams: { prompt: "select_account" },
         },
       });
     } catch (err) {
       setError("Google 로그인에 실패했습니다.");
+    }
+  };
+
+  const handleKakaoSignin = async () => {
+    setError(null);
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: "kakao",
+        options: {
+          redirectTo: `${window.location.origin}/signin`,
+        },
+      });
+    } catch (err) {
+      setError("Kakao 로그인에 실패했습니다.");
+    }
+  };
+
+  const handleGithubSignin = async () => {
+    setError(null);
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: {
+          redirectTo: `${window.location.origin}/signin`,
+        },
+      });
+    } catch (err) {
+      setError("GitHub 로그인에 실패했습니다.");
     }
   };
 
@@ -107,24 +135,54 @@ export const Signin = () => {
       </CardHeader>
 
       <CardContent className="grid gap-6">
-        {/* Google 로그인 */}
-        <Button
-          variant="outline"
-          className="flex items-center justify-center gap-2 w-full py-2"
-          onClick={handleGoogleSignin}
-        >
-          <img src="/google.svg" alt="Google" className="w-5 h-5" />
-          <span className="text-sm font-medium">Google</span>
-        </Button>
+        <div className="flex items-center justify-center gap-5">
+          <button
+            type="button"
+            onClick={handleKakaoSignin} 
+            className="h-14 w-14 rounded-xl shadow-sm border border-black/5 flex items-center justify-center hover:scale-105 transition"
+            style={{ backgroundColor: "#FEE500" }}
+            aria-label="카카오로 로그인"
+          >
+            <img
+              src="/kakaotalk-logo.svg"
+              alt="Kakao"
+              className="h-8 w-8 object-contain"
+            />
+          </button>
 
-        {/* 구분선 */}
+          <button
+            type="button"
+            onClick={handleGoogleSignin}
+            className="h-14 w-14 rounded-xl shadow-sm border bg-white text-gray-800 hover:bg-gray-50 flex items-center justify-center hover:scale-105 transition"
+            aria-label="Google로 로그인"
+          >
+            <img
+              src="/google-new.svg"
+              alt="Google"
+              className="h-7 w-7 object-contain"
+            />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleGithubSignin} 
+            className="h-14 w-14 rounded-xl shadow-sm border border-black/10 bg-[#24292F] hover:bg-black/90 flex items-center justify-center hover:scale-105 transition"
+            aria-label="GitHub로 로그인"
+          >
+            <img
+              src="/github.svg"
+              alt="GitHub"
+              className="h-7 w-7 object-contain invert"
+            />
+          </button>
+        </div>
+
         <div className="flex items-center gap-4">
           <Separator className="flex-1" />
           <span className="text-muted-foreground text-xs">OR</span>
           <Separator className="flex-1" />
         </div>
 
-        {/* 이메일 입력 */}
         <div className="grid gap-2">
           <Label htmlFor="email">이메일</Label>
           <Input
@@ -135,11 +193,13 @@ export const Signin = () => {
           />
         </div>
 
-        {/* 비밀번호 입력 */}
         <div className="grid gap-2">
           <div className="flex items-center justify-between">
             <Label htmlFor="password">비밀번호</Label>
-            <Link to="/forgot-password" className="underline text-sm text-muted-foreground">
+            <Link
+              to="/forgot-password"
+              className="underline text-sm text-muted-foreground"
+            >
               비밀번호를 잊으셨나요?
             </Link>
           </div>
@@ -159,7 +219,11 @@ export const Signin = () => {
 
       <CardFooter className="flex flex-col gap-4 pt-2">
         {error && <Paragraph className="text-red-500 text-sm">{error}</Paragraph>}
-        <Button className="w-full" onClick={handleEmailSignin} disabled={loading}>
+        <Button
+          className="w-full"
+          onClick={handleEmailSignin}
+          disabled={loading}
+        >
           {loading ? "로그인 중..." : "로그인"}
         </Button>
         <Paragraph muted className="text-center">

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/common/ui/button";
-import screenshot from "@/assets/landing/river-dashboard.png";
+import screenshot from "@/assets/landing/river_dashboard.png";
 
 import windowsIcon from "@/assets/landing/windows.png";
 import windowsIconDark from "@/assets/landing/windows2.svg";
