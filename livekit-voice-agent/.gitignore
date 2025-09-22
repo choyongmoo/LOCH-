@@ -1,0 +1,120 @@
+###############################################
+# Python
+###############################################
+__pycache__/
+*.py[cod]
+*$py.class
+
+# C extensions
+*.so
+
+###############################################
+# Distribution / packaging
+###############################################
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+pip-wheel-metadata/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+###############################################
+# Unit test / coverage
+###############################################
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage.xml
+*.cover
+*.py,cover
+.pytest_cache/
+.hypothesis/
+
+###############################################
+# Type checkers / linters
+###############################################
+.mypy_cache/
+.dmypy.json
+dmypy.json
+.pyre/
+.pytype/
+.ruff_cache/
+
+###############################################
+# Environments
+###############################################
+.env
+.env.*
+!.env.example
+.venv
+venv/
+ENV/
+env/
+env.bak/
+venv.bak/
+.python-version
+
+###############################################
+# IDEs / Editors
+###############################################
+.vscode/
+.idea/
+*.swp
+*.swo
+
+###############################################
+# OS files
+###############################################
+.DS_Store
+Thumbs.db
+
+###############################################
+# Logs / runtime
+###############################################
+logs/
+*.log
+*.pid
+*.pid.lock
+
+###############################################
+# Local data
+###############################################
+data/
+tmp/
+temp/
+
+###############################################
+# Jupyter
+###############################################
+.ipynb_checkpoints/
+
+###############################################
+# Project-specific (LiveKit voice agent)
+###############################################
+user_speech_log.txt
+recordings/
+artifacts/
+
+###############################################
+# uv (keep uv.lock tracked)
+###############################################
+.cache/uv/
+
