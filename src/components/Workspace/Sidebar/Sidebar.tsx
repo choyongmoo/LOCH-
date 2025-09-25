@@ -28,6 +28,7 @@ export default function CustomSidebar() {
   const [newName, setNewName] = React.useState<string>("");
   const [newDesc, setNewDesc] = React.useState<string>("");
   const [creating, setCreating] = React.useState<boolean>(false);
+  const [selectedServerId, setSelectedServerId] = React.useState<string | null>(null);
 
   const loadPendingCount = React.useCallback(async () => {
     try {
@@ -72,6 +73,38 @@ export default function CustomSidebar() {
       sub.subscription.unsubscribe();
     };
   }, [loadPendingCount]);
+
+  // 현재 선택된 서버 ID를 로컬스토리지/이벤트로 추적하여 MeetingButton에 전달
+  React.useEffect(() => {
+    const readSelected = () => {
+      try {
+        const raw = localStorage.getItem('home:selectedMeeting');
+        if (!raw) return setSelectedServerId(null);
+        const parsed = JSON.parse(raw) as { meetingId?: string } | null;
+        setSelectedServerId(parsed?.meetingId ?? null);
+      } catch {
+        setSelectedServerId(null);
+      }
+    };
+
+    readSelected();
+
+    const onShowParticipants = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { meetingId?: string } | undefined;
+      setSelectedServerId(detail?.meetingId ?? null);
+    };
+    window.addEventListener('show-participants', onShowParticipants as EventListener);
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'home:selectedMeeting') readSelected();
+    };
+    window.addEventListener('storage', onStorage);
+
+    return () => {
+      window.removeEventListener('show-participants', onShowParticipants as EventListener);
+      window.removeEventListener('storage', onStorage);
+    };
+  }, []);
   return (
     <>
       <Sidebar className="min-h-screen bg-[#111827] w-full !static !max-h-none font-bold">
@@ -86,31 +119,10 @@ export default function CustomSidebar() {
                   <SidebarMenuItem>
                     <div className="px-2 py-2">
                       <div className="flex w-full items-center justify-center">
-                        <MeetingButton />
+                        <MeetingButton serverId={selectedServerId ?? undefined} />
                       </div>
                     </div>
-                    <SidebarMenuButton
-                      onClick={async () => {
-                        try {
-                          const raw = localStorage.getItem("home:selectedMeeting");
-                          if (raw) {
-                            const parsed = JSON.parse(raw) as { meetingId?: string } | null;
-                            const meetingId = parsed?.meetingId;
-                            if (meetingId) {
-                              navigate(`/meeting/${meetingId}`);
-                              return;
-                            }
-                          }
-                        } catch {
-                          /* ignore */
-                        }
-                        setCreateOpen(true);
-                      }}
-                      className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/meeting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2  ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
-                    >
-                      회의
-                    </SidebarMenuButton>
-
+                    
                     <SidebarMenuButton className="hover:bg-transparent dark:hover:bg-transparent focus:bg-transparent active:bg-transparent cursor-default">
                       내 제품
                     </SidebarMenuButton>
@@ -298,9 +310,10 @@ export default function CustomSidebar() {
                       setCreateOpen(false);
                       setNewName("");
                       setNewDesc("");
-                      navigate(`/meeting/${data.id}`);
+                      navigate(`/room/${data.id}`);
                     }
                   } catch {
+                    /* ignore */
                   } finally {
                     setCreating(false);
                   }

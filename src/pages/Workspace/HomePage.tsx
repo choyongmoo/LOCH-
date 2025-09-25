@@ -80,7 +80,7 @@ function RecentServers() {
   return (
     <div className="flex gap-4 mb-4 min-h-[72px]">
       {list.map((m) => (
-        <Link key={m.id} to={`/meeting/${m.id}`} className="flex flex-col items-center w-16 flex-none">
+        <Link key={m.id} to={`/room/${m.id}`} className="flex flex-col items-center w-16 flex-none">
           <GroupItem name={m.room_name} title={m.room_name} />
           <span className="text-xs font-bold text-gray-700 dark:text-gray-200 text-center w-full">
             {m.room_name && m.room_name.length > 4 ? `${m.room_name.slice(0, 4)}…` : m.room_name}

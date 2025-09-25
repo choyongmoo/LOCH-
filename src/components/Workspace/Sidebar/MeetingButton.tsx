@@ -15,31 +15,72 @@ interface Room {
   user_count: number;
 }
 
-export const MeetingButton = ({
-  serverId = "0c2e3788-8080-4a1f-af51-4d30b4835a9d",
-  className,
-}: MeetingButtonProps) => {
+export const MeetingButton = ({ serverId, className }: MeetingButtonProps) => {
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  // 현재 선택된 서버 ID 추적 (MiniSidebar에서 "이동" 시 저장됨)
   useEffect(() => {
+    const readSelected = () => {
+      try {
+        const raw = localStorage.getItem("home:selectedMeeting");
+        if (!raw) return setSelectedServerId(null);
+        const parsed = JSON.parse(raw) as { meetingId?: string } | null;
+        setSelectedServerId(parsed?.meetingId ?? null);
+      } catch {
+        setSelectedServerId(null);
+      }
+    };
+
+    readSelected();
+
+    const onShowParticipants = (e: Event) => {
+      const detail = (e as CustomEvent).detail as { meetingId?: string } | undefined;
+      setSelectedServerId(detail?.meetingId ?? null);
+    };
+    window.addEventListener("show-participants", onShowParticipants as EventListener);
+
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === "home:selectedMeeting") readSelected();
+    };
+    window.addEventListener("storage", onStorage);
+
+    return () => {
+      window.removeEventListener("show-participants", onShowParticipants as EventListener);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
+
+  const effectiveServerId = serverId ?? selectedServerId ?? null;
+
+  useEffect(() => {
+    let active = true;
     const fetchRoom = async () => {
       setLoading(true);
       setError(null);
+      setRoom(null);
+      if (!effectiveServerId) {
+        setLoading(false);
+        return;
+      }
       const { data, error } = await supabase
         .from("rooms")
         .select("id, is_active, user_count")
-        .eq("server_id", serverId)
-        .single();
+        .eq("server_id", effectiveServerId)
+        .maybeSingle();
 
+      if (!active) return;
       if (!error) setRoom(data);
       setLoading(false);
       setError(error?.message ?? null);
     };
 
-    fetchRoom();
+    void fetchRoom();
+
+    if (!effectiveServerId) return;
 
     const channel = supabase
       .channel("schema-db-changes")
@@ -49,7 +90,7 @@ export const MeetingButton = ({
           event: "*",
           schema: "public",
           table: "rooms",
-          filter: `server_id=eq.${serverId}`,
+          filter: `server_id=eq.${effectiveServerId}`,
         },
         (payload: { eventType: string; new: Room | null }) => {
           if (payload.eventType === "DELETE") {
@@ -62,15 +103,31 @@ export const MeetingButton = ({
       .subscribe();
 
     return () => {
+      active = false;
       supabase.removeChannel(channel);
     };
-  }, [serverId]);
+  }, [effectiveServerId]);
 
-  const handleButtonClick = () => {
+  const handleButtonClick = async () => {
+    // 선택된 서버가 없으면 홈 유지
+    if (!effectiveServerId) {
+      return;
+    }
     if (room?.id) {
       navigate(`/room/${room.id}`);
-    } else {
-      navigate(`/workspace`);
+      return;
+    }
+    // 방이 없으면 즉시 생성 후 이동
+    try {
+      const { data, error } = await supabase
+        .from("rooms")
+        .insert({ server_id: effectiveServerId, is_active: true, user_count: 0 })
+        .select("id")
+        .single();
+      if (error) throw error;
+      if (data?.id) navigate(`/room/${data.id}`);
+    } catch (e) {
+      setError((e as Error)?.message ?? "Failed to start meeting");
     }
   };
 

@@ -194,7 +194,7 @@ const ManagerPage = () => {
             <div
               key={m.id}
               className="group flex items-center px-2 py-3 border-b border-gray-200 dark:border-[#23242e] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2A2B32]"
-              onClick={() => navigate(`/meeting/${m.id}`)}
+              onClick={() => navigate(`/room/${m.id}`)}
             >
               <div className="w-8" />
               <div className="flex-1 flex items-center gap-3 min-w-0">
