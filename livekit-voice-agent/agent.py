@@ -2,10 +2,9 @@ import datetime
 from dotenv import load_dotenv
 
 from livekit import agents
-from livekit.agents import AgentSession, Agent, RoomInputOptions, RoomOutputOptions
+from livekit.agents import AgentSession, Agent, CloseEvent, ConversationItemAddedEvent, ErrorEvent, RoomInputOptions, RoomOutputOptions, UserInputTranscribedEvent
 from livekit.plugins import (
     openai,
-    deepgram,
     noise_cancellation,
     silero,
 )
@@ -13,38 +12,48 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 
 load_dotenv(".env.local")
 
-
-class Assistant(Agent):
-    def __init__(self) -> None:
-        super().__init__(instructions="You are a helpful AI assistant.")
-
-
 async def entrypoint(ctx: agents.JobContext):
-    session = AgentSession(
-        stt=deepgram.STT(model="nova-3", language="multi"),
-        llm=openai.LLM(model="gpt-4o-mini"),
-        tts=None,
-        vad=silero.VAD.load(),
-        turn_detection=MultilingualModel(),
-    )
+    session = AgentSession()
 
     @session.on("user_input_transcribed")
-    def on_transcript(transcript):
-        if transcript.is_final:
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            with open("user_speech_log.txt", "a") as f:
-                f.write(f"[{timestamp}] {transcript.transcript}\n")
+    def on_user_input_transcribed(event: UserInputTranscribedEvent):
+        open("session.log", "a").write(
+            f"User input transcribed: {event.transcript}\n"
+            f"final: {event.is_final}\n"
+            f"speaker id: {event.speaker_id}\n")
+
+
+    @session.on("conversation_item_added")
+    def on_conversation_item_added(event: ConversationItemAddedEvent):
+        open("session.log", "a").write(
+            f"Conversation item added from {event.item.role}: {event.item.text_content}.\n"
+            f"interrupted: {event.item.interrupted}\n")
+
+        for content in event.item.content:
+            if isinstance(content, str):
+                print(f" - text: {content}")
+
+    @session.on("close")
+    def on_close(error: ErrorEvent):
+        open("session.log", "a").write(
+            f"Session closed with error: {error}\n"
+        )
+
 
     await session.start(
         room=ctx.room,
-        agent=Assistant(),
+        agent=Agent(
+            stt=openai.STT(model="gpt-4o-mini-transcribe"),
+            llm=openai.LLM(model="gpt-4o-mini"),
+            vad=silero.VAD.load(),
+            turn_detection=MultilingualModel(),
+            instructions="You are a helpful AI assistant.",
+        ),
         room_input_options=RoomInputOptions(
-            # For telephony applications, use `BVCTelephony` instead for best results
             noise_cancellation=noise_cancellation.BVC(),
         ),
         room_output_options=RoomOutputOptions(
             audio_enabled=False,
-            transcription_enabled=True,
         ),
     )
 

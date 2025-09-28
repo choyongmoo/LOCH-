@@ -1,7 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { AuthLayout } from "./layouts/AuthLayout";
 import { HomeLayout } from "./layouts/HomeLayout";
-import { MeetingLayout } from "./layouts/MeetingLayout";
 import WorkspaceLayout from "./layouts/WorkspaceLayout";
 import { Signin } from "./pages/Auth/Signin";
 import { Signup } from "./pages/Auth/Signup";
@@ -55,9 +54,6 @@ export const Router = () => {
           <Route path="setting" element={<SettingPage />} />
           <Route path="manager" element={<ManagerPage />} />
         </Route>
-        {/* Meeting Pages */}
-        <Route path="meeting" element={<MeetingLayout />} />
-        <Route path="meeting/:meetingId" element={<MeetingLayout />} />
 
         {/* LiveKit Pages */}
         <Route path="room" element={<Room />} />

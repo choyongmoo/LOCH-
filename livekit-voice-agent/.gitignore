@@ -107,14 +107,6 @@ temp/
 .ipynb_checkpoints/
 
 ###############################################
-# Project-specific (LiveKit voice agent)
-###############################################
-user_speech_log.txt
-recordings/
-artifacts/
-
-###############################################
-# uv (keep uv.lock tracked)
+# uv
 ###############################################
 .cache/uv/
-

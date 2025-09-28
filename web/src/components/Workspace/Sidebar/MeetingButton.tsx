@@ -15,23 +15,65 @@ interface Room {
   user_count: number;
 }
 
-export const MeetingButton = ({
-  serverId = "0c2e3788-8080-4a1f-af51-4d30b4835a9d",
-  className,
-}: MeetingButtonProps) => {
+export const MeetingButton = ({ serverId, className }: MeetingButtonProps) => {
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedServerId, setSelectedServerId] = useState<string | null>(serverId ?? null);
   const navigate = useNavigate();
 
+  // Keep internal selectedServerId in sync with prop, if provided
   useEffect(() => {
+    if (serverId) {
+      setSelectedServerId(serverId);
+    }
+  }, [serverId]);
+
+  // Initialize from localStorage and respond to MiniSidebar selections via 'show-participants'
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("home:selectedMeeting");
+      if (raw) {
+        const parsed = JSON.parse(raw) as { meetingId?: string } | null;
+        setSelectedServerId(parsed?.meetingId ?? null);
+      } else {
+        setSelectedServerId(null);
+      }
+    } catch {
+      setSelectedServerId(null);
+    }
+
+    const handleShowParticipants = (e: Event) => {
+      try {
+        const ce = e as CustomEvent<{ meetingId?: string }>;
+        const id = ce.detail?.meetingId ?? "";
+        setSelectedServerId(id || null);
+      } catch {
+        /* ignore */
+      }
+    };
+
+    window.addEventListener("show-participants", handleShowParticipants as EventListener);
+    return () =>
+      window.removeEventListener("show-participants", handleShowParticipants as EventListener);
+  }, []);
+
+  useEffect(() => {
+    // If there is no selected server, clear state and stop loading
+    if (!selectedServerId) {
+      setRoom(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
+
     const fetchRoom = async () => {
       setLoading(true);
       setError(null);
       const { data, error } = await supabase
         .from("rooms")
         .select("id, is_active, user_count")
-        .eq("server_id", serverId)
+        .eq("server_id", selectedServerId)
         .single();
 
       if (!error) setRoom(data);
@@ -49,7 +91,7 @@ export const MeetingButton = ({
           event: "*",
           schema: "public",
           table: "rooms",
-          filter: `server_id=eq.${serverId}`,
+          filter: `server_id=eq.${selectedServerId}`,
         },
         (payload: { eventType: string; new: Room | null }) => {
           if (payload.eventType === "DELETE") {
@@ -64,7 +106,7 @@ export const MeetingButton = ({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [serverId]);
+  }, [selectedServerId]);
 
   const handleButtonClick = () => {
     if (room?.id) {
