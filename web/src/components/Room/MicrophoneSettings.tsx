@@ -13,7 +13,7 @@ export function MicrophoneSettings() {
       }}
     >
       <section className="lk-button-group">
-        <TrackToggle source={Track.Source.Microphone}>Microphone</TrackToggle>
+        <TrackToggle source={Track.Source.Microphone}>마이크</TrackToggle>
         <div className="lk-button-group-menu">
           <MediaDeviceMenu kind="audioinput" />
         </div>

@@ -4,8 +4,9 @@ import { KeyboardShortcuts } from "@/components/Room/KeyboardShortcuts";
 import { RecordingIndicator } from "@/components/Room/RecordingIndicator";
 import { SettingsMenu } from "@/components/Room/SettingsMenu";
 import { LiveKitRoomProvider } from "@/providers/LiveKitRoomProvider";
-import { formatChatMessageLinks, VideoConference } from "@livekit/components-react";
+import { formatChatMessageLinks } from "@livekit/components-react";
 import { useParams } from "react-router";
+import { CustomVideoConference } from "./CustomVideoConference";
 
 export function Room() {
   const { roomId } = useParams();
@@ -14,7 +15,7 @@ export function Room() {
     <div className="lk-room-container">
       <LiveKitRoomProvider roomId={roomId!}>
         <KeyboardShortcuts />
-        <VideoConference
+        <CustomVideoConference
           chatMessageFormatter={formatChatMessageLinks}
           SettingsComponent={SettingsMenu}
         />

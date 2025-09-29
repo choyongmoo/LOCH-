@@ -68,14 +68,14 @@ export function CameraSettings() {
       )}
 
       <section className="lk-button-group">
-        <TrackToggle source={Track.Source.Camera}>Camera</TrackToggle>
+        <TrackToggle source={Track.Source.Camera}>카메라</TrackToggle>
         <div className="lk-button-group-menu">
           <MediaDeviceMenu kind="videoinput" />
         </div>
       </section>
 
       <div style={{ marginTop: "10px" }}>
-        <div style={{ marginBottom: "8px" }}>Background Effects</div>
+        <div style={{ marginBottom: "8px" }}>배경 효과</div>
         <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
           <button
             onClick={() => selectBackground("none")}
@@ -86,7 +86,7 @@ export function CameraSettings() {
               minWidth: "80px",
             }}
           >
-            None
+            없음
           </button>
 
           <button
@@ -124,7 +124,7 @@ export function CameraSettings() {
                 fontSize: "12px",
               }}
             >
-              Blur
+              흐리게
             </span>
           </button>
         </div>

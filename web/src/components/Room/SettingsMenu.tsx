@@ -5,15 +5,12 @@ import { CameraSettings } from "./CameraSettings";
 import { MicrophoneSettings } from "./MicrophoneSettings";
 import styles from "./styles/SettingsMenu.module.css";
 
-/**
- * @alpha
- */
 export function SettingsMenu(props: React.HTMLAttributes<HTMLDivElement>) {
   const layoutContext = useMaybeLayoutContext();
 
   const settings = React.useMemo(() => {
     return {
-      media: { camera: true, microphone: true, label: "Media Devices", speaker: true },
+      media: { camera: true, microphone: true, label: "미디어 장치", speaker: true },
     };
   }, []);
 
@@ -45,7 +42,7 @@ export function SettingsMenu(props: React.HTMLAttributes<HTMLDivElement>) {
           <>
             {settings.media && settings.media.camera && (
               <>
-                <h3>Camera</h3>
+                <h3>카메라</h3>
                 <section>
                   <CameraSettings />
                 </section>
@@ -53,7 +50,7 @@ export function SettingsMenu(props: React.HTMLAttributes<HTMLDivElement>) {
             )}
             {settings.media && settings.media.microphone && (
               <>
-                <h3>Microphone</h3>
+                <h3>마이크</h3>
                 <section>
                   <MicrophoneSettings />
                 </section>
@@ -61,9 +58,9 @@ export function SettingsMenu(props: React.HTMLAttributes<HTMLDivElement>) {
             )}
             {settings.media && settings.media.speaker && (
               <>
-                <h3>Speaker & Headphones</h3>
+                <h3>스피커 & 헤드폰</h3>
                 <section className="lk-button-group">
-                  <span className="lk-button">Audio Output</span>
+                  <span className="lk-button">오디오 출력</span>
                   <div className="lk-button-group-menu">
                     <MediaDeviceMenu kind="audiooutput"></MediaDeviceMenu>
                   </div>
@@ -78,7 +75,7 @@ export function SettingsMenu(props: React.HTMLAttributes<HTMLDivElement>) {
           className={`lk-button`}
           onClick={() => layoutContext?.widget.dispatch?.({ msg: "toggle_settings" })}
         >
-          Close
+          닫기
         </button>
       </div>
     </div>

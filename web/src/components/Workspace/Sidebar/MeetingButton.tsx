@@ -120,13 +120,13 @@ export const MeetingButton = ({ serverId, className }: MeetingButtonProps) => {
     return (
       <Button disabled variant="outline" size="lg" className={className ?? "w-full"}>
         <Loader2 className="animate-spin" />
-        Loading...
+        로딩 중...
       </Button>
     );
   if (error)
     return (
       <Button disabled variant="outline" size="lg" className={className ?? "w-full"}>
-        Unavailable
+        오류
       </Button>
     );
 
@@ -138,7 +138,7 @@ export const MeetingButton = ({ serverId, className }: MeetingButtonProps) => {
       title={room && room.is_active ? "Join active meeting" : "Start a new meeting"}
     >
       <Video />
-      {room && room.is_active ? `Join Meeting (${room.user_count})` : "Start Meeting"}
+      {room && room.is_active ? `회의 참여 (${room.user_count}명)` : "회의 시작"}
     </Button>
   );
 };

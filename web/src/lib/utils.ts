@@ -1,6 +1,51 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs))
+  return twMerge(clsx(inputs));
+}
+
+export function supportsScreenSharing(): boolean {
+  return (
+    typeof navigator !== "undefined" &&
+    navigator.mediaDevices &&
+    !!navigator.mediaDevices.getDisplayMedia
+  );
+}
+
+export function mergeProps<T extends Record<string, unknown>, U extends Record<string, unknown>>(
+  a: T,
+  b: U
+): T & U {
+  const result: Record<string, unknown> = { ...a };
+
+  for (const key of Object.keys(b)) {
+    const av = (a as Record<string, unknown>)[key];
+    const bv = (b as Record<string, unknown>)[key];
+
+    if (key === "className") {
+      result.className = cn(av as string | undefined, bv as string | undefined);
+      continue;
+    }
+
+    const isEvent = (/^on[A-Z]/.test(key) && typeof av === "function") || typeof bv === "function";
+    if (isEvent) {
+      const fnA = typeof av === "function" ? (av as (...args: unknown[]) => unknown) : undefined;
+      const fnB = typeof bv === "function" ? (bv as (...args: unknown[]) => unknown) : undefined;
+      if (fnA && fnB) {
+        result[key] = (...args: unknown[]) => {
+          fnA(...args);
+          return fnB(...args);
+        };
+      } else {
+        result[key] = fnB ?? fnA;
+      }
+      continue;
+    }
+
+    // Default: second overrides first
+    result[key] = bv;
+  }
+
+  return result as T & U;
 }
