@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import React from "react";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -48,4 +49,25 @@ export function mergeProps<T extends Record<string, unknown>, U extends Record<s
   }
 
   return result as T & U;
+}
+
+export function cloneSingleChild(
+  children: React.ReactNode | React.ReactNode[],
+  props?: Record<string, unknown>,
+  key?: unknown
+) {
+  return React.Children.map(children, (child) => {
+    // Checking isValidElement is the safe way and avoids a typescript
+    // error too.
+    if (React.isValidElement(child) && React.Children.only(children)) {
+      if (child.props.className) {
+        // make sure we retain classnames of both passed props and child
+        props ??= {};
+        props.className = clsx(child.props.className, props.className);
+        props.style = { ...child.props.style, ...props.style };
+      }
+      return React.cloneElement(child, { ...props, key });
+    }
+    return child;
+  });
 }

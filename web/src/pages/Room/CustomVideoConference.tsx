@@ -1,3 +1,4 @@
+import { Chat } from "@/components/Room/Chat";
 import { ConnectionStateToast } from "@/components/Room/ConnectionStateToast";
 import type {
   MessageDecoder,
@@ -8,7 +9,6 @@ import type {
 import { isEqualTrackRef, isTrackReference, isWeb, log } from "@livekit/components-core";
 import {
   CarouselLayout,
-  Chat,
   FocusLayout,
   FocusLayoutContainer,
   GridLayout,

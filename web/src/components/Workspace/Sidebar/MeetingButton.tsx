@@ -116,6 +116,14 @@ export const MeetingButton = ({ serverId, className }: MeetingButtonProps) => {
     }
   };
 
+  if (!selectedServerId) {
+    return (
+      <Button disabled variant="outline" size="lg" className={className ?? "w-full text-1xl"}>
+        서버를 선택해 주세요
+      </Button>
+    );
+  }
+
   if (loading)
     return (
       <Button disabled variant="outline" size="lg" className={className ?? "w-full"}>
@@ -131,12 +139,7 @@ export const MeetingButton = ({ serverId, className }: MeetingButtonProps) => {
     );
 
   return (
-    <Button
-      onClick={handleButtonClick}
-      size="lg"
-      className={className ?? "w-full"}
-      title={room && room.is_active ? "Join active meeting" : "Start a new meeting"}
-    >
+    <Button onClick={handleButtonClick} size="lg" className={className ?? "w-full"}>
       <Video />
       {room && room.is_active ? `회의 참여 (${room.user_count}명)` : "회의 시작"}
     </Button>

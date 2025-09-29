@@ -6,13 +6,11 @@ export const NotFound = () => {
       <div className="absolute inset-0 h-full w-full bg-gradient-to-br from-primary to-secondary opacity-10"></div>
       <div className="z-10">
         <h1 className="text-9xl font-bold text-primary">404</h1>
-        <h2 className="mt-4 text-3xl font-semibold">Page Not Found</h2>
-        <p className="mt-2 text-muted-foreground">
-          Sorry, we couldn't find the page you're looking for.
-        </p>
+        <h2 className="mt-4 text-4xl font-semibold">Page Not Found</h2>
+        <p className="mt-2 text-muted-foreground">페이지가 존재하지 않습니다.</p>
         <div className="mt-8">
           <Button asChild>
-            <a href="/">Go back to Home</a>
+            <a href="/">홈으로 돌아가기</a>
           </Button>
         </div>
       </div>
