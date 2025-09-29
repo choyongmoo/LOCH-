@@ -1,18 +1,24 @@
-import { VideoConference } from "@livekit/components-react";
-import { useParams } from "react-router";
-import { LiveKitRoomProvider } from "../../providers/LiveKitRoomProvider";
+"use client";
 
-export default function Room() {
+import { KeyboardShortcuts } from "@/components/Room/KeyboardShortcuts";
+import { RecordingIndicator } from "@/components/Room/RecordingIndicator";
+import { SettingsMenu } from "@/components/Room/SettingsMenu";
+import { LiveKitRoomProvider } from "@/providers/LiveKitRoomProvider";
+import { formatChatMessageLinks, VideoConference } from "@livekit/components-react";
+import { useParams } from "react-router";
+
+export function Room() {
   const { roomId } = useParams();
 
-  if (!roomId) {
-    return <div>Room not found</div>;
-  }
-
   return (
-    <div className="h-[100dvh] w-full">
-      <LiveKitRoomProvider roomId={roomId}>
-        <VideoConference className="h-full w-full" />
+    <div className="lk-room-container">
+      <LiveKitRoomProvider roomId={roomId!}>
+        <KeyboardShortcuts />
+        <VideoConference
+          chatMessageFormatter={formatChatMessageLinks}
+          SettingsComponent={SettingsMenu}
+        />
+        <RecordingIndicator />
       </LiveKitRoomProvider>
     </div>
   );

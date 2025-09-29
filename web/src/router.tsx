@@ -18,7 +18,7 @@ import Docs from "@/pages/Home/Docs";
 import { ForgotPassword } from "./pages/Auth/ForgotPassword";
 import DocsDetail from "./pages/Home/Doc/DocsDetail";
 import { Download } from "./pages/Home/Download";
-import Room from "./pages/Room";
+import { Room } from "./pages/Room";
 import ManagerPage from "./pages/Workspace/ManagerPage";
 import SettingPage from "./pages/Workspace/SettingPage";
 
