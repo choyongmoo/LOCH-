@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 
 from livekit import agents
 from livekit import api
-from livekit.agents import AgentSession, Agent, CloseEvent, ConversationItemAddedEvent, RoomInputOptions, RoomOutputOptions, UserInputTranscribedEvent
+from livekit.agents import AgentSession, Agent, CloseEvent, RoomInputOptions, RoomOutputOptions, UserInputTranscribedEvent
 from livekit.plugins import (
     openai,
     noise_cancellation,
@@ -16,33 +16,51 @@ from livekit.plugins.turn_detector.multilingual import MultilingualModel
 load_dotenv(".env.local")
 
 async def entrypoint(ctx: agents.JobContext):
+    await ctx.connect()
+
     session = AgentSession()
     room = ctx.room
+
+    _active_tasks = set()
+
+    def handle_text_stream(reader, participant_identity):
+        task = asyncio.create_task(async_handle_text_stream(reader, participant_identity))
+        _active_tasks.add(task)
+        task.add_done_callback(lambda t: _active_tasks.remove(t))
+
+    async def async_handle_text_stream(reader, participant_identity):
+        info = reader.info
+
+        print(
+            f'Text stream received from {participant_identity}\n'
+            f'  Topic: {info.topic}\n'
+            f'  Timestamp: {info.timestamp}\n'
+            f'  Size: {info.size}'  # Optional, only available if the stream was sent with `send_text`
+        )
+
+        # Option 1: Process the stream incrementally using an async for loop.
+        # async for chunk in reader:
+        #     print(f"Next chunk: {chunk}")
+
+        # Option 2: Get the entire text after the stream completes.
+        text = await reader.read_all()
+        print(f"Received text: {text}")
+
+    room.register_text_stream_handler("lk.chat", handle_text_stream)
 
     @session.on("user_input_transcribed")
     def on_user_input_transcribed(event: UserInputTranscribedEvent):
         open("session.log", "a").write(
+            f"--- USER INPUT TRANSCRIBED EVENT ---\n"
             f"User input transcribed: {event.transcript}\n"
             f"final: {event.is_final}\n"
             f"speaker id: {event.speaker_id}\n"
             f"created at: {event.created_at}\n")
 
-    @session.on("conversation_item_added")
-    def on_conversation_item_added(event: ConversationItemAddedEvent):
-        open("session.log", "a").write(
-            f"Conversation item added from {event.item.role}: {event.item.text_content}.\n"
-            f"interrupted: {event.item.interrupted}\n"
-            f"created at: {event.created_at}\n")
-
-        for content in event.item.content:
-            if isinstance(content, str):
-                print(f" - text: {content}")
-
     @session.on("close")
     def on_close(event: CloseEvent):
-        open("session.log", "a").write(
-            f"Session closed with error: {event.error}\n"
-            f"created at: {event.created_at}\n")
+        open("session.log", "w").write("")
+        # asyncio.run(ctx.delete_room())
 
     await session.start(
         room=ctx.room,
@@ -58,6 +76,7 @@ async def entrypoint(ctx: agents.JobContext):
         ),
         room_output_options=RoomOutputOptions(
             audio_enabled=False,
+            sync_transcription=False
         ),
     )
 
