@@ -85,19 +85,7 @@ export default function CustomSidebar() {
                 <SidebarMenu>
                   <SidebarMenuItem>
                     <div className="px-2 py-2">
-                      <div className="flex w-full items-center justify-center">
-                        <MeetingButton />
-                      </div>
-                      <div className="mt-2 flex w-full items-center justify-center">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="w-full"
-                          onClick={() => navigate("/workspace/docs")}
-                        >
-                          회의 내역
-                        </Button>
-                      </div>
+                      <MeetingButton />
                     </div>
 
                     <SidebarMenuButton className="hover:bg-transparent dark:hover:bg-transparent focus:bg-transparent active:bg-transparent cursor-default">
@@ -276,6 +264,7 @@ export default function CustomSidebar() {
                       navigate(`/meeting/${data.id}`);
                     }
                   } catch {
+                    /* no-op */
                   } finally {
                     setCreating(false);
                   }

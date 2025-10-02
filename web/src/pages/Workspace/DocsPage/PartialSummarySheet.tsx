@@ -10,9 +10,10 @@ import { supabase } from "@/lib/supabase";
 import {
   formatSeconds,
   getTotalSecondsFromLog,
-  getTranscriptItems,
+  getTranscriptEntries,
   parseTimeInput,
 } from "@/lib/utils";
+import { Loader2 } from "lucide-react";
 import React from "react";
 
 type PartialSummarySheetProps = {
@@ -30,15 +31,18 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
   const [startText, setStartText] = React.useState<string>("0");
   const [endText, setEndText] = React.useState<string>("" + total);
   const [summary, setSummary] = React.useState<string>("");
+  const [isSummarizing, setIsSummarizing] = React.useState<boolean>(false);
 
   React.useEffect(() => {
+    if (!log?.id) return;
     setStartText("0");
     setEndText(String(Math.floor(total)));
     setSummary("");
-  }, [total, open]);
+  }, [log?.id, total]);
 
   const doSummarize = async () => {
     try {
+      setIsSummarizing(true);
       const startParsed = parseTimeInput(startText);
       const endParsed = parseTimeInput(endText);
 
@@ -55,17 +59,34 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
       const startSeconds = Math.floor(startParsed);
       const endSeconds = Math.floor(endParsed);
 
+      const items = getTranscriptEntries(log?.transcript)
+        .filter(
+          (i) =>
+            Number.isFinite(i.timestamp) && i.timestamp >= startSeconds && i.timestamp <= endSeconds
+        )
+        .map((i) => {
+          const t = i.transcript.trim();
+          if (!t) return "";
+          return `${i.participant} -> ${t}`;
+        })
+        .filter((t) => t.length > 0);
+
+      if (items.length === 0) {
+        setSummary("요약할 텍스트가 없습니다.");
+        return;
+      }
+
+      const text = items.map((t) => `- ${t}`).join("\n");
+
       const result = await supabase.functions.invoke("meeting-summary", {
-        body: {
-          start: startSeconds,
-          end: endSeconds,
-          transcript: log?.transcript,
-        },
+        body: { text },
       });
 
       setSummary(result.data?.summary || result.error?.message || "요약 중 오류가 발생했습니다.");
     } catch (e) {
       setSummary((e as { message?: string })?.message || "요약 중 오류가 발생했습니다.");
+    } finally {
+      setIsSummarizing(false);
     }
   };
 
@@ -105,8 +126,15 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
               >
                 전체 선택
               </Button>
-              <Button size="sm" onClick={doSummarize}>
-                간단 요약
+              <Button size="sm" onClick={doSummarize} disabled={isSummarizing}>
+                {isSummarizing ? (
+                  <>
+                    <Loader2 className="animate-spin" />
+                    처리 중...
+                  </>
+                ) : (
+                  "간단 요약"
+                )}
               </Button>
             </div>
           </div>
@@ -122,8 +150,8 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
               {(() => {
                 const start = Math.max(0, parseTimeInput(startText));
                 const end = Math.max(start, parseTimeInput(endText));
-                const items = getTranscriptItems(log?.transcript).filter(
-                  (i) => Number.isFinite(i.time) && i.time >= start && i.time <= end
+                const items = getTranscriptEntries(log?.transcript).filter(
+                  (i) => Number.isFinite(i.timestamp) && i.timestamp >= start && i.timestamp <= end
                 );
                 if (items.length === 0)
                   return (
@@ -134,12 +162,12 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
                 return (
                   <div className="p-2 space-y-2">
                     {items.map((it, idx) => (
-                      <div key={`${it.time}-${idx}`} className="flex items-start gap-3">
+                      <div key={`${it.timestamp}-${idx}`} className="flex items-start gap-3">
                         <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/10 text-xs font-mono text-gray-700 dark:text-gray-200">
-                          {formatSeconds(it.time)}
+                          <button>{formatSeconds(it.timestamp)}</button>
                         </span>
-                        <p className="text-sm leading-6 text-gray-900 dark:text-gray-100">
-                          {it.text}
+                        <p className={"text-sm leading-6 text-gray-900 dark:text-gray-100"}>
+                          {[`[${it.participant}] `, it.transcript].join("")}
                         </p>
                       </div>
                     ))}
