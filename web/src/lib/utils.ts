@@ -60,14 +60,103 @@ export function cloneSingleChild(
     // Checking isValidElement is the safe way and avoids a typescript
     // error too.
     if (React.isValidElement(child) && React.Children.only(children)) {
-      if (child.props.className) {
+      const element = child as React.ReactElement<Record<string, unknown>>;
+      const elementProps = (element.props ?? {}) as Record<string, unknown>;
+      if (typeof elementProps.className === "string" && elementProps.className.length > 0) {
         // make sure we retain classnames of both passed props and child
         props ??= {};
-        props.className = clsx(child.props.className, props.className);
-        props.style = { ...child.props.style, ...props.style };
+        props.className = clsx(elementProps.className as string, (props.className as string) ?? "");
+        props.style = {
+          ...((elementProps.style as Record<string, unknown>) ?? {}),
+          ...((props.style as Record<string, unknown>) ?? {}),
+        };
       }
-      return React.cloneElement(child, { ...props, key });
+      return React.cloneElement(element, {
+        ...(props as Record<string, unknown>),
+        key: key as React.Key | undefined,
+      });
     }
     return child;
   });
+}
+
+// ----- Shared helpers for meeting logs -----
+
+export type TranscriptJson =
+  | {
+      time_unit?: string;
+      items?: Array<{ time?: number; text?: string }>;
+    }
+  | null
+  | undefined;
+
+export function formatSeconds(input: number): string {
+  if (!Number.isFinite(input) || input < 0) return "0:00";
+  const total = Math.floor(input);
+  const hours = Math.floor(total / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
+  const seconds = total % 60;
+  const mm = hours > 0 ? String(minutes).padStart(2, "0") : String(minutes);
+  const ss = String(seconds).padStart(2, "0");
+  return hours > 0 ? `${hours}:${mm}:${ss}` : `${mm}:${ss}`;
+}
+
+export function parseTimeInput(input: string): number {
+  try {
+    const s = input.trim();
+    if (!s) return Number.NaN;
+    if (/^\d+(\.\d+)?$/.test(s)) return Number(s);
+    const parts = s.split(":").map((p) => Number(p));
+    if (parts.some((n) => Number.isNaN(n))) return Number.NaN;
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    return Number.NaN;
+  } catch {
+    return Number.NaN;
+  }
+}
+
+export function getTranscriptItems(transcript: unknown): Array<{ time: number; text: string }> {
+  try {
+    const t = transcript as TranscriptJson;
+    if (!t || !Array.isArray(t.items)) return [];
+    return t.items
+      .filter((it) => typeof it?.text === "string" && typeof it?.time === "number")
+      .map((it) => ({ time: it!.time as number, text: it!.text as string }));
+  } catch {
+    return [];
+  }
+}
+
+export function getTotalSecondsFromLog(
+  log: {
+    started_at?: string;
+    ended_at?: string;
+    transcript?: unknown;
+  } | null
+): number {
+  if (!log) return 0;
+  const items = getTranscriptItems(log?.transcript);
+  const byItems = items.length > 0 ? items[items.length - 1].time : 0;
+  const ended = log?.ended_at ? new Date(log.ended_at).getTime() : 0;
+  const started = log?.started_at ? new Date(log.started_at).getTime() : 0;
+  const byClock = Number.isFinite(ended - started)
+    ? Math.max(0, Math.round((ended - started) / 1000))
+    : 0;
+  return Math.max(byItems, byClock);
+}
+
+export function downloadJson(data: unknown, filename: string) {
+  try {
+    const raw = JSON.stringify(data ?? {}, null, 2);
+    const blob = new Blob([raw], { type: "application/json;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  } catch {
+    /* ignore */
+  }
 }

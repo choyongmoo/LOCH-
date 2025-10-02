@@ -1,84 +1,111 @@
-import datetime
-import asyncio
-from typing import List
+import os, json, time, datetime
 from dotenv import load_dotenv
 
-from livekit import agents
-from livekit import api
-from livekit.agents import AgentSession, Agent, CloseEvent, RoomInputOptions, RoomOutputOptions, UserInputTranscribedEvent
-from livekit.plugins import (
-    openai,
-    noise_cancellation,
-    silero,
+from livekit.agents import (
+    JobContext, UserInputTranscribedEvent, WorkerOptions, cli,
+    AgentSession, Agent, RoomInputOptions, RoomOutputOptions,
 )
-from livekit.plugins.turn_detector.multilingual import MultilingualModel
+from livekit.plugins import openai as lk_openai, noise_cancellation, silero
 
-load_dotenv(".env.local")
+from supabase import create_client, Client
+from openai import AsyncOpenAI
 
-async def entrypoint(ctx: agents.JobContext):
-    await ctx.connect()
+load_dotenv(".env")
 
+sb: Client = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
+oa = AsyncOpenAI()
+
+async def summarize_text(text: str) -> str:
+    if not text.strip():
+        return "No transcript available."
+    prompt = (
+        "Summarize this meeting in 5~10 bullet points, answer in most used language of the transcript. "
+        "Emphasize key decisions, action items (with owners/dates if mentioned), "
+        "and any blockers. Keep it concise.\n\nTranscript:\n" + text
+    )
+    resp = await oa.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role": "system", "content": "You are a precise meeting summarizer."},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.2,
+    )
+    return (resp.choices[0].message.content or "").strip()
+
+async def entrypoint(ctx: JobContext):
     session = AgentSession()
-    room = ctx.room
 
-    _active_tasks = set()
+    t0 = time.monotonic()
+    started_at = datetime.datetime.now(datetime.timezone.utc)
 
-    def handle_text_stream(reader, participant_identity):
-        task = asyncio.create_task(async_handle_text_stream(reader, participant_identity))
-        _active_tasks.add(task)
-        task.add_done_callback(lambda t: _active_tasks.remove(t))
-
-    async def async_handle_text_stream(reader, participant_identity):
-        info = reader.info
-
-        print(
-            f'Text stream received from {participant_identity}\n'
-            f'  Topic: {info.topic}\n'
-            f'  Timestamp: {info.timestamp}\n'
-            f'  Size: {info.size}'  # Optional, only available if the stream was sent with `send_text`
-        )
-
-        # Option 1: Process the stream incrementally using an async for loop.
-        # async for chunk in reader:
-        #     print(f"Next chunk: {chunk}")
-
-        # Option 2: Get the entire text after the stream completes.
-        text = await reader.read_all()
-        print(f"Received text: {text}")
-
-    room.register_text_stream_handler("lk.chat", handle_text_stream)
+    transcript_log = []
 
     @session.on("user_input_transcribed")
-    def on_user_input_transcribed(event: UserInputTranscribedEvent):
-        open("session.log", "a").write(
-            f"--- USER INPUT TRANSCRIBED EVENT ---\n"
-            f"User input transcribed: {event.transcript}\n"
-            f"final: {event.is_final}\n"
-            f"speaker id: {event.speaker_id}\n"
-            f"created at: {event.created_at}\n")
+    def on_user_input_transcribed(evt: UserInputTranscribedEvent):
+        if evt.is_final:
+            transcript_log.append({
+                "time": round(time.monotonic() - t0, 3),
+                "text": evt.transcript,
+            })
 
-    @session.on("close")
-    def on_close(event: CloseEvent):
-        open("session.log", "w").write("")
-        # asyncio.run(ctx.delete_room())
+    async def dump_to_supabase():
+        ended_at = datetime.datetime.now(datetime.timezone.utc)
+
+        # Build plain text for summarization
+        full_text = "\n".join(f"- {item['text']}" for item in transcript_log)
+
+        # Generate summary
+        try:
+            summary = await summarize_text(full_text)
+            print(summary)
+        except Exception as e:
+            summary = f"(summary unavailable: {e})"
+
+        # Find server_id via rooms.id == LiveKit room name
+        try:
+            print(ctx.room.name)
+            rooms = sb.from_("rooms").select("server_id").eq("id", ctx.room.name).single().execute()
+            server_id = rooms.data["server_id"]
+        except Exception as e:
+            print(f"Failed to resolve server_id for room '{ctx.room.name}': {e}")
+            return
+
+        payload = {
+            "server_id": server_id,
+            "transcript": {
+                "time_unit": "seconds_since_session_start",
+                "items": transcript_log,
+            },
+            "summary": summary,
+            "started_at": started_at.isoformat(),
+            "ended_at": ended_at.isoformat(),
+        }
+
+        try:
+            res = sb.table("meeting_logs").insert(payload).execute()
+            print(f"Inserted meeting_log id={res.data[0]['id'] if res.data else 'unknown'}")
+        except Exception as e:
+            print(f"Insert into meeting_logs failed: {e}")
+
+    ctx.add_shutdown_callback(dump_to_supabase)
+
+    await ctx.connect()
 
     await session.start(
         room=ctx.room,
         agent=Agent(
-            stt=openai.STT(model="gpt-4o-mini-transcribe"),
-            llm=openai.LLM(model="gpt-4o-mini"),
+            stt=lk_openai.STT(model="gpt-4o-mini-transcribe"),
             vad=silero.VAD.load(),
-            turn_detection=MultilingualModel(),
-            instructions="You are a helpful AI assistant.",
+            instructions="You are a helpful assistant that transcribes user speech to text.",
         ),
         room_input_options=RoomInputOptions(
             noise_cancellation=noise_cancellation.BVC(),
+            close_on_disconnect=False,
+            text_enabled=False,
         ),
-        room_output_options=RoomOutputOptions(
-            audio_enabled=False,
-            sync_transcription=False
-        ),
+        room_output_options=RoomOutputOptions(audio_enabled=False),
     )
 
 if __name__ == "__main__":
-    agents.cli.run_app(agents.WorkerOptions(entrypoint_fnc=entrypoint))
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))

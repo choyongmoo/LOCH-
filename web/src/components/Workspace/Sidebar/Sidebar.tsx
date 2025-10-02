@@ -88,42 +88,17 @@ export default function CustomSidebar() {
                       <div className="flex w-full items-center justify-center">
                         <MeetingButton />
                       </div>
-                    </div>
-                    <SidebarMenuButton
-                      onClick={async () => {
-                        try {
-                          const raw = localStorage.getItem("home:selectedMeeting");
-                          if (raw) {
-                            const parsed = JSON.parse(raw) as { meetingId?: string } | null;
-                            const meetingId = parsed?.meetingId;
-                            if (meetingId) {
-                              navigate(`/meeting/${meetingId}`);
-                              return;
-                            }
-                          }
-                        } catch {
-                          /* ignore */
-                        }
-                        setCreateOpen(true);
-                      }}
-                      className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/meeting" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2  ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
-                    >
-                      회의
-                    </SidebarMenuButton>
-
-                    <SidebarMenuButton className="hover:bg-transparent dark:hover:bg-transparent focus:bg-transparent active:bg-transparent cursor-default">
-                      내 제품
-                    </SidebarMenuButton>
-                    <SidebarMenuSub>
-                      <SidebarMenuSubItem>
-                        <SidebarMenuSubButton
-                          onClick={() => navigate("/workspace/mun")}
-                          className={`bg-gray-100 hover:bg-gray-200 dark:bg-white/5 dark:hover:bg-white/10 ${location.pathname === "/workspace/mun" ? "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20" : ""}`}
+                      <div className="mt-2 flex w-full items-center justify-center">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="w-full"
+                          onClick={() => navigate("/workspace/docs")}
                         >
-                          문서
-                        </SidebarMenuSubButton>
-                      </SidebarMenuSubItem>
-                    </SidebarMenuSub>
+                          회의 내역
+                        </Button>
+                      </div>
+                    </div>
 
                     <SidebarMenuButton className="hover:bg-transparent dark:hover:bg-transparent focus:bg-transparent active:bg-transparent cursor-default">
                       내 계정

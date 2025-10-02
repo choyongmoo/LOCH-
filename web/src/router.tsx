@@ -10,7 +10,6 @@ import { NotFound } from "./pages/NotFound";
 import ContactPage from "./pages/Workspace/ContactPage";
 import FriendRequestPage from "./pages/Workspace/FriendRequestPage";
 import HomePage from "./pages/Workspace/HomePage";
-import MunPage from "./pages/Workspace/MunPage";
 import ProfilePage from "./pages/Workspace/ProfilePage";
 
 import { ResetPassword } from "@/pages/Auth/ResetPassword";
@@ -19,6 +18,7 @@ import { ForgotPassword } from "./pages/Auth/ForgotPassword";
 import DocsDetail from "./pages/Home/Doc/DocsDetail";
 import { Download } from "./pages/Home/Download";
 import { Room } from "./pages/Room";
+import DocsPage from "./pages/Workspace/DocsPage";
 import ManagerPage from "./pages/Workspace/ManagerPage";
 import SettingPage from "./pages/Workspace/SettingPage";
 
@@ -47,7 +47,7 @@ export const Router = () => {
         <Route path="workspace" element={<WorkspaceLayout />}>
           <Route index element={<HomePage />} />
           <Route path="home" element={<HomePage />} />
-          <Route path="mun" element={<MunPage />} />
+          <Route path="docs" element={<DocsPage />} />
           <Route path="profile" element={<ProfilePage />} />
           <Route path="contact" element={<ContactPage />} />
           <Route path="friends/requests" element={<FriendRequestPage />} />
