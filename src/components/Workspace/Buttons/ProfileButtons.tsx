@@ -38,7 +38,7 @@ export function EditPWButton({ className = ""}: {className?: string}) {
 
 export function LogOutButton({ className = ""}: {className?: string}) {
     const { openModal } = useModal();
-    return <Button variant="ghost" className={`${className}`} onClick={() => openModal("logOut")}>로그아웃</Button>
+    return <Button variant="ghost" className={`${className}`} onClick={() => openModal("logout")}>로그아웃</Button>
 }
 
 export function DeleteUserButton({ className = ""}: {className?: string}) {

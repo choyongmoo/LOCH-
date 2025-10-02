@@ -1,7 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { AuthLayout } from "./layouts/AuthLayout";
 import { HomeLayout } from "./layouts/HomeLayout";
-import { MeetingLayout } from "./layouts/MeetingLayout";
 import { Signin } from "./pages/Auth/Signin";
 import { Signup } from "./pages/Auth/Signup";
 import { Home } from "./pages/Home";
@@ -54,11 +53,7 @@ export const Router = () => {
           <Route path="contact" element={ <ContactPage /> } />
           <Route path="record" element={ <RecordPage /> } />
           <Route path="friend" element={ <FriendRequestPage /> } />
-
         </Route>
-        {/* Meeting Pages */}
-        <Route path="meeting" element={<MeetingLayout />} />
-        <Route path="meeting/:meetingId" element={<MeetingLayout />} />
 
         {/* LiveKit Pages */}
         <Route path="room" element={<Room />} />

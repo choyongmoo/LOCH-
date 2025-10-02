@@ -4,6 +4,7 @@ import { ThemeToggleButton } from "./Buttons/ThemeTogglebutton";
 import { Button } from "../common/ui/button";
 import { useModal } from "@/store/useModal";
 import CreateServerModal from "./Modals/CreateServerModal";
+import EditModal from "./Modals/EditModal";
 
 export default function ServerSidebar() {    
     const { currentModal, closeModal } = useModal();
@@ -15,11 +16,12 @@ export default function ServerSidebar() {
                 <ThemeToggleButton />
             </div>
             <div className="pb-4">
-                <Button variant="outline" size="icon" title="로그아웃">
+                <Button variant="outline" size="icon" title="로그아웃" onClick={() => useModal.getState().openModal("logout")}>
                     <Power />
                 </Button>
             </div>
             { currentModal === "addGroup" && <CreateServerModal close={closeModal} /> }
+            { currentModal === "logout" && <EditModal modalType="logout" title="로그아웃" description="현재 계정에서 로그아웃 하시겠습니까?" onConfirm={() => {}} confirmLabel="로그아웃"/> }            
         </div>
     )
 }

@@ -95,7 +95,7 @@ export default function ProfilePage() {
             <EditModal modalType="micTest" title="마이크 테스트" description="마이크를 테스트하세요." ></EditModal>
             <EditModal modalType="editMic" title="마이크 설정" description="사용할 마이크를 선택하세요." onConfirm={() => {}} confirmLabel="변경"></EditModal>
             <EditModal modalType="editPW" title="비밀번호 변경" description="비밀 번호를 변경합니다." onConfirm={() => {}} confirmLabel="변경"></EditModal>
-            <EditModal modalType="logOut" title="로그아웃" description="현재 계정에서 로그아웃 하시겠습니까?" onConfirm={() => {}} confirmLabel="로그아웃"></EditModal>
+            <EditModal modalType="logout" title="로그아웃" description="현재 계정에서 로그아웃 하시겠습니까?" onConfirm={() => {}} confirmLabel="로그아웃"></EditModal>
             <EditModal modalType="deleteUser" title="회원 탈퇴" description="현재 계정을 삭제합니다." onConfirm={() => {}} confirmLabel="탈퇴"></EditModal>
         </div>
     );
