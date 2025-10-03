@@ -29,9 +29,9 @@ Deno.serve(async (req) => {
 
     // users.user_uuid 기준으로 내 PK(id: bigint) 찾기
     const { data: urow, error: uerr } = await admin
-      .from("users")
+      .from("profile")
       .select("id")
-      .eq("user_uuid", userId) // ✅ UUID 매칭
+      .eq("id", userId) // ✅ UUID 매칭
       .maybeSingle();
     if (uerr) throw uerr;
 
@@ -41,7 +41,6 @@ Deno.serve(async (req) => {
     if (userPk) {
       // FK CASCADE가 있다면 profile 삭제는 생략 가능. 안전하게 먼저 삭제해도 OK.
       await admin.from("profile").delete().eq("id", userPk);
-      await admin.from("users").delete().eq("id", userPk);
     }
 
     // 마지막으로 Auth 유저 삭제

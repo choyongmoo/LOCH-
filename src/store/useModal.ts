@@ -1,8 +1,8 @@
 import { create } from "zustand"
 
 export type ModalType = "addGroup" | "changeName" | "editBio" | "editColor" |
-                        "editLanguage" | "micTest" | "editMic" | "editPW" | 
-                        "logout" | "deleteUser" | null;
+                        "cameraTest" | "editCamera" | "micTest" | "editMic" | "editPW" | 
+                        "logout" | "deleteUser" | "addFriend" | null;
 
 type modalStore = {
     currentModal: ModalType;

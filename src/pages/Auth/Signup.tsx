@@ -15,7 +15,7 @@ import { Paragraph } from "@/components/common/ui/Paragraph";
 import { supabase } from "@/lib/supabase";
 
 export const Signup = () => {
-  const [name, setName] = useState("");
+  const [nickname, setNickname] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -54,7 +54,7 @@ export const Signup = () => {
         password,
         options: {
           data: {
-            name,
+            name: nickname,
             birthDate,
           },
         },
@@ -91,12 +91,12 @@ export const Signup = () => {
       <CardContent className="grid gap-5">
         {/* 이름 */}
         <div className="grid gap-2">
-          <Label htmlFor="name">이름</Label>
+          <Label htmlFor="nickname">이름</Label>
           <Input
-            id="name"
+            id="nickname"
             type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
           />
         </div>
 

@@ -23,12 +23,21 @@ export interface CardProps {
 
 //ProfilePage
 export interface Profile {
-  name: string;
-  bio: string;
-  color: string;
-  lang?: "ko" | "en";
-  micLabel?: string;
+  id?: string;
   email: string;
+  password?: string;
+  birth_year?: number;
+  birth_month?: number;
+  birth_day?: number;
+  nickname?: string;
+  bio?: string;
+  accent_color?: string;
+  created_at?: string;
+  updated_at?: string;
+
+  // UI용 필드
+  cameraLabel?: string;
+  micLabel?: string;
 }
 
 export interface Manager {
@@ -63,4 +72,16 @@ export interface EditModalProps {
   confirmLabel?: string;
   cancelLabel?: string;
   confirmDisabled?: boolean;
+}
+
+//friend request
+export type FriendRequestStatus = "pending" | "accepted" | "rejected";
+
+export interface FriendRequest {
+  id: number;
+  status: FriendRequestStatus;
+  created_at: string;
+  responded_at: string | null;
+  requester_id: string;
+  addressee_id: string;
 }

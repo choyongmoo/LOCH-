@@ -5,9 +5,11 @@ import { Button } from "../common/ui/button";
 import { useModal } from "@/store/useModal";
 import CreateServerModal from "./Modals/CreateServerModal";
 import EditModal from "./Modals/EditModal";
+import { useUserStore } from "@/store/useUserStore";
 
 export default function ServerSidebar() {    
     const { currentModal, closeModal } = useModal();
+    const logout = useUserStore((state) => state.logout);
 
     return (
         <div className="flex flex-col justify-between h-full items-center">
@@ -21,7 +23,8 @@ export default function ServerSidebar() {
                 </Button>
             </div>
             { currentModal === "addGroup" && <CreateServerModal close={closeModal} /> }
-            { currentModal === "logout" && <EditModal modalType="logout" title="로그아웃" description="현재 계정에서 로그아웃 하시겠습니까?" onConfirm={() => {}} confirmLabel="로그아웃"/> }            
+            { currentModal === "logout" && <EditModal modalType="logout" title="로그아웃" description="현재 계정에서 로그아웃 하시겠습니까?" 
+                onConfirm={async () => { await logout();}} confirmLabel="로그아웃"/> }            
         </div>
     )
 }

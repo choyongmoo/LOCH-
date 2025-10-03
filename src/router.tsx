@@ -20,6 +20,7 @@ import ManagerPage from "./pages/Workspace/ManagerPage";
 import ContactPage from "./pages/Workspace/ContactPage";
 import RecordPage from "./pages/Workspace/RecordPage";
 import FriendRequestPage from "./pages/Workspace/FriendRequestPage";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 
 export const Router = () => {
@@ -44,15 +45,17 @@ export const Router = () => {
         </Route>
 
         {/* Workspace Pages */}
-        <Route path="workspace" element={<WorkspaceLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="home" element= { <HomePage /> } />
-          <Route path="profile" element={ <ProfilePage /> } />
-          <Route path="setting" element={ <SettingPage /> } />
-          <Route path="manager" element={ <ManagerPage /> } />
-          <Route path="contact" element={ <ContactPage /> } />
-          <Route path="record" element={ <RecordPage /> } />
-          <Route path="friend" element={ <FriendRequestPage /> } />
+        <Route path="workspace" element={<ProtectedRoute />}>
+          <Route element={<WorkspaceLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path="home" element={<HomePage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="setting" element={<SettingPage />} />
+            <Route path="manager" element={<ManagerPage />} />
+            <Route path="contact" element={<ContactPage />} />
+            <Route path="record" element={<RecordPage />} />
+            <Route path="friend" element={<FriendRequestPage />} />
+          </Route>
         </Route>
 
         {/* LiveKit Pages */}

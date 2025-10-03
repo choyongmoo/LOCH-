@@ -1,5 +1,6 @@
 import { useModal } from "@/store/useModal";
 import { Button } from "@/components/common/ui/button";
+import { useNavigate } from "react-router";
 
 export function ChangeNameButton({className = ""}: {className?: string}) {
     const { openModal } = useModal();
@@ -16,9 +17,14 @@ export function EditColorButton({ className = ""}: {className?: string}) {
     return <Button variant="ghost" className={`${className}`} onClick={() => openModal("editColor")}>변경</Button>
 }
 
-export function EditLanguageButton({ className = ""}: {className?: string}) {
+export function EditCameraButton({ className = ""}: {className?: string}) {
     const { openModal } = useModal();
-    return <Button variant="ghost" className={`${className}`} onClick={() => openModal("editLanguage")}>변경</Button>
+    return <Button variant="ghost" className={`${className}`} onClick={() => openModal("editCamera")}>변경</Button>
+}
+
+export function CameraTestButton({ className = ""}: {className?: string}) {
+    const navigate =useNavigate();
+    return <Button variant="ghost" className={`${className}`} onClick={() => navigate("/workspace/setting")}>테스트</Button>
 }
 
 export function MicTestButton({ className = ""}: {className?: string}) {

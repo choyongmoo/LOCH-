@@ -1,4 +1,6 @@
+import { useModal } from "@/store/useModal";
 import type { Friend } from "@/types/workspace";
+import { Button } from "react-scroll";
 
 interface FriendSidebarProps {
     friends?: Friend[];
@@ -6,12 +8,16 @@ interface FriendSidebarProps {
 }
 
 export default function FriendSidebar({ friends = [], selectedFriend }: FriendSidebarProps) {
+    const { openModal } = useModal();
+
     return (
         <aside className="w-[260px] h-screen flex flex-col border-r border-gray-200 dark:border-[#2c2f33] bg-gray-100 dark:bg-[#1E1F2B]">
             <div className="flex items-center px-4 py-4 gap-2">
                 <span className="font-bold text-lg text-gray-900 dark:text-white">친구</span>
-                <button className="ml-auto px-3 py-1 rounded text-sm font-medium bg-blue-100 dark:bg-[#111827] text-gray-900 dark:text-white">
-                    +
+                <button
+                    onClick={() => openModal("addFriend")} 
+                    className="ml-auto px-3 py-1 rounded text-sm font-medium bg-blue-100 dark:bg-[#111827] text-gray-900 dark:text-white">
+                        +
                 </button>
             </div>
 
