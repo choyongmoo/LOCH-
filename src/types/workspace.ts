@@ -74,14 +74,10 @@ export interface EditModalProps {
   confirmDisabled?: boolean;
 }
 
-//friend request
-export type FriendRequestStatus = "pending" | "accepted" | "rejected";
-
 export interface FriendRequest {
-  id: number;
-  status: FriendRequestStatus;
-  created_at: string;
-  responded_at: string | null;
-  requester_id: string;
-  addressee_id: string;
+    id: string;
+    name: string;
+    requestedAt: string;
+    requester_id: string;
+    addressee_id: string;
 }
