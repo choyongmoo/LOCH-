@@ -9,10 +9,10 @@ export function ThemeToggleButton() {
   return (
     <Button variant="outline" size="icon" onClick={toggleTheme}>
       <Sun
-        className={`transition-all ${isLight ? "scale-130" : "scale-0 -rotate-90"}`}
+        className={`active:scale-95 transition-all ${isLight ? "scale-130" : "scale-0 -rotate-90"}`}
       />
       <Moon
-        className={`absolute transition-all ${isLight ? "scale-0 rotate-90" : "scale-110 rotate-0"}`}
+        className={`active:scale-95 absolute transition-all ${isLight ? "scale-0 rotate-90" : "scale-110 rotate-0"}`}
       />
     </Button>
   );

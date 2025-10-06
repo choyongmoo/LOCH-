@@ -1,6 +1,6 @@
 import { Button } from "@/components/common/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle } from "@/components/common/ui/sheet";
-import { useModal } from "@/store/useModal";
+import { useModal } from "@/store/useModalStore";
 import type { EditModalProps } from "@/types/workspace";
 
 export default function EditModal({modalType, title, description, children, onConfirm, confirmLabel, cancelLabel, confirmDisabled}: EditModalProps) {

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useServers } from "@/store/useServers";
-import { useNavigate } from "react-router";
+import { useServers } from "@/store/useServersStore";
 import { Button } from "../../common/ui/button";
 
 export default function CreateRoomModal({ close }: { close: () => void }) {
@@ -11,7 +10,6 @@ export default function CreateRoomModal({ close }: { close: () => void }) {
     const [isPrivate, setIsPrivate] = useState(false);
     const [password, setPassword] = useState("");
     const addRoom = useServers((state) => state.addServer);
-    const navigate = useNavigate();
 
     const handleSubmit = async () => {
         if (!roomName.trim()) 
@@ -23,26 +21,34 @@ export default function CreateRoomModal({ close }: { close: () => void }) {
         if (!user) return;
 
         const { data: room, error } = await supabase
-        .from("servers")
-        .insert([
-            {
-            room_name: roomName,
-            description,
-            host: user.id,
-            max_participants: maxParticipants,
-            is_private: isPrivate,
-            password: isPrivate ? password : null,
-            status: "active",
-            },
-        ])
-        .select()
-        .single();
+            .from("servers")
+            .insert([
+                {
+                    room_name: roomName,
+                    description,
+                    host: user.id,
+                    max_participants: maxParticipants,
+                    is_private: isPrivate,
+                    password: isPrivate ? password : null,
+                    status: "active",
+                },
+            ])
+            .select()
+            .maybeSingle();
 
         if (error || !room) return console.error(error);
 
-        addRoom(room);
+        const { data: profileData } = await supabase
+            .from("profile")
+            .select("nickname")
+            .eq("id", user.id)
+            .maybeSingle();
+
+        addRoom({
+            ...room,
+            host_nickname: profileData?.nickname ?? "-",
+        });
         close();
-        navigate(`/workspace/${room.id}`);
     };
 
     return (

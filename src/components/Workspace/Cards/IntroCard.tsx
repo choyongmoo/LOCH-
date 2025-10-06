@@ -2,7 +2,7 @@ const cardClass = "bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-8 flex flex
 
 export default function IntroCard() {
     return (
-        <div className={`${cardClass} min-h-[160px]`}>
+        <div className={`${cardClass} min-h-[160px] `}>
             <h1 className="text-2xl font-bold text-gray-800 dark:text-white mb-2">
                 회의 제목
             </h1>

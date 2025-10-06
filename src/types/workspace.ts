@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { ModalType } from "@/store/useModal";
+import type { ModalType } from "@/store/useModalStore";
 
 export interface ButtonBaseProps {
   children: ReactNode;
@@ -24,7 +24,7 @@ export interface CardProps {
 //ProfilePage
 export interface Profile {
   id?: string;
-  email: string;
+  email?: string;
   password?: string;
   birth_year?: number;
   birth_month?: number;
@@ -73,6 +73,7 @@ export interface EditModalProps {
   cancelLabel?: string;
   confirmDisabled?: boolean;
 }
+export type FriendRequestStatus = "pending" | "accepted" | "rejected";
 
 export interface FriendRequest {
     id: string;
@@ -80,4 +81,5 @@ export interface FriendRequest {
     requestedAt: string;
     requester_id: string;
     addressee_id: string;
+    responded_at?: string;
 }

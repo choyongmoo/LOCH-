@@ -3,6 +3,7 @@ import type { Friend } from "@/types/workspace";
 import { useChatMessages } from "../hooks/useChatMessages";
 import { useRealtimeMessages } from "../hooks/useRealtimeMessages";
 import { sendMessage } from "../hooks/sendMessage";
+import { ScrollArea } from "@/components/common/ui/scroll-area";
 
 interface ChatWindowProps {
     currentUserId?: string;
@@ -14,11 +15,12 @@ export default function ChatWindow({ currentUserId, selectedFriend }: ChatWindow
     useRealtimeMessages(currentUserId, selectedFriend, addMessage);
 
     const [input, setInput] = useState("");
-    const messagesContainerRef = useRef<HTMLDivElement>(null);
+    const viewportRef = useRef<HTMLDivElement>(null);
 
+    // 메시지 갱신 시 스크롤 최하단으로 이동
     useEffect(() => {
-        if (messagesContainerRef.current) {
-            messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        if (viewportRef.current) {
+        viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
         }
     }, [messages]);
 
@@ -26,86 +28,80 @@ export default function ChatWindow({ currentUserId, selectedFriend }: ChatWindow
         if (!currentUserId || !selectedFriend || !input.trim()) return;
         sendMessage(input.trim(), currentUserId, selectedFriend, addMessage);
         setInput("");
+
+        // 메시지 전송 직후에도 스크롤 이동
+        if (viewportRef.current) {
+        viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
+        }
     };
 
     return (
         <div className="flex flex-col flex-1 h-screen bg-gray-50 dark:bg-[#313338]">
-            {/* 헤더 */}
-            {selectedFriend && (
-                <div className="flex items-center px-4 py-3 gap-3 border-b border-gray-200 dark:border-[#23272a] bg-white dark:bg-[#23272a]">
-                    <div
-                        className="w-9 h-9 rounded-md flex items-center justify-center text-white font-bold"
-                        style={{ backgroundColor: selectedFriend.accent_color || "#7e22ce" }}
-                    >
-                        {selectedFriend.name.charAt(0).toUpperCase()}
-                    </div>
-                    <span className="font-semibold text-lg truncate">{selectedFriend.name}</span>
-                </div>
-            )}
+        {/* 헤더 */}
+        {selectedFriend && (
+            <div className="flex items-center px-4 py-3 gap-3 border-b border-gray-200 dark:border-[#23272a] bg-white dark:bg-[#23272a]">
+            <div
+                className="w-9 h-9 rounded-md flex items-center justify-center text-white font-bold"
+                style={{ backgroundColor: selectedFriend.accent_color || "#7e22ce" }}
+            >
+                {selectedFriend.name.charAt(0).toUpperCase()}
+            </div>
+            <span className="font-semibold text-lg truncate">{selectedFriend.name}</span>
+            </div>
+        )}
 
-            {/* 메시지 영역 */}
-            <div ref={messagesContainerRef} className="flex-1 overflow-y-auto flex flex-col gap-2 p-4">
+        {/* 메시지 영역 */}
+        <ScrollArea className="flex-1" viewportRef={viewportRef}>
+            <div className="flex flex-col gap-2 p-4">
                 {messages.length === 0 ? (
                     <div className="text-center text-gray-400 dark:text-gray-500 mt-10">
-                        메시지가 없습니다. 대화를 시작해보세요!
+                    메시지가 없습니다. 대화를 시작해보세요!
                     </div>
-                ) : (
-                    messages.map((msg, idx) => {
+                    ) : (
+                        messages.map((msg, idx) => {
                         const currentDate = new Date(msg.timestamp);
-                        const prevDate =
-                            idx > 0 ? new Date(messages[idx - 1].timestamp) : null;
-                        const isNewDay =
-                            !prevDate || currentDate.toDateString() !== prevDate.toDateString();
+                        const prevDate = idx > 0 ? new Date(messages[idx - 1].timestamp) : null;
+                        const isNewDay = !prevDate || currentDate.toDateString() !== prevDate.toDateString();
 
                         return (
                             <div key={idx}>
-                                {/* 날짜 구분선 */}
-                                {isNewDay && (
-                                    <div className="flex items-center my-3">
-                                        <div className="flex-1 h-px bg-gray-300 dark:bg-gray-700" />
-                                        <span className="mx-2 text-xs text-gray-500 dark:text-gray-400">
-                                            {currentDate.toLocaleDateString("ko-KR", {
-                                                month: "long",
-                                                day: "numeric",
-                                                weekday: "short",
-                                            })}
-                                        </span>
-                                        <div className="flex-1 h-px bg-gray-300 dark:bg-gray-700" />
-                                    </div>
-                                )}
+                            {/* 날짜 구분선 */}
+                            {isNewDay && (
+                                <div className="flex items-center my-3">
+                                    <div className="flex-1 h-px bg-gray-300 dark:bg-gray-700" />
+                                    <span className="mx-2 text-xs text-gray-500 dark:text-gray-400">
+                                        {currentDate.toLocaleDateString("ko-KR", {
+                                            month: "long",
+                                            day: "numeric",
+                                            weekday: "short",
+                                        })}
+                                    </span>
+                                    <div className="flex-1 h-px bg-gray-300 dark:bg-gray-700" />
+                                </div>
+                            )}
 
                                 {/* 메시지 */}
                                 <div
                                     className={`flex flex-col ${
-                                        msg.sender === "me" ? "items-end" : "items-start"
+                                    msg.sender === "me" ? "items-end" : "items-start"
                                     }`}
                                 >
                                     <div
-                                        className={`px-3 py-2 rounded-xl max-w-xs text-sm ${
-                                            msg.sender === "me"
-                                                ? "bg-indigo-500 text-white"
-                                                : "bg-gray-200 dark:bg-[#40444b] text-gray-800 dark:text-gray-200"
-                                        }`}
+                                    className={`px-3 py-2 rounded-xl max-w-xs text-sm ${
+                                        msg.sender === "me"
+                                        ? "bg-indigo-500 text-white"
+                                        : "bg-gray-200 dark:bg-[#40444b] text-gray-800 dark:text-gray-200"
+                                    }`}
                                     >
-                                        {msg.text}
+                                    {msg.text}
                                     </div>
-                                    <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                        <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                                         {(() => {
                                             const now = new Date();
-                                            const isToday =
-                                                currentDate.toDateString() === now.toDateString();
-
+                                            const isToday = currentDate.toDateString() === now.toDateString();
                                             return isToday
-                                                ? currentDate.toLocaleTimeString("ko-KR", {
-                                                      hour: "2-digit",
-                                                      minute: "2-digit",
-                                                  })
-                                                : currentDate.toLocaleString("ko-KR", {
-                                                      month: "long",
-                                                      day: "numeric",
-                                                      hour: "2-digit",
-                                                      minute: "2-digit",
-                                                  });
+                                                ? currentDate.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })
+                                                : currentDate.toLocaleString("ko-KR", { month: "long", day: "numeric", hour: "2-digit", minute: "2-digit" });
                                         })()}
                                     </span>
                                 </div>
@@ -113,7 +109,8 @@ export default function ChatWindow({ currentUserId, selectedFriend }: ChatWindow
                         );
                     })
                 )}
-            </div>
+                </div>
+            </ScrollArea>
 
             {/* 입력 영역 */}
             <div className="flex px-4 py-3 border-t border-gray-200 dark:border-[#23272a] bg-white dark:bg-[#23272a]">

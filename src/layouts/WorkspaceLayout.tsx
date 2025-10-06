@@ -37,8 +37,8 @@ export default function WorkspaceLayout() {
                 <div className={`w-64 h-screen flex-shrink-0 border-r ${isLight ? "bg-white text-black" : "bg-[#0f172a] text-white"}`}>
                     <MenuSidebar />
                 </div>
-                <div className={`flex-1 relative h-screen overflow-hidden ${isLight ? "bg-white text-black" : "bg-zinc-800 text-white"}`}>
-                    <div className="min-w-0 w-full max-w-none min-h-full px-0">
+                <div className={`flex-1 relative h-screen overflow-x-auto overflow-y-hidden ${isLight ? "bg-white text-black" : "bg-zinc-800 text-white"}`}>
+                    <div className="shrink-0 w-full h-full px-0">
                         <Outlet />
                     </div>
                 </div>

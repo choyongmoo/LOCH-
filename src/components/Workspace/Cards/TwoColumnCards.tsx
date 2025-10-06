@@ -3,7 +3,7 @@ import IntroCard from "./IntroCard";
 
 export default function TwoColumnCards() {
     return (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+        <div className="grid gap-6 w-full grid-cols-[repeat(auto-fit,minmax(280px,1fr))]">
             <IntroCard />
             <FriendsCard />
         </div>

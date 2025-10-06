@@ -5,7 +5,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { supabase } from "@/lib/supabase";
 import type { Friend } from "@/types/workspace";
 import FriendAddModal from "@/components/Workspace/Modals/FriendAddModal";
-import { useModal } from "@/store/useModal";
+import { useModal } from "@/store/useModalStore";
 
 export default function ContactPage() {
     const currentUser = useUserStore((state) => state.user);

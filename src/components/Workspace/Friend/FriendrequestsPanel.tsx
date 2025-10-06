@@ -16,12 +16,12 @@ export default function FriendRequestsPanel() {
         const { data, error } = await supabase
             .from("friend_requests")
             .select(`
-            id,
-            requester_id,
-            addressee_id,
-            status,
-            created_at,
-            requester:requester_id (nickname)
+                id,
+                requester_id,
+                addressee_id,
+                status,
+                created_at,
+                requester:requester_id (nickname)
             `)
             .eq("addressee_id", currentUser.id)
             .eq("status", "pending");
@@ -51,8 +51,8 @@ export default function FriendRequestsPanel() {
             .update({ status: "accepted", responded_at: new Date().toISOString() })
             .eq("id", requestId);
 
-        if (error) throw error;
-        fetchRequests();
+            if (error) throw error;
+            fetchRequests();
         } catch (err) {
         console.error("수락 실패", err);
         }
@@ -60,15 +60,15 @@ export default function FriendRequestsPanel() {
 
     const handleReject = async (requestId: string) => {
         try {
-        const { error } = await supabase
-            .from("friend_requests")
-            .update({ status: "rejected", responded_at: new Date().toISOString() })
-            .eq("id", requestId);
+            const { error } = await supabase
+                .from("friend_requests")
+                .update({ status: "declined", responded_at: new Date().toISOString() }) // enum에 맞는 값
+                .eq("id", requestId);
 
-        if (error) throw error;
-        fetchRequests();
+            if (error) throw error;
+            setRequests(prev => prev.filter(req => req.id !== requestId));
         } catch (err) {
-        console.error("거절 실패", err);
+            console.error("거절 실패", err);
         }
     };
 
@@ -78,12 +78,12 @@ export default function FriendRequestsPanel() {
 
     return (
         <FriendRequestList
-        requests={requests.map(req => ({
-            ...req,
-            accept: () => handleAccept(req.id),
-            reject: () => handleReject(req.id),
-        }))}
-        loading={loading}
+            requests={requests.map(req => ({
+                ...req,
+                accept: () => handleAccept(req.id),
+                reject: () => handleReject(req.id),
+            }))}
+            loading={loading}
         />
     );
 }

@@ -7,8 +7,8 @@ interface FriendState {
   setRequests: (requests: FriendRequest[]) => void;
   fetchFriendRequests: (userId: string) => Promise<void>;
   addFriendRequest: (addressee_id: string) => Promise<void>;
-  respondFriendRequest: (id: number, status: FriendRequestStatus) => Promise<void>;
-  deleteFriendRequest: (id: number) => Promise<void>;
+  respondFriendRequest: (id: string, status: FriendRequestStatus) => Promise<void>;
+  deleteFriendRequest: (id: string) => Promise<void>;
 }
 
 export const useFriendStore = create<FriendState>((set, get) => ({
@@ -37,7 +37,7 @@ export const useFriendStore = create<FriendState>((set, get) => ({
     if (data) set({ requests: [...get().requests, ...data] });
   },
 
-  respondFriendRequest: async (id: number, status: FriendRequestStatus) => {
+  respondFriendRequest: async (id: string, status: FriendRequestStatus) => {
     const { data, error } = await supabase
       .from("friend_requests")
       .update({ status, responded_at: new Date().toISOString() })

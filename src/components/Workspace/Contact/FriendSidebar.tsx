@@ -1,4 +1,4 @@
-import { useModal } from "@/store/useModal";
+import { useModal } from "@/store/useModalStore";
 import type { Friend } from "@/types/workspace";
 
 interface FriendSidebarProps {

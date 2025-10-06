@@ -5,21 +5,27 @@ import RiverDownloadCard from "@/components/Workspace/Cards/RiverDownloadCard";
 import ServerManagementCard from "@/components/Workspace/Cards/ServerManagementCard";
 import SettingsCard from "@/components/Workspace/Cards/SettingsCard";
 import TwoColumnCards from "@/components/Workspace/Cards/TwoColumnCards";
+import { ScrollArea } from "@/components/common/ui/scroll-area";
 
 export default function HomePage() {
     return (
-        <div className="p-2 flex h-screen gap-4">
-            <div className="flex-1 flex flex-col gap-2">
-                <ProfileCard name={""} bio={""} />
-                <TwoColumnCards />
-                <RecentActivityCard />
+        <ScrollArea className="p-2 h-screen">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_20rem] gap-4">
+                {/* 좌측 컬럼 */}
+                <div className="flex flex-col gap-4 order-1 md:order-1">
+                    <ProfileCard />
+                    <TwoColumnCards />
+                    <RecentActivityCard />
+                </div>
+
+                {/* 우측 컬럼 */}
+                <div className="flex flex-col gap-6 order-2 md:order-2">
+                    <RiverDownloadCard />
+                    <ServerManagementCard />
+                    <SettingsCard />
+                    <MicrophoneTestCard />
+                </div>
             </div>
-            <div className="w-[410px] flex flex-col gap-6">
-                <RiverDownloadCard />
-                <ServerManagementCard />
-                <SettingsCard />
-                <MicrophoneTestCard />
-            </div>
-        </div>
+        </ScrollArea>
     );
 }

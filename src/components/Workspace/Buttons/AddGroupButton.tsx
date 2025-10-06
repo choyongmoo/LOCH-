@@ -1,4 +1,4 @@
-import { useModal } from "@/store/useModal";
+import { useModal } from "@/store/useModalStore";
 import { Button } from "../../common/ui/button";
 import type { AddGroupButtonProps } from "@/types/workspace";
 
