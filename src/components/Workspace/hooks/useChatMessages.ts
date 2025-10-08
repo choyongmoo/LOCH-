@@ -1,36 +1,46 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
-import { useChatStore } from "@/store/useChatStore";
-import type { Friend } from "@/types/workspace";
+import type { Friend, Message } from "@/types/workspace";
 
-export function useChatMessages(currentUserId?: string, selectedFriend?: Friend | null) {
-    const { messages, addMessage, setMessages } = useChatStore();
+export const useChatMessages = (currentUserId?: string, selectedFriend?: Friend | null) => {
+  const [messages, setMessages] = useState<Message[]>([]);
 
-    useEffect(() => {
-        if (!selectedFriend || !currentUserId) return;
+  useEffect(() => {
+    if (!currentUserId || !selectedFriend) {
+      setMessages([]);
+      return;
+    }
 
-        const fetchMessages = async () => {
-        const { data, error } = await supabase
-            .from("messages")
-            .select("*")
-            .or(
-                `and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.id}),and(sender_id.eq.${selectedFriend.id},receiver_id.eq.${currentUserId})`
-            )
-            .order("created_at", { ascending: true });
+    const loadMessages = async () => {
+      const { data, error } = await supabase
+        .from("messages")
+        .select("*")
+        .or(
+          `and(sender_id.eq.${currentUserId},receiver_id.eq.${selectedFriend.id}),and(sender_id.eq.${selectedFriend.id},receiver_id.eq.${currentUserId})`
+        )
+        .order("created_at", { ascending: true });
 
-        if (error) return console.error(error);
+      if (error) {
+        console.error(error);
+        return;
+      }
 
-        setMessages(
-            (data || []).map((msg) => ({
-                sender: msg.sender_id === currentUserId ? "me" : "friend",
-                text: msg.content,
-                timestamp: new Date(msg.created_at).getTime(),
-            }))
-        );
-        };
+      const formatted: Message[] = (data ?? []).map((m: any) => ({
+        id: m.id, // Supabase에서 온 메시지 id 사용
+        sender: m.sender_id === currentUserId ? "me" : "friend",
+        text: m.content,
+        timestamp: new Date(m.created_at).getTime(),
+        type: m.type ?? "text",
+        serverId: m.server_id ?? undefined,
+      }));
 
-        fetchMessages();
-    }, [selectedFriend, currentUserId, setMessages]);
+      setMessages(formatted);
+    };
 
-    return { messages, addMessage };
-}
+    void loadMessages();
+  }, [currentUserId, selectedFriend]);
+
+  const addMessage = (msg: Message) => setMessages((prev) => [...prev, msg]);
+
+  return { messages, addMessage };
+};

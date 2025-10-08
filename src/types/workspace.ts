@@ -50,16 +50,18 @@ export interface Manager {
 //contact
 export interface Friend {
   id: string;
-  name: string;
-  nickname?: string;
+  nickname: string;
   email?: string;
   accent_color?: string;
 }
 
 export interface Message {
-  sender: 'me' | 'friend';
+  id: string;
+  sender: "me" | "friend";
   text: string;
   timestamp: number;
+  type?: "text" | "server_invite"; // 추가
+  serverId?: string;
 }
 
 //edit modal
@@ -73,7 +75,7 @@ export interface EditModalProps {
   cancelLabel?: string;
   confirmDisabled?: boolean;
 }
-export type FriendRequestStatus = "pending" | "accepted" | "rejected";
+export type FriendRequestStatus = "pending" | "accepted" | "declined";
 
 export interface FriendRequest {
     id: string;
@@ -82,4 +84,28 @@ export interface FriendRequest {
     requester_id: string;
     addressee_id: string;
     responded_at?: string;
+    status: FriendRequestStatus;
+}
+
+export interface Participant {
+  id: string;
+  user_id: string;
+  nickname?: string;
+  is_host?: boolean;
+  email: string;
+}
+
+export interface Server {
+  id: string;
+  room_name: string;
+  description?: string;
+  host: string;
+  host_nickname?: string;
+  created_at: string;
+  updated_at: string;
+  status: string;
+  max_participants?: number;
+  is_private?: boolean;
+  password?: string | null;
+  members?: Participant[];
 }

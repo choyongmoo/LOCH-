@@ -1,5 +1,6 @@
-import type { Server } from "@/store/useServersStore";
+import type { Server } from "@/types/workspace";
 import { useUserStore } from "@/store/useUserStore";
+import { useModal } from "@/store/useModalStore";
 
 interface Props {
     server: Server;
@@ -8,9 +9,10 @@ interface Props {
 export default function ManagerRow({ server }: Props) {
     const { user } = useUserStore();
     const isHost = user?.id === server.host;
+    const { openModal } = useModal();
     
     return (
-        <div className="flex items-center px-2 py-3 border-b border-gray-200 dark:border-[#23242e] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2A2B32]">
+        <div onClick={() => openModal("serverModal", server)} className="flex items-center px-2 py-3 border-b border-gray-200 dark:border-[#23242e] cursor-pointer hover:bg-gray-50 dark:hover:bg-[#2A2B32]">
             <div className="w-8" />
 
             {/* 방 이름 + 비공개 표시 */}

@@ -1,17 +1,32 @@
-import { create } from "zustand"
+import { create } from "zustand";
+import type { Server } from "@/types/workspace";
 
-export type ModalType = "addGroup" | "changeName" | "editBio" | "editColor" |
-                        "cameraTest" | "editCamera" | "micTest" | "editMic" | "editPW" | 
-                        "logout" | "deleteUser" | "addFriend" | null;
+export type ModalType =
+  | "addGroup"
+  | "changeName"
+  | "editBio"
+  | "editColor"
+  | "cameraTest"
+  | "editCamera"
+  | "micTest"
+  | "editMic"
+  | "editPW"
+  | "logout"
+  | "deleteUser"
+  | "addFriend"
+  | "serverModal"
+  | null;
 
-type modalStore = {
+type ModalStore = {
     currentModal: ModalType;
-    openModal: (type: ModalType) => void;
+    selectedServer?: Server;
+    openModal: (type: ModalType, server?: Server) => void;
     closeModal: () => void;
 };
 
-export const useModal = create<modalStore>((set) => ({
+export const useModal = create<ModalStore>((set) => ({
     currentModal: null,
-    openModal: (type) => set({ currentModal: type }),
-    closeModal: () => set({ currentModal: null }),
+    selectedServer: undefined,
+    openModal: (type, server) => set({ currentModal: type, selectedServer: server }),
+    closeModal: () => set({ currentModal: null, selectedServer: undefined }),
 }));
