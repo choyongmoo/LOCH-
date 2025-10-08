@@ -10,7 +10,7 @@ import {
   downloadJson,
   formatSeconds,
   getTotalSecondsFromLog,
-  getTranscriptItems,
+  getTranscriptEntries,
   parseTimeInput,
 } from "@/lib/utils";
 import React from "react";
@@ -28,19 +28,19 @@ export const TranscriptSheet: React.FC<TranscriptSheetProps> = ({ open, onOpenCh
 
   const scrollToTime = (seconds: number) => {
     try {
-      const items = getTranscriptItems(log?.transcript);
-      if (items.length === 0 || !Number.isFinite(seconds) || seconds < 0) return;
+      const entries = getTranscriptEntries(log?.transcript);
+      if (entries.length === 0 || !Number.isFinite(seconds) || seconds < 0) return;
       let nearestIndex = 0;
       let nearestDiff = Number.POSITIVE_INFINITY;
-      for (let i = 0; i < items.length; i++) {
-        const diff = Math.abs(items[i].time - seconds);
+      for (let i = 0; i < entries.length; i++) {
+        const diff = Math.abs(entries[i].timestamp - seconds);
         if (diff < nearestDiff) {
           nearestDiff = diff;
           nearestIndex = i;
         }
       }
-      const target = items[nearestIndex];
-      const id = `transcript-item-${Math.round(target.time * 1000)}`;
+      const target = entries[nearestIndex];
+      const id = `transcript-item-${Math.round(target.timestamp * 1000)}`;
       const el = document.getElementById(id);
       if (el) {
         el.scrollIntoView({ block: "center", behavior: "smooth" });
@@ -101,18 +101,25 @@ export const TranscriptSheet: React.FC<TranscriptSheetProps> = ({ open, onOpenCh
             </div>
           </div>
           {(() => {
-            const items = getTranscriptItems(log?.transcript);
-            if (items.length > 0) {
+            const entries = getTranscriptEntries(log?.transcript);
+            if (entries.length > 0) {
               return (
                 <div ref={containerRef} className="max-h-[70vh] overflow-auto space-y-3">
-                  {items.map((it, idx) => {
-                    const id = `transcript-item-${Math.round(it.time * 1000)}`;
+                  {entries.map((it, idx) => {
+                    const id = `transcript-item-${Math.round(it.timestamp * 1000)}`;
                     const isHighlight = id === highlightId;
                     return (
-                      <div id={id} key={`${it.time}-${idx}`} className="flex items-start gap-3">
+                      <div
+                        id={id}
+                        key={`${it.timestamp}-${idx}`}
+                        className="flex items-start gap-3"
+                      >
                         <span className="px-2 py-0.5 rounded bg-black/5 dark:bg-white/10 text-xs font-mono text-gray-700 dark:text-gray-200">
-                          <button className="hover:underline" onClick={() => scrollToTime(it.time)}>
-                            {formatSeconds(it.time)}
+                          <button
+                            className="hover:underline"
+                            onClick={() => scrollToTime(it.timestamp)}
+                          >
+                            {formatSeconds(it.timestamp)}
                           </button>
                         </span>
                         <p
@@ -122,7 +129,7 @@ export const TranscriptSheet: React.FC<TranscriptSheetProps> = ({ open, onOpenCh
                               : "text-sm leading-6 text-gray-900 dark:text-gray-100"
                           }
                         >
-                          {it.text}
+                          {[`[${it.participant}] `, it.transcript].join("")}
                         </p>
                       </div>
                     );

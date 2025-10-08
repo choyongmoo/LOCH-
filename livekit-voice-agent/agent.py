@@ -1,111 +1,252 @@
-import os, json, time, datetime
+import asyncio
+import json
+import logging
+import datetime
+import os
+import time
+
 from dotenv import load_dotenv
 
+from livekit import rtc
 from livekit.agents import (
-    JobContext, UserInputTranscribedEvent, WorkerOptions, cli,
-    AgentSession, Agent, RoomInputOptions, RoomOutputOptions,
+    Agent,
+    AgentSession,
+    AutoSubscribe,
+    JobContext,
+    JobProcess,
+    RoomInputOptions,
+    RoomIO,
+    RoomOutputOptions,
+    StopResponse,
+    WorkerOptions,
+    cli,
+    llm,
+    utils,
 )
-from livekit.plugins import openai as lk_openai, noise_cancellation, silero
+from livekit.plugins import openai, silero
+from openai import AsyncOpenAI as OpenAIAsyncClient
+import supabase
 
-from supabase import create_client, Client
-from openai import AsyncOpenAI
+load_dotenv()
 
-load_dotenv(".env")
+logger = logging.getLogger("transcriber")
+logging.getLogger("asyncio").setLevel(logging.WARNING)
+logging.getLogger("livekit.agents").setLevel(logging.WARNING)
+logging.getLogger("hpack").setLevel(logging.WARNING)
 
-sb: Client = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
-oa = AsyncOpenAI()
+_openai_client = OpenAIAsyncClient()
+_supabase_client = supabase.create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_ROLE_KEY"))
 
-async def summarize_text(text: str) -> str:
-    if not text.strip():
-        return "No transcript available."
-    prompt = (
-        "Summarize this meeting in 5~10 bullet points, answer in most used language of the transcript. "
-        "Emphasize key decisions, action items (with owners/dates if mentioned), "
-        "and any blockers. Keep it concise.\n\nTranscript:\n" + text
-    )
-    resp = await oa.chat.completions.create(
+
+async def summarize_transcript(transcript_context: str) -> str:
+    if not transcript_context or not transcript_context.strip():
+        return ""
+
+    response = await _openai_client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=[
-            {"role": "system", "content": "You are a precise meeting summarizer."},
-            {"role": "user", "content": prompt},
-        ],
         temperature=0.2,
+        max_tokens=400,   # safer than max_completion_tokens
+        messages=[
+            {
+                "role": "system",
+                "content": (
+                    "You are a precise meeting summarizer. "
+                    "Your task is to produce a clear summary of meeting transcripts. "
+                    "Follow these rules strictly:\n"
+                    "- Output 5–10 concise bullet points.\n"
+                    "- Include key decisions and action items.\n"
+                    "- Be objective and avoid speculation.\n"
+                    "- Write in the same language as the transcript. "
+                    "If multiple languages are used, default to Korean."
+                ),
+            },
+            {
+                "role": "user",
+                "content": (
+                    f"Summarize the following transcript:\n\n{transcript_context}"
+                ),
+            },
+        ],
     )
-    return (resp.choices[0].message.content or "").strip()
 
-async def entrypoint(ctx: JobContext):
-    session = AgentSession()
+    return (response.choices[0].message.content or "").strip()
 
-    t0 = time.monotonic()
-    started_at = datetime.datetime.now(datetime.timezone.utc)
+class Transcriber(Agent):
+    def __init__(
+        self,
+        *,
+        created_at: float,
+        participant_identity: str,
+        participant_name: str,
+        transcript_log: list[dict[str, str]],
+    ):
+        super().__init__(
+            instructions="not-needed",
+            stt=openai.STT(model="gpt-4o-mini-transcribe"),
+        )
+        self.created_at = created_at
+        self.participant_identity = participant_identity
+        self.participant_name = participant_name
+        self.transcript_log = transcript_log
+    async def on_user_turn_completed(self, chat_ctx: llm.ChatContext, new_message: llm.ChatMessage):
+        user_transcript = new_message.text_content
+        logger.info(f"[{(time.monotonic() - self.created_at):.2f}s] {self.participant_identity} -> {user_transcript}")
 
-    transcript_log = []
+        self.transcript_log.append({
+            "timestamp": round(time.monotonic() - self.created_at, 2),
+            "participant": self.participant_name,
+            "transcript": user_transcript,
+        })
 
-    @session.on("user_input_transcribed")
-    def on_user_input_transcribed(evt: UserInputTranscribedEvent):
-        if evt.is_final:
-            transcript_log.append({
-                "time": round(time.monotonic() - t0, 3),
-                "text": evt.transcript,
-            })
+        raise StopResponse()
 
-    async def dump_to_supabase():
-        ended_at = datetime.datetime.now(datetime.timezone.utc)
 
-        # Build plain text for summarization
-        full_text = "\n".join(f"- {item['text']}" for item in transcript_log)
+class MultiUserTranscriber:
+    def __init__(self, ctx: JobContext):
+        self.ctx = ctx
+        self._sessions: dict[str, AgentSession] = {}
+        self._tasks: set[asyncio.Task] = set()
 
-        # Generate summary
+        self.created_at: float | None = None
+        self.started_at: str = ""
+        self.ended_at: str = ""
+        self.transcript_log: list[dict[str, str]] = []
+
+    def start(self):
+        self.created_at = time.monotonic()
+        self.started_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        logger.info(f"[{(time.monotonic() - self.created_at):.2f}s] starting transcriber for {self.ctx.room.name}")
+
+        self.ctx.room.on("participant_connected", self.on_participant_connected)
+        self.ctx.room.on("participant_disconnected", self.on_participant_disconnected)
+
+    async def aclose(self):
+        logger.info(f"[{(time.monotonic() - self.created_at):.2f}s] closing transcriber for {self.ctx.room.name}")
+
+        await utils.aio.cancel_and_wait(*self._tasks)
+
+        await asyncio.gather(*[self._close_session(session) for session in self._sessions.values()])
+
+        self.ctx.room.off("participant_connected", self.on_participant_connected)
+        self.ctx.room.off("participant_disconnected", self.on_participant_disconnected)
+
+        self.ended_at = datetime.datetime.now(datetime.timezone.utc).isoformat()
+
+        await self._dump_session()
+
+
+    def on_participant_connected(self, participant: rtc.RemoteParticipant):
+        if participant.identity in self._sessions:
+            return
+
+        logger.info(f"[{(time.monotonic() - self.created_at):.2f}s] starting session for {participant.identity}")
+        task = asyncio.create_task(self._start_session(participant))
+        self._tasks.add(task)
+
+        def on_task_done(task: asyncio.Task):
+            try:
+                self._sessions[participant.identity] = task.result()
+            finally:
+                self._tasks.discard(task)
+
+        task.add_done_callback(on_task_done)
+
+    def on_participant_disconnected(self, participant: rtc.RemoteParticipant):
+        if (session := self._sessions.pop(participant.identity)) is None:
+            return
+
+        logger.info(f"[{(time.monotonic() - self.created_at):.2f}s] closing session for {participant.identity}")
+        task = asyncio.create_task(self._close_session(session))
+        self._tasks.add(task)
+        task.add_done_callback(lambda _: self._tasks.discard(task))
+
+
+    async def _start_session(self, participant: rtc.RemoteParticipant) -> AgentSession:
+        if participant.identity in self._sessions:
+            return self._sessions[participant.identity]
+
+        session = AgentSession(
+            vad=self.ctx.proc.userdata["vad"],
+        )
+        room_io = RoomIO(
+            agent_session=session,
+            room=self.ctx.room,
+            participant=participant,
+            input_options=RoomInputOptions(
+                text_enabled=False,
+                video_enabled=False,
+            ),
+            output_options=RoomOutputOptions(
+                transcription_enabled=True,
+                audio_enabled=False,
+            ),
+        )
+        await room_io.start()
+        await session.start(
+            agent=Transcriber(
+                created_at=self.created_at,
+                participant_identity=participant.identity,
+                participant_name=participant.name,
+                transcript_log=self.transcript_log,
+            )
+        )
+        return session
+
+    async def _close_session(self, sess: AgentSession) -> None:
+        await sess.drain()
+        await sess.aclose()
+
+
+    async def _dump_session(self) -> None:
+        if not self.transcript_log or len(self.transcript_log) == 0:
+            return
+
+        server_id = ""
         try:
-            summary = await summarize_text(full_text)
-            print(summary)
-        except Exception as e:
-            summary = f"(summary unavailable: {e})"
-
-        # Find server_id via rooms.id == LiveKit room name
-        try:
-            print(ctx.room.name)
-            rooms = sb.from_("rooms").select("server_id").eq("id", ctx.room.name).single().execute()
+            rooms = _supabase_client.table("rooms").select("server_id").eq("id", self.ctx.room.name).single().execute()
             server_id = rooms.data["server_id"]
         except Exception as e:
-            print(f"Failed to resolve server_id for room '{ctx.room.name}': {e}")
-            return
+            logger.error(f"[{(time.monotonic() - self.created_at):.2f}s] server id retrieval failed for {self.ctx.room.name}: {e}")
+
+        summary = ""
+        transcript_context = "\n".join(f"{item['participant']} -> {item['transcript']}" for item in self.transcript_log)
+        try:
+            summary = await summarize_transcript(transcript_context)
+        except Exception as e:
+            logger.error(f"[{(time.monotonic() - self.created_at):.2f}s] transcript summary generation failed for {self.ctx.room.name}: {e}")
 
         payload = {
             "server_id": server_id,
-            "transcript": {
-                "time_unit": "seconds_since_session_start",
-                "items": transcript_log,
-            },
+            "started_at": self.started_at,
+            "ended_at": self.ended_at,
+            "transcript": self.transcript_log,
             "summary": summary,
-            "started_at": started_at.isoformat(),
-            "ended_at": ended_at.isoformat(),
         }
 
         try:
-            res = sb.table("meeting_logs").insert(payload).execute()
-            print(f"Inserted meeting_log id={res.data[0]['id'] if res.data else 'unknown'}")
+            result = _supabase_client.table("meeting_logs").insert(payload).execute()
+            logger.info(f"[{(time.monotonic() - self.created_at):.2f}s] successfully inserted session log for {self.ctx.room.name}")
         except Exception as e:
-            print(f"Insert into meeting_logs failed: {e}")
+            logger.error(f"[{(time.monotonic() - self.created_at):.2f}s] session log insertion failed for {self.ctx.room.name}: {e}")
 
-    ctx.add_shutdown_callback(dump_to_supabase)
 
-    await ctx.connect()
+async def entrypoint(ctx: JobContext):
+    transcriber = MultiUserTranscriber(ctx)
+    transcriber.start()
 
-    await session.start(
-        room=ctx.room,
-        agent=Agent(
-            stt=lk_openai.STT(model="gpt-4o-mini-transcribe"),
-            vad=silero.VAD.load(),
-            instructions="You are a helpful assistant that transcribes user speech to text.",
-        ),
-        room_input_options=RoomInputOptions(
-            noise_cancellation=noise_cancellation.BVC(),
-            close_on_disconnect=False,
-            text_enabled=False,
-        ),
-        room_output_options=RoomOutputOptions(audio_enabled=False),
-    )
+    await ctx.connect(auto_subscribe=AutoSubscribe.AUDIO_ONLY)
+    for participant in ctx.room.remote_participants.values():
+        transcriber.on_participant_connected(participant)
+
+    async def cleanup():
+        await transcriber.aclose()
+
+    ctx.add_shutdown_callback(cleanup)
+
+
+def prewarm(proc: JobProcess):
+    proc.userdata["vad"] = silero.VAD.load()
+
 
 if __name__ == "__main__":
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint))
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm))

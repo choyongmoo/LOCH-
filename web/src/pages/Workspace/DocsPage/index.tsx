@@ -1,9 +1,9 @@
 import { Button } from "@/components/common/ui/button";
 import { supabase } from "@/lib/supabase";
 import React from "react";
-import { PartialSummarySheet } from "./components/PartialSummarySheet";
-import { SummarySheet } from "./components/SummarySheet";
-import { TranscriptSheet } from "./components/TranscriptSheet";
+import { PartialSummarySheet } from "./PartialSummarySheet";
+import { SummarySheet } from "./SummarySheet";
+import { TranscriptSheet } from "./TranscriptSheet";
 
 type MeetingLog = {
   id: string;

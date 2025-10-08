@@ -83,10 +83,7 @@ export function cloneSingleChild(
 // ----- Shared helpers for meeting logs -----
 
 export type TranscriptJson =
-  | {
-      time_unit?: string;
-      items?: Array<{ time?: number; text?: string }>;
-    }
+  | Array<{ timestamp?: number; participant?: string; transcript?: string }>
   | null
   | undefined;
 
@@ -116,13 +113,25 @@ export function parseTimeInput(input: string): number {
   }
 }
 
-export function getTranscriptItems(transcript: unknown): Array<{ time: number; text: string }> {
+export function getTranscriptEntries(
+  transcript: unknown
+): Array<{ timestamp: number; participant?: string; transcript: string }> {
   try {
     const t = transcript as TranscriptJson;
-    if (!t || !Array.isArray(t.items)) return [];
-    return t.items
-      .filter((it) => typeof it?.text === "string" && typeof it?.time === "number")
-      .map((it) => ({ time: it!.time as number, text: it!.text as string }));
+    if (!Array.isArray(t)) return [];
+    return t
+      .filter(
+        (it) =>
+          !!it &&
+          typeof it === "object" &&
+          typeof (it as { transcript?: unknown }).transcript === "string" &&
+          typeof (it as { timestamp?: unknown }).timestamp === "number"
+      )
+      .map((it) => ({
+        timestamp: (it as { timestamp: number }).timestamp,
+        participant: (it as { participant?: string }).participant,
+        transcript: (it as { transcript: string }).transcript,
+      }));
   } catch {
     return [];
   }
@@ -136,8 +145,8 @@ export function getTotalSecondsFromLog(
   } | null
 ): number {
   if (!log) return 0;
-  const items = getTranscriptItems(log?.transcript);
-  const byItems = items.length > 0 ? items[items.length - 1].time : 0;
+  const entries = getTranscriptEntries(log?.transcript);
+  const byItems = entries.length > 0 ? entries[entries.length - 1].timestamp : 0;
   const ended = log?.ended_at ? new Date(log.ended_at).getTime() : 0;
   const started = log?.started_at ? new Date(log.started_at).getTime() : 0;
   const byClock = Number.isFinite(ended - started)

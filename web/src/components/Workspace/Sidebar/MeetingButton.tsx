@@ -1,7 +1,7 @@
 import { Button } from "@/components/common/ui/button";
 import { supabase } from "@/lib/supabase";
 import { Loader2, Video } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 
 interface MeetingButtonProps {
@@ -116,32 +116,55 @@ export const MeetingButton = ({ serverId, className }: MeetingButtonProps) => {
     }
   };
 
-  if (!selectedServerId) {
-    return (
+  const hasSelection = !!selectedServerId;
+
+  let meetingAction: ReactNode;
+  if (!hasSelection) {
+    meetingAction = (
       <Button disabled variant="outline" size="lg" className={className ?? "w-full text-1xl"}>
         서버를 선택해 주세요
       </Button>
     );
-  }
-
-  if (loading)
-    return (
+  } else if (loading) {
+    meetingAction = (
       <Button disabled variant="outline" size="lg" className={className ?? "w-full"}>
         <Loader2 className="animate-spin" />
         로딩 중...
       </Button>
     );
-  if (error)
-    return (
+  } else if (error) {
+    meetingAction = (
       <Button disabled variant="outline" size="lg" className={className ?? "w-full"}>
         오류
       </Button>
     );
+  } else {
+    meetingAction = (
+      <Button onClick={handleButtonClick} size="lg" className={className ?? "w-full"}>
+        <Video />
+        {room && room.is_active ? `회의 참여 (${room.user_count}명)` : "회의 시작"}
+      </Button>
+    );
+  }
 
   return (
-    <Button onClick={handleButtonClick} size="lg" className={className ?? "w-full"}>
-      <Video />
-      {room && room.is_active ? `회의 참여 (${room.user_count}명)` : "회의 시작"}
-    </Button>
+    <div className="w-full">
+      {meetingAction}
+      <div className="mt-2 flex w-full items-center justify-center">
+        <Button
+          size="sm"
+          variant="outline"
+          className="w-full"
+          onClick={() => {
+            if (hasSelection) {
+              navigate("/workspace/docs");
+            }
+          }}
+          disabled={!hasSelection}
+        >
+          {hasSelection ? "회의 내역" : "서버를 선택해 주세요"}
+        </Button>
+      </div>
+    </div>
   );
 };
