@@ -6,7 +6,7 @@ import { useUserStore } from "@/store/useUserStore";
 
 export default function ManagerPage() {
   const { currentModal, selectedServer, closeModal } = useModal();
-  const { servers, updateServer, deleteServer, kickMember, onLeaveServer } = useServers();
+  const { servers, updateServer, deleteServer, onLeaveServer } = useServers();
   const { user } = useUserStore();
 
   if (!user) return null;
@@ -19,10 +19,6 @@ export default function ManagerPage() {
   const handleDelete = (serverId: string) => {
     deleteServer(serverId);
     closeModal();
-  };
-
-  const handleKickMember = (serverId: string, userId: string) => {
-    kickMember(serverId, userId);
   };
 
   const handleonLeaveServer = (serverId: string, userId: string) => {
@@ -38,12 +34,10 @@ export default function ManagerPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <ServerModal
             server={serverWithMembers}
-            members={serverWithMembers.members || []}
             currentUserId={user.id!}
             onClose={closeModal}
             onSave={handleSave}
             onDelete={handleDelete}
-            onKickMember={handleKickMember}
             onLeaveServer={handleonLeaveServer}
           />
         </div>

@@ -7,11 +7,17 @@ import { sendMessage } from "../hooks/sendMessage";
 
 interface InviteModalProps {
   serverInviteLink: string;
+  serverId: string;
   currentUserId: string;
   onClose: () => void;
 }
 
-export default function InviteModal({ serverInviteLink, currentUserId, onClose }: InviteModalProps) {
+export default function InviteModal({
+  serverInviteLink,
+  serverId,
+  currentUserId,
+  onClose,
+}: InviteModalProps) {
   const [copied, setCopied] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [friends, setFriends] = useState<Friend[]>([]);
@@ -68,17 +74,23 @@ export default function InviteModal({ serverInviteLink, currentUserId, onClose }
     }
   };
 
-  // 친구에게 1:1 DM으로 서버 링크 보내기
+  // 친구에게 서버 초대 메시지 전송
   const handleSendInvite = async (friend: Friend) => {
     try {
-      // 클릭 가능한 링크로 보내기
-      const messageContent = `서버 초대: ${serverInviteLink}`;
-      await sendMessage(messageContent, currentUserId, friend, () => {});
+      await sendMessage(
+        `서버 초대: ${serverInviteLink}`,
+        currentUserId,
+        friend,
+        () => {},
+        serverId,
+        "server_invite"
+      );
       alert(`${friend.nickname}에게 초대 링크를 보냈습니다!`);
     } catch (err) {
       console.error("초대 전송 실패:", err);
       alert("초대 전송 실패");
     }
+    console.log("serverId:", serverId);
   };
 
   return (
@@ -134,9 +146,7 @@ export default function InviteModal({ serverInviteLink, currentUserId, onClose }
           ))}
 
           {friends.length === 0 && (
-            <p className="text-gray-400 text-center mt-4">
-              친구 목록이 없습니다.
-            </p>
+            <p className="text-gray-400 text-center mt-4">친구 목록이 없습니다.</p>
           )}
         </div>
       </div>

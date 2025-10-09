@@ -1,9 +1,9 @@
+import CameraTestCard from "@/components/Workspace/Cards/CameraTestCard";
 import MicrophoneTestCard from "@/components/Workspace/Cards/MicrophoneTestCard";
 import ProfileCard from "@/components/Workspace/Cards/ProfileCard";
 import RecentActivityCard from "@/components/Workspace/Cards/RecentActivityCard";
 import RiverDownloadCard from "@/components/Workspace/Cards/RiverDownloadCard";
 import ServerManagementCard from "@/components/Workspace/Cards/ServerManagementCard";
-import SettingsCard from "@/components/Workspace/Cards/SettingsCard";
 import TwoColumnCards from "@/components/Workspace/Cards/TwoColumnCards";
 import { ScrollArea } from "@/components/common/ui/scroll-area";
 
@@ -22,7 +22,7 @@ export default function HomePage() {
                 <div className="flex flex-col gap-6 order-2 md:order-2">
                     <RiverDownloadCard />
                     <ServerManagementCard />
-                    <SettingsCard />
+                    <CameraTestCard />
                     <MicrophoneTestCard />
                 </div>
             </div>

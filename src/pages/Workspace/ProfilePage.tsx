@@ -9,6 +9,8 @@ import ProfileSection from "@/components/Workspace/Profile/ProfileSection";
 import { useUserStore } from "@/store/useUserStore";
 import { useState } from "react";
 import { useModal } from "@/store/useModalStore";
+import { useMicrophone } from "@/components/Workspace/hooks/useMicrophone";
+import { useDeleteAccount } from "@/components/Workspace/hooks/useDeleteAccount";
 
 export default function ProfilePage() {
   const user = useUserStore((state) => state.user);
@@ -17,7 +19,12 @@ export default function ProfilePage() {
   const [newAccent_color, setNewAccent_color] = useState(user?.accent_color || "#7e22ce");
   const closeModal = useModal((state) => state.closeModal);
   const logout = useUserStore((state) => state.logout);
-
+  const { deleteAccount } = useDeleteAccount();
+  
+  const { devices, selectedDeviceId, selectDevice } = useMicrophone();
+  const [tempDeviceId, setTempDeviceId] = useState<string | undefined>(selectedDeviceId);
+  
+  
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewAccent_color(e.target.value);
   };
@@ -73,7 +80,7 @@ export default function ProfilePage() {
           />
           <ProfileRow
             label="마이크"
-            value={user.micLabel ?? "설정되지 않음"}
+            value={devices.find(d => d.deviceId === selectedDeviceId)?.label || "기본 마이크"}
             action={
               <>
                 <MicTestButton className={actionButtonClass} />
@@ -129,11 +136,28 @@ export default function ProfilePage() {
 
       <EditModal modalType="editCamera" title="카메라 변경" description="사용할 카메라를 선택하세요." onConfirm={() => {}} confirmLabel="변경"/>
       <EditModal modalType="micTest" title="마이크 테스트" description="마이크를 테스트하세요." />
-      <EditModal modalType="editMic" title="마이크 설정" description="사용할 마이크를 선택하세요." onConfirm={() => {}} confirmLabel="변경"/>
+      <EditModal modalType="editMic" title="마이크 설정" description="사용할 마이크를 선택하세요." confirmLabel="변경" onConfirm={() => { if (tempDeviceId) selectDevice(tempDeviceId); closeModal(); }} >
+        <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+          {devices.length === 0 && <p>사용 가능한 마이크가 없습니다.</p>}
+          {devices.map((device) => (
+            <button
+              key={device.deviceId}
+              className={`px-3 py-2 border rounded text-left ${
+                device.deviceId === tempDeviceId
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 dark:bg-[#23242e] text-gray-800 dark:text-gray-200"
+              }`}
+              onClick={() => setTempDeviceId(device.deviceId)}
+            >
+              {device.label || "알 수 없는 마이크"}
+            </button>
+          ))}
+        </div>
+      </EditModal>
       <EditModal modalType="editPW" title="비밀번호 변경" description="비밀 번호를 변경합니다." onConfirm={() => {}} confirmLabel="변경"/>
       <EditModal modalType="logout" title="로그아웃" description="현재 계정에서 로그아웃 하시겠습니까?" 
         onConfirm={async () => { await logout(); }} confirmLabel="로그아웃"/>
-      <EditModal modalType="deleteUser" title="회원 탈퇴" description="현재 계정을 삭제합니다." onConfirm={() => {}} confirmLabel="탈퇴"/>
+      <EditModal modalType="deleteUser" title="회원 탈퇴" description="현재 계정을 삭제합니다." onConfirm={() => {deleteAccount();}} confirmLabel="탈퇴"/>
     </div>
   );
 }

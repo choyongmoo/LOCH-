@@ -21,6 +21,7 @@ import ContactPage from "./pages/Workspace/ContactPage";
 import RecordPage from "./pages/Workspace/RecordPage";
 import FriendRequestPage from "./pages/Workspace/FriendRequestPage";
 import ProtectedRoute from "./components/ProtectedRoute";
+import InvitePage from "./pages/Workspace/InvitePage";
 
 
 export const Router = () => {
@@ -55,6 +56,7 @@ export const Router = () => {
             <Route path="contact" element={<ContactPage />} />
             <Route path="record" element={<RecordPage />} />
             <Route path="friend" element={<FriendRequestPage />} />
+            <Route path="invite/:serverId" element={<InvitePage />} />
           </Route>
         </Route>
 

@@ -93,6 +93,7 @@ export interface Participant {
   nickname?: string;
   is_host?: boolean;
   email: string;
+  accent_color?: string;
 }
 
 export interface Server {

@@ -10,7 +10,6 @@ interface ServersState {
   addServer: (server: Server) => Promise<void>;
   updateServer: (server: Server) => Promise<void>;
   deleteServer: (serverId: string) => Promise<void>;
-  kickMember: (serverId: string, userId: string) => Promise<void>;
   onLeaveServer: (serverId: string, userId: string) => Promise<void>;
 }
 
@@ -202,28 +201,7 @@ export const useServers = create<ServersState>((set) => ({
       servers: state.servers.filter((s) => s.id !== serverId),
     }));
   },
-
-  kickMember: async (serverId, userId) => {
-    const { error } = await supabase
-      .from("server_members")
-      .delete()
-      .eq("server_id", serverId)
-      .eq("user_id", userId);
-
-    if (error) {
-      console.error("멤버 추방 실패:", error);
-      return;
-    }
-
-    set((state) => ({
-      servers: state.servers.map((s) =>
-        s.id === serverId
-          ? { ...s, members: s.members?.filter((m) => m.user_id !== userId) }
-          : s
-      ),
-    }));
-  },
-
+  
   onLeaveServer: async (serverId, userId) => {
     const { error } = await supabase
       .from("server_members")

@@ -1,27 +1,23 @@
 import { useState } from "react";
-import type { Server, Participant } from "@/types/workspace";
+import type { Server } from "@/types/workspace";
 import { Button } from "@/components/common/ui/button";
 import InviteModal from "./InviteModal";
 
 interface ServerModalProps {
   server: Server;
-  members: Participant[];
   currentUserId: string;
   onClose: () => void;
   onSave: (server: Server) => void;
   onDelete: (serverId: string) => void;
-  onKickMember: (serverId: string, userId: string) => void;
   onLeaveServer: (serverId: string, userId: string) => void;
 }
 
 export default function ServerModal({
   server,
-  members,
   currentUserId,
   onClose,
   onSave,
   onDelete,
-  onKickMember,
   onLeaveServer,
 }: ServerModalProps) {
   const isHost = currentUserId === server.host;
@@ -31,7 +27,6 @@ export default function ServerModal({
   const [maxParticipants, setMaxParticipants] = useState(server.max_participants || 10);
   const [isPrivate, setIsPrivate] = useState(server.is_private || false);
   const [password, setPassword] = useState(server.password || "");
-  const [newHost, setNewHost] = useState(server.host);
 
   const [isInviteOpen, setIsInviteOpen] = useState(false);
 
@@ -48,7 +43,6 @@ export default function ServerModal({
       max_participants: maxParticipants,
       is_private: isPrivate,
       password: isPrivate ? password : undefined,
-      host: newHost,
       updated_at: new Date().toISOString(),
     });
   };
@@ -144,51 +138,6 @@ export default function ServerModal({
           </div>
         )}
 
-        {/* 호스트 변경 */}
-        {isHost && members.length > 0 && (
-          <div className="mb-4">
-            <label className="block text-sm text-gray-300 mb-1">서버 호스트 변경</label>
-            <select
-              value={newHost}
-              onChange={(e) => setNewHost(e.target.value)}
-              className="w-full p-2 rounded-md border border-gray-600 bg-[#202225] text-white focus:outline-none focus:border-blue-500"
-            >
-              {members.map((m) => (
-                <option key={m.user_id} value={m.user_id}>
-                  {m.nickname || m.user_id}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
-
-        {/* 멤버 추방 */}
-        {isHost && members.length > 0 && (
-          <div className="mb-4">
-            <label className="block text-sm text-gray-300 mb-2">서버 멤버 추방</label>
-            <div className="flex flex-col gap-1 max-h-40 overflow-y-auto border border-gray-700 rounded-md p-2 bg-[#2f3136]">
-              {members
-                .filter((m) => m.user_id !== currentUserId)
-                .map((m) => (
-                  <div
-                    key={m.user_id}
-                    className="flex justify-between items-center bg-[#202225] p-2 rounded-md"
-                  >
-                    <span>{m.nickname || m.user_id}</span>
-                    <Button
-                      onClick={() => onKickMember(server.id, m.user_id)}
-                      variant="destructive"
-                      size="sm"
-                      className="bg-red-600 hover:bg-red-700 text-white"
-                    >
-                      추방
-                    </Button>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-
         {/* 버튼 섹션 */}
         <div className="flex justify-end gap-3 mt-6">
           <button
@@ -226,6 +175,7 @@ export default function ServerModal({
           serverInviteLink={serverInviteLink}
           currentUserId={currentUserId}
           onClose={() => setIsInviteOpen(false)}
+          serverId={server.id}
         />
       )}
     </div>

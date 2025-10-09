@@ -1,9 +1,10 @@
 import { useState, useRef, useEffect } from "react";
-import type { Friend } from "@/types/workspace";
 import { useChatMessages } from "../hooks/useChatMessages";
 import { useRealtimeMessages } from "../hooks/useRealtimeMessages";
 import { sendMessage } from "../hooks/sendMessage";
 import { ScrollArea } from "@/components/common/ui/scroll-area";
+import type { Friend } from "@/types/workspace";
+import { useNavigate } from "react-router-dom";
 
 interface ChatWindowProps {
   currentUserId?: string;
@@ -16,6 +17,7 @@ export default function ChatWindow({ currentUserId, selectedFriend }: ChatWindow
 
   const [input, setInput] = useState("");
   const viewportRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (viewportRef.current) {
@@ -25,33 +27,40 @@ export default function ChatWindow({ currentUserId, selectedFriend }: ChatWindow
 
   const handleSend = async () => {
     if (!currentUserId || !selectedFriend || !input.trim()) return;
-
     await sendMessage(input.trim(), currentUserId, selectedFriend, addMessage);
     setInput("");
+  };
 
-    if (viewportRef.current) {
-      viewportRef.current.scrollTop = viewportRef.current.scrollHeight;
+  const renderMessageText = (msg: any) => {
+  if (msg.type === "server_invite" && msg.serverId) {
+    return (
+      <button
+        type="button"
+        className="text-blue-500 underline cursor-pointer bg-transparent p-0"
+        onClick={() => navigate(`/workspace/invite/${msg.serverId}`)}
+      >
+        {msg.text}
+      </button>
+    );
+  }
+
+  return msg.text.split(" ").map((word: string, i: number) => {
+    if (word.startsWith("http://") || word.startsWith("https://")) {
+      return (
+        <a
+          key={i}
+          href={word}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline text-blue-500 hover:text-blue-400"
+        >
+          {word}{" "}
+        </a>
+      );
     }
-  };
-
-  const renderMessageText = (text: string) => {
-    return text.split(" ").map((word, i) => {
-      if (word.startsWith("http://") || word.startsWith("https://")) {
-        return (
-          <a
-            key={i}
-            href={word}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="underline text-blue-500 hover:text-blue-400"
-          >
-            {word}{" "}
-          </a>
-        );
-      }
-      return word + " ";
-    });
-  };
+    return word + " ";
+  });
+};
 
   return (
     <div className="flex flex-col flex-1 h-screen bg-gray-50 dark:bg-[#313338]">
@@ -103,10 +112,13 @@ export default function ChatWindow({ currentUserId, selectedFriend }: ChatWindow
                           : "bg-gray-200 dark:bg-[#40444b] text-gray-800 dark:text-gray-200"
                       }`}
                     >
-                      {renderMessageText(msg.text)}
+                      {renderMessageText(msg)}
                     </div>
                     <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      {currentDate.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" })}
+                      {currentDate.toLocaleTimeString("ko-KR", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </span>
                   </div>
                 </div>

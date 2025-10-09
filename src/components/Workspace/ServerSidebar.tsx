@@ -11,6 +11,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { useServers } from "@/store/useServersStore";
 import { useSelectedServerStore } from "@/store/useSelectedServerStore";
 import { useEffect } from "react";
+import { supabase } from "@/lib/supabase";
 
 export default function ServerSidebar() {
   const { currentModal, closeModal } = useModal();
@@ -23,9 +24,35 @@ export default function ServerSidebar() {
   const setSelectedServerId = useSelectedServerStore((state) => state.setSelectedServerId);
 
   useEffect(() => {
-    if (!user?.id) return;
-    void fetchUserServers(user.id);
-  }, [user?.id]);
+    const userId = user?.id;
+    if (!userId) return;
+    void fetchUserServers(userId);
+  }, [user?.id, fetchUserServers]);
+
+  useEffect(() => {
+    const userId = user?.id;
+    if (!userId) return;
+
+    const subscription = supabase
+      .channel(`server-members-user-${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "server_members",
+          filter: `user_id=eq.${userId}`,
+        },
+        () => {
+          void fetchUserServers(userId);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, [user?.id, fetchUserServers]);
 
   return (
     <div className="flex flex-col h-full items-center w-full">

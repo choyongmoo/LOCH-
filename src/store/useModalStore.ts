@@ -15,6 +15,7 @@ export type ModalType =
   | "deleteUser"
   | "addFriend"
   | "serverModal"
+  | "RecentActivityModal"
   | null;
 
 type ModalStore = {

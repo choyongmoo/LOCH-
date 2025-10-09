@@ -83,20 +83,25 @@ export function useServerDetail(selectedServerId?: string, servers: Server[] = [
 
       // 참여자 프로필
       const userIds = members.map((m) => m.user_id);
-      const { data: profiles, error: profileError } = await supabase
+      const { data: profile, error: profileError } = await supabase
         .from("profile")
-        .select("id, nickname")
+        .select("id, nickname, email, accent_color")
         .in("id", userIds);
 
       if (profileError) console.error(profileError);
 
       const filtered = members
         .filter((m) => m.role !== "host")
-        .map((m) => ({
-          id: m.id,
-          user_id: m.user_id,
-          nickname: profiles?.find((p) => p.id === m.user_id)?.nickname ?? "",
-        }));
+        .map((m) => {
+          const p = profile?.find((p) => p.id === m.user_id);
+          return {
+            id: m.id,
+            user_id: m.user_id,
+            nickname: p?.nickname ?? "",
+            email: p?.email ?? "",
+            accent_color: p?.accent_color ?? "#3b82f6",
+          };
+        });
 
       setParticipants(filtered);
       setIsParticipantsLoading(false);
