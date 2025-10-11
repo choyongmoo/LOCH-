@@ -11,48 +11,23 @@ import { useUserStore } from "@/store/useUserStore";
 import { useServers } from "@/store/useServersStore";
 import { useSelectedServerStore } from "@/store/useSelectedServerStore";
 import { useEffect } from "react";
-import { supabase } from "@/lib/supabase";
 
 export default function ServerSidebar() {
   const { currentModal, closeModal } = useModal();
   const logout = useUserStore((state) => state.logout);
-  const servers = useServers((state) => state.servers);
-  const fetchUserServers = useServers((state) => state.fetchUserServers);
   const user = useUserStore((state) => state.user);
+  const servers = useServers((state) => state.servers);
+  const fetchAllUserServers = useServers((state) => state.fetchAllUserServers);
 
   const selectedServerId = useSelectedServerStore((state) => state.selectedServerId);
   const setSelectedServerId = useSelectedServerStore((state) => state.setSelectedServerId);
 
+  // 유저 변경 시 서버 불러오기
   useEffect(() => {
-    const userId = user?.id;
-    if (!userId) return;
-    void fetchUserServers(userId);
-  }, [user?.id, fetchUserServers]);
-
-  useEffect(() => {
-    const userId = user?.id;
-    if (!userId) return;
-
-    const subscription = supabase
-      .channel(`server-members-user-${userId}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "INSERT",
-          schema: "public",
-          table: "server_members",
-          filter: `user_id=eq.${userId}`,
-        },
-        () => {
-          void fetchUserServers(userId);
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-  }, [user?.id, fetchUserServers]);
+    if (user?.id) {
+      void fetchAllUserServers(user.id);
+    }
+  }, [user?.id, fetchAllUserServers]);
 
   return (
     <div className="flex flex-col h-full items-center w-full">

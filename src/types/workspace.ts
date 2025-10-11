@@ -34,7 +34,7 @@ export interface Profile {
   accent_color?: string;
   created_at?: string;
   updated_at?: string;
-
+  providers?: string[];
   // UI용 필드
   cameraLabel?: string;
   micLabel?: string;
@@ -60,7 +60,7 @@ export interface Message {
   sender: "me" | "friend";
   text: string;
   timestamp: number;
-  type?: "text" | "server_invite"; // 추가
+  type?: "text" | "server_invite";
   serverId?: string;
 }
 

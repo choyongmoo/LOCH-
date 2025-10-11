@@ -37,9 +37,9 @@ export function EditMicButton({ className = ""}: {className?: string}) {
     return <Button variant="ghost" className={`${className}`} onClick={() => openModal("editMic")}>변경</Button>
 }
 
-export function EditPWButton({ className = ""}: {className?: string}) {
+export function EditPWButton({ className = "", disabled = false}: {className?: string, disabled?: boolean}) {
     const { openModal } = useModal();
-    return <Button variant="ghost" className={`${className}`} onClick={() => openModal("editPW")}>변경</Button>
+    return <Button variant="ghost" className={`${className}`} onClick={() => openModal("editPW") } disabled={disabled}>변경</Button>
 }
 
 export function LogOutButton({ className = ""}: {className?: string}) {

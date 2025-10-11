@@ -1,10 +1,11 @@
 import { useNavigate, useLocation } from "react-router";
 import { SidebarMenu, SidebarProvider } from "../common/ui/sidebar";
-import { ContactButton, HomeButton, ManagerButton, RecordButton, ProfileButton, SettingButton, FriendRequestButton, } from "./Buttons/MenuButtons";
+import { ContactButton, HomeButton, ManagerButton, RecordButton, ProfileButton, SettingButton, FriendRequestButton } from "./Buttons/MenuButtons";
 import MenuGroup from "./MenuGorup";
 import { OthLogo } from "../common/OthLogo";
 import { MeetingButton } from "./Buttons/MeetingButton";
 import { useState, useEffect } from "react";
+import { useUserStore } from "@/store/useUserStore";
 
 const MAX_RECENT = 10;
 
@@ -17,16 +18,19 @@ interface RecentPage {
 export default function MenuSidebar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const activeClass =
-    "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20";
+  const user = useUserStore((state) => state.user);
+  const activeClass = "bg-[var(--sidebar-accent)] dark:bg-[var(--sidebar-accent)] font-bold ring-2 ring-black/10 shadow dark:ring-2 dark:ring-white/20";
   const [showFriendRequest, setShowFriendRequest] = useState(false);
-  const [ ,setRecentPages] = useState<RecentPage[]>([]);
+  const [, setRecentPages] = useState<RecentPage[]>([]);
 
   const getDisplayName = (path: string) =>
     path.split("/").filter(Boolean).pop() || "홈";
 
+  const getStorageKey = () => (user ? `recentPages_${user.id}` : "recentPages_guest");
+
   const addRecentPage = (path: string) => {
-    const stored = localStorage.getItem("recentPages");
+    const storageKey = getStorageKey();
+    const stored = localStorage.getItem(storageKey);
     const prevPages: RecentPage[] = stored ? JSON.parse(stored) : [];
 
     const newPage: RecentPage = {
@@ -35,18 +39,15 @@ export default function MenuSidebar() {
       ts: Date.now(),
     };
 
-    const updatedPages = [
-      newPage,
-      ...prevPages.filter((p) => p.path !== path),
-    ].slice(0, MAX_RECENT);
+    const updatedPages = [newPage, ...prevPages.filter((p) => p.path !== path)].slice(0, MAX_RECENT);
 
     setRecentPages(updatedPages);
-    localStorage.setItem("recentPages", JSON.stringify(updatedPages));
+    localStorage.setItem(storageKey, JSON.stringify(updatedPages));
   };
 
   useEffect(() => {
     addRecentPage(location.pathname);
-  }, [location.pathname]);
+  }, [location.pathname, user]);
 
   const handleButtonClick = (path: string, type?: string) => {
     navigate(path);

@@ -2,9 +2,9 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useModal } from "@/store/useModalStore";
 import RecentActivityModal from "../Modals/RecentActivityModal";
+import { useUserStore } from "@/store/useUserStore";
 
 const MAX_RECENT = 3;
-const RECENT_STORAGE_KEY = "recentPages";
 
 export interface RecentPage {
   path: string;
@@ -16,34 +16,33 @@ export default function RecentActivityCard() {
   const location = useLocation();
   const [recentPages, setRecentPages] = useState<RecentPage[]>([]);
   const { openModal, currentModal } = useModal();
+  const user = useUserStore((state) => state.user);
 
   const getDisplayName = (path: string) =>
     path.split("/").filter(Boolean).pop() || "홈";
 
-  // 초기 로컬스토리지에서 불러오기
+  const storageKey = user ? `recentPages_${user.id}` : "recentPages_guest";
+
   useEffect(() => {
-    const stored: RecentPage[] = JSON.parse(localStorage.getItem(RECENT_STORAGE_KEY) || "[]");
+    const stored: RecentPage[] = JSON.parse(localStorage.getItem(storageKey) || "[]");
     setRecentPages(stored.slice(0, MAX_RECENT));
-  }, []);
+  }, [storageKey]);
 
-  // location이 바뀌면 최근 페이지 업데이트
   useEffect(() => {
-    if (!location.pathname) return;
+    if (!location.pathname || !user) return;
 
-    const stored: RecentPage[] = JSON.parse(localStorage.getItem(RECENT_STORAGE_KEY) || "[]");
+    const stored: RecentPage[] = JSON.parse(localStorage.getItem(storageKey) || "[]");
     const newPage: RecentPage = {
       path: location.pathname,
       name: getDisplayName(location.pathname),
       ts: Date.now(),
     };
 
-    // 전체 기록 업데이트
     const fullUpdatedPages = [newPage, ...stored.filter((p) => p.path !== location.pathname)];
-    localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(fullUpdatedPages));
+    localStorage.setItem(storageKey, JSON.stringify(fullUpdatedPages));
 
-    // 카드에는 MAX_RECENT만 보여줌
     setRecentPages(fullUpdatedPages.slice(0, MAX_RECENT));
-  }, [location.pathname]);
+  }, [location.pathname, user, storageKey]);
 
   return (
     <div className="w-full">
@@ -89,7 +88,7 @@ export default function RecentActivityCard() {
       {/* 모달 */}
       {currentModal === "RecentActivityModal" && (
         <RecentActivityModal
-          recentPages={JSON.parse(localStorage.getItem(RECENT_STORAGE_KEY) || "[]")}
+          recentPages={JSON.parse(localStorage.getItem(storageKey) || "[]")}
           showAllModal={true}
           setShowAllModal={() => openModal(null)}
         />

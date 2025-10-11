@@ -5,8 +5,7 @@ import type { Server } from "@/types/workspace";
 //기존 서버 관리용
 interface ServersState {
   servers: Server[];
-  fetchUserServers: (userId: string) => Promise<void>;
-  fetchServersWithNickname: (userId: string) => Promise<void>;
+  fetchAllUserServers: (userId: string) => Promise<void>;
   addServer: (server: Server) => Promise<void>;
   updateServer: (server: Server) => Promise<void>;
   deleteServer: (serverId: string) => Promise<void>;
@@ -50,11 +49,10 @@ export const useJoinServer = create<JoinServerState>(() => ({
               user_id: userId,
               joined_at: new Date().toISOString(),
               is_active: true,
-              role: "member",
+              role: "participant",
             },
           ]);
           if (insertError) throw insertError;
-          console.log("✅ 새 멤버 입장 처리 완료");
         } 
     } catch(err) {
       console.error("🚨 서버 입장 실패:", err);
@@ -66,24 +64,29 @@ export const useJoinServer = create<JoinServerState>(() => ({
 export const useServers = create<ServersState>((set) => ({
   servers: [],
 
-  fetchUserServers: async (userId: string) => {
-    try{
-      const { data: hostServers, error: hostError } = await supabase
-        .from("servers")
-        .select("*")
-        .eq("host", userId);
-      if (hostError) throw hostError;
+  fetchAllUserServers: async (userId: string) => {
+  try {
+    // 1. 사용자가 호스트인 서버 가져오기
+    const { data: hostServers, error: hostError } = await supabase
+      .from("servers")
+      .select("*")
+      .eq("host", userId);
 
-      const { data: memberships, error: memberError } = await supabase
-        .from("server_members")
-        .select("server_id")
-        .eq("user_id", userId)
-        .eq("is_active", true);
-      if (memberError) throw memberError;
+    if (hostError) throw hostError;
 
-      const memberServerIds = memberships?.map((m) => m.server_id) || [];
+    // 2. 사용자가 멤버로 참여 중인 서버 ID 가져오기
+    const { data: memberships, error: memberError } = await supabase
+      .from("server_members")
+      .select("server_id")
+      .eq("user_id", userId)
+      .eq("is_active", true);
 
-      const { data: memberServers, error: memberServersError } = await supabase
+    if (memberError) throw memberError;
+
+    const memberServerIds = memberships?.map((m) => m.server_id) || [];
+
+    // 3. 멤버 서버 정보 가져오기 (호스트 서버는 제외)
+    const { data: memberServers, error: memberServersError } = await supabase
       .from("servers")
       .select("*")
       .in("id", memberServerIds)
@@ -91,59 +94,15 @@ export const useServers = create<ServersState>((set) => ({
 
     if (memberServersError) throw memberServersError;
 
+    // 4. 호스트 서버 + 멤버 서버 합치기
     const allServers = [...(hostServers || []), ...(memberServers || [])];
 
     set({ servers: allServers });
-    } catch (err) {
-      console.error("서버 불러오기 실패: ", err);
-      set({ servers: []});
-    }
-  },
-
-  fetchServersWithNickname: async (userId: string) => {
-    const { data: memberships, error: memberError } = await supabase
-      .from("server_members")
-      .select("server_id")
-      .eq("user_id", userId);
-
-    if (memberError || !memberships?.length) {
-      console.error("서버 멤버 불러오기 실패:", memberError);
-      set({ servers: [] });
-      return;
-    }
-
-    const serverIds = memberships.map((m) => m.server_id);
-
-    const { data: servers, error: serverError } = await supabase
-      .from("servers")
-      .select("*")
-      .in("id", serverIds);
-
-    if (serverError || !servers) {
-      console.error("서버 불러오기 실패:", serverError);
-      return;
-    }
-
-    const hostIds = servers.map((s) => s.host);
-    const { data: profiles, error: profileError } = await supabase
-      .from("profile")
-      .select("id, nickname")
-      .in("id", hostIds);
-
-    if (profileError) {
-      console.error("프로필 불러오기 실패:", profileError);
-      set({ servers });
-      return;
-    }
-
-    const nicknameMap = new Map(profiles.map((p) => [p.id, p.nickname]));
-    const mapped = servers.map((s) => ({
-      ...s,
-      host_nickname: nicknameMap.get(s.host) ?? "-",
-    }));
-
-    set({ servers: mapped });
-  },
+  } catch (err) {
+    console.error("서버 불러오기 실패:", err);
+    set({ servers: [] });
+  }
+},
 
   addServer: async (server) => {
         const { data: profile } = await supabase

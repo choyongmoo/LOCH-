@@ -17,12 +17,16 @@ export const useUserStore = create<UserState & { logout: () => Promise<void> }> 
     setUser: (user) => set({ user }),
 
     logout: async () => {
+        const user = get().user;
         const { error } = await supabase.auth.signOut();
-        if(error) {
+        if (error) {
             console.error(error);
             return;
         }
-        set ({ user: null });
+        if (user?.id) {
+            localStorage.removeItem(`recentPages_${user.id}`);
+        }
+        set({ user: null });
         window.location.href = "/";
     },
     

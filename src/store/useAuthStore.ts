@@ -1,15 +1,19 @@
 import { create } from "zustand";
+import { supabase } from "@/lib/supabase";
 
 interface AuthState {
-    userId?: string;
-    email?: string;
-    logout: () => void;
-    setUser: (id: string, email: string) => void;
+  user: any;
+  setUser: (user: any) => void;
+
+  updatePassword: (newPassword: string) => Promise<{ data?: any; error?: any }>;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-    userId: undefined,
-    email: undefined,
-    logout: () => set({ userId: undefined, email: undefined }),
-    setUser: (id, email) => set({ userId: id, email }),
+  user: null,
+  setUser: (user) => set({ user }),
+
+  updatePassword: async (newPassword: string) => {
+    const { data, error } = await supabase.auth.updateUser({ password: newPassword });
+    return { data, error };
+  },
 }));

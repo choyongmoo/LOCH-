@@ -6,13 +6,13 @@ import { useServers } from "@/store/useServersStore";
 
 export default function ManagerTable() {
     const { user } = useUserStore();
-    const { servers, fetchServersWithNickname } = useServers(); 
+    const { servers, fetchAllUserServers } = useServers(); 
 
     useEffect(() => {
         if (user?.id) {
-            fetchServersWithNickname(user.id); 
+            fetchAllUserServers(user.id); 
         }
-    }, [user?.id, fetchServersWithNickname]);
+    }, [user?.id, fetchAllUserServers]);
 
     return (
         <>

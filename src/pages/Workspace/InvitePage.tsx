@@ -12,7 +12,7 @@ export default function InvitePage() {
   const [error, setError] = useState<string | null>(null);
 
   const { joinServer } = useJoinServer();
-  const fetchUserServers = useServers((state) => state.fetchUserServers);
+  const fetchUserServers = useServers((state) => state.fetchAllUserServers);
 
   const [userId, setUserId] = useState<string | null>(null);
 

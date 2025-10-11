@@ -139,33 +139,34 @@ export default function ServerModal({
         )}
 
         {/* 버튼 섹션 */}
-        <div className="flex justify-end gap-3 mt-6">
+        <div className="flex justify-between gap-3 mt-6">
           <button
             className="px-4 py-2 rounded-md bg-gray-600 hover:bg-gray-500"
             onClick={onClose}
           >
             취소
           </button>
+          <div className="flex gap-2">
+            {isHost ? (
+              <Button
+                onClick={() => onDelete(server.id)}
+                className="bg-red-600 hover:bg-red-700 text-white"
+              >
+                서버 삭제
+              </Button>
+            ) : (
+              <Button
+                onClick={() => onLeaveServer(server.id, currentUserId)}
+                className="bg-gray-700 hover:bg-gray-600 text-white"
+              >
+                서버 나가기
+              </Button>
+            )}
 
-          {isHost ? (
-            <Button
-              onClick={() => onDelete(server.id)}
-              className="bg-red-600 hover:bg-red-700 text-white"
-            >
-              서버 삭제
+            <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+              저장
             </Button>
-          ) : (
-            <Button
-              onClick={() => onLeaveServer(server.id, currentUserId)}
-              className="bg-gray-700 hover:bg-gray-600 text-white"
-            >
-              서버 나가기
-            </Button>
-          )}
-
-          <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-            저장
-          </Button>
+          </div>
         </div>
       </div>
 
