@@ -18,9 +18,11 @@ import { ForgotPassword } from "./pages/Auth/ForgotPassword";
 import DocsDetail from "./pages/Home/Doc/DocsDetail";
 import { Download } from "./pages/Home/Download";
 import { Room } from "./pages/Room";
-import DocsPage from "./pages/Workspace/DocsPage";
 import ManagerPage from "./pages/Workspace/ManagerPage";
 import SettingPage from "./pages/Workspace/SettingPage";
+import ProtectedRoute from "./components/ProtectedRoute";
+import InvitePage from "./pages/Workspace/InvitePage";
+import DocsPage from "./pages/Workspace/DocsPage";
 
 export const Router = () => {
   return (
@@ -44,15 +46,18 @@ export const Router = () => {
         </Route>
 
         {/* Workspace Pages */}
-        <Route path="workspace" element={<WorkspaceLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="home" element={<HomePage />} />
-          <Route path="docs" element={<DocsPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="contact" element={<ContactPage />} />
-          <Route path="friends/requests" element={<FriendRequestPage />} />
-          <Route path="setting" element={<SettingPage />} />
-          <Route path="manager" element={<ManagerPage />} />
+        <Route path="workspace" element={<ProtectedRoute />}>
+          <Route element={<WorkspaceLayout />}>
+            <Route index element={<HomePage />} />
+            <Route path="home" element={<HomePage />} />
+            <Route path="profile" element={<ProfilePage />} />
+            <Route path="setting" element={<SettingPage />} />
+            <Route path="manager" element={<ManagerPage />} />
+            <Route path="contact" element={<ContactPage />} />
+            <Route path="docs" element={<DocsPage />} />
+            <Route path="friend" element={<FriendRequestPage />} />
+            <Route path="invite/:serverId" element={<InvitePage />} />
+          </Route>
         </Route>
 
         {/* LiveKit Pages */}

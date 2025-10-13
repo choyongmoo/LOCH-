@@ -4,6 +4,7 @@ import React from "react";
 import { PartialSummarySheet } from "./PartialSummarySheet";
 import { SummarySheet } from "./SummarySheet";
 import { TranscriptSheet } from "./TranscriptSheet";
+import { useSelectedServerStore } from "@/store/useSelectedServerStore";
 
 type MeetingLog = {
   id: string;
@@ -25,7 +26,6 @@ function formatDate(value: string) {
 }
 
 const DocsPage = () => {
-  const [selectedServerId, setSelectedServerId] = React.useState<string | null>(null);
   const [logs, setLogs] = React.useState<MeetingLog[]>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string | null>(null);
@@ -34,6 +34,8 @@ const DocsPage = () => {
   const [transcriptOpen, setTranscriptOpen] = React.useState<boolean>(false);
   const [activeLog, setActiveLog] = React.useState<MeetingLog | null>(null);
   const [partialOpen, setPartialOpen] = React.useState<boolean>(false);
+  
+  const { selectedServerId, setSelectedServerId } = useSelectedServerStore();
 
   React.useEffect(() => {
     try {

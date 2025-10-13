@@ -1,5 +1,6 @@
 import { Button } from "@/components/common/ui/button";
 import { supabase } from "@/lib/supabase";
+import { useSelectedServerStore } from "@/store/useSelectedServerStore";
 import { Loader2, Video } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
@@ -15,19 +16,13 @@ interface Room {
   user_count: number;
 }
 
-export const MeetingButton = ({ serverId, className }: MeetingButtonProps) => {
+export const MeetingButton = ({ className }: MeetingButtonProps) => {
   const [room, setRoom] = useState<Room | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedServerId, setSelectedServerId] = useState<string | null>(serverId ?? null);
   const navigate = useNavigate();
 
-  // Keep internal selectedServerId in sync with prop, if provided
-  useEffect(() => {
-    if (serverId) {
-      setSelectedServerId(serverId);
-    }
-  }, [serverId]);
+  const { selectedServerId, setSelectedServerId } = useSelectedServerStore();
 
   // Initialize from localStorage and respond to MiniSidebar selections via 'show-participants'
   useEffect(() => {
