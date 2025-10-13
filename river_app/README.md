@@ -1,4 +1,4 @@
-# river_app
+# River App
 
 A new Flutter project.
 
