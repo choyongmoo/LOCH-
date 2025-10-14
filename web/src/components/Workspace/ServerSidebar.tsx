@@ -1,4 +1,3 @@
-// src/components/ServerSidebar.tsx
 import { Power } from "lucide-react";
 import AddGroupButton from "./Buttons/AddGroupButton";
 import { ThemeToggleButton } from "./Buttons/ThemeTogglebutton";
@@ -11,6 +10,7 @@ import { useUserStore } from "@/store/useUserStore";
 import { useServers } from "@/store/useServersStore";
 import { useSelectedServerStore } from "@/store/useSelectedServerStore";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function ServerSidebar() {
   const { currentModal, closeModal } = useModal();
@@ -21,6 +21,8 @@ export default function ServerSidebar() {
 
   const selectedServerId = useSelectedServerStore((state) => state.selectedServerId);
   const setSelectedServerId = useSelectedServerStore((state) => state.setSelectedServerId);
+
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (user?.id) {
@@ -44,7 +46,7 @@ export default function ServerSidebar() {
                   ${isSelected ? "bg-blue-500 text-white" : "bg-gray-700 text-gray-200"}
                 `}
                 title={server.room_name}
-                onClick={() => setSelectedServerId(server.id)}
+                onClick={() => {setSelectedServerId(server.id); navigate("/workspace/home");}}
               >
                 {server.room_name.slice(0, 2)}
               </Button>

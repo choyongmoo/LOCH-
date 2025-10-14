@@ -189,10 +189,7 @@ export const useServers = create<ServersState>((set) => ({
   onLeaveServer: async (serverId, userId) => {
     const { error } = await supabase
       .from("server_members")
-      .update({
-        is_active: false,
-        left_at: new Date().toISOString(),
-      })
+      .delete()
       .eq("server_id", serverId)
       .eq("user_id", userId)
       .eq("is_active", true);
