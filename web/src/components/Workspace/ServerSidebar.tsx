@@ -22,7 +22,6 @@ export default function ServerSidebar() {
   const selectedServerId = useSelectedServerStore((state) => state.selectedServerId);
   const setSelectedServerId = useSelectedServerStore((state) => state.setSelectedServerId);
 
-  // 유저 변경 시 서버 불러오기
   useEffect(() => {
     if (user?.id) {
       void fetchAllUserServers(user.id);
@@ -71,7 +70,7 @@ export default function ServerSidebar() {
         </Button>
       </div>
 
-      {currentModal === "addGroup" && <CreateServerModal close={closeModal} />}
+      {currentModal === "addGroup" && user?.id && (<CreateServerModal close={closeModal} userId={user.id} />)}
       {currentModal === "logout" && (
         <EditModal
           modalType="logout"

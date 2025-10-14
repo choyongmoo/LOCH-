@@ -10,7 +10,7 @@ export function ProfileButton({ className, onClick }: ButtonBaseProps) {
 }
 
 export function SettingButton({ className, onClick }: ButtonBaseProps) {
-  return <MenuButtonBase className={className} onClick={onClick}>설정</MenuButtonBase>;
+  return <MenuButtonBase className={className} onClick={onClick}>카메라 세팅</MenuButtonBase>;
 }
 
 export function ContactButton({ className, onClick }: ButtonBaseProps) {

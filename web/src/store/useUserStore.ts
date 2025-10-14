@@ -8,11 +8,10 @@ interface UserState {
     updateNickname: (nickname: string) => Promise<void>;
     updateBio: (bio: string) => Promise<void>;
     updateAccentColor: (accent_color: string) => Promise<void>;
-    updateCameraLabel: (cameraLabel: string) => Promise<void>;
-    updateMicLabel: (micLabel: string) => Promise<void>;
+    logout: () => Promise<void>;
 }
 
-export const useUserStore = create<UserState & { logout: () => Promise<void> }> ((set, get) => ({
+export const useUserStore = create<UserState> ((set, get) => ({
     user: null,
     setUser: (user) => set({ user }),
 
@@ -73,29 +72,4 @@ export const useUserStore = create<UserState & { logout: () => Promise<void> }> 
         set({ user: { ...user, accent_color } });
     },
 
-    updateCameraLabel: async (cameraLabel: string) => {
-        const user = get().user;
-        if(!user) return;
-
-        const { error } = await supabase
-            .from("profile")
-            .update({ cameraLabel })
-            .eq("id", user.id);
-        if(error) return console.error(error);
-
-        set({ user: { ...user, cameraLabel } });
-    },
-
-    updateMicLabel: async (micLabel: string) => {
-        const user = get().user;
-        if(!user) return;
-
-        const { error } = await supabase
-            .from("profile")
-            .update({ micLabel })
-            .eq("id", user.id);
-        if(error) return console.error(error);
-
-        set({ user: { ...user, micLabel } });
-    },
 }));

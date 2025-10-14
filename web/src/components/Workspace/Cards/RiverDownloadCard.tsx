@@ -28,8 +28,8 @@ export default function RiverDownloadCard() {
                     River를 다운로드 하여 사용해보세요!
                 </p>
 
-                {/* 버튼 (UI만) */}
-                <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-5 py-2 mb-2">
+                {/* 버튼 */}
+                <button className="bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg px-5 py-2 mb-2" onClick={() => window.open("/download", "_blank")}>
                     River 다운로드
                 </button>
             </div>

@@ -34,7 +34,7 @@ export interface Profile {
   accent_color?: string;
   created_at?: string;
   updated_at?: string;
-  providers?: string[];
+  
   // UI용 필드
   cameraLabel?: string;
   micLabel?: string;

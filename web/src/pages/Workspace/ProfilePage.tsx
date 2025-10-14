@@ -18,7 +18,7 @@ import ProfileHeader from "@/components/Workspace/Profile/ProfileHeader";
 import ProfileRow from "@/components/Workspace/Profile/ProfileRow";
 import ProfileSection from "@/components/Workspace/Profile/ProfileSection";
 import { useUserStore } from "@/store/useUserStore";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useModal } from "@/store/useModalStore";
 import { useMicrophone } from "@/components/Workspace/hooks/useMicrophone";
 import { useDeleteAccount } from "@/components/Workspace/hooks/useDeleteAccount";
@@ -35,15 +35,43 @@ export default function ProfilePage() {
   const deleteAccount = useDeleteAccount();
   const { devices, selectedDeviceId, selectDevice } = useMicrophone();
   const [tempDeviceId, setTempDeviceId] = useState<string | undefined>(selectedDeviceId);
+  const [isEmail, setIsEmail] = useState<boolean>(false);
 
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewAccent_color(e.target.value);
   };
 
+  useEffect(() => {
+  if (!user) return;
+
+  const checkProvider = async () => {
+    try {
+      const res = await fetch("https://ddkrmsyxgkxgrxpzuyau.functions.supabase.co/get-user-provider", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: user.id }),
+      });
+
+      const data = await res.json();
+
+      let providers: string[] = [];
+      if (data.providers && Array.isArray(data.providers)) {
+        providers = data.providers;
+      }
+
+      setIsEmail(providers.length === 0 || providers.includes("email")); 
+    } catch (err) {
+      console.error("프로바이더 확인 실패", err);
+      setIsEmail(true);
+    }
+  };
+
+  checkProvider();
+}, [user]);
+
   if (!user) return <div>Loading...</div>;
 
   const actionButtonClass = "text-blue-600 dark:text-blue-400 text-sm hover:underline px-2";
-  const isEmailProvider = (user.providers ?? []).includes("email");
 
   return (
     <div className="h-screen w-full flex flex-col bg-[#f8fafc] dark:bg-[#18191c]">
@@ -111,8 +139,8 @@ export default function ProfilePage() {
           />
           <ProfileRow
             label="비밀번호 변경"
-            value={isEmailProvider ? "비밀번호를 변경할 수 있습니다" : "소셜 계정은 비밀번호 변경 불가"}
-            action={<EditPWButton className={actionButtonClass} disabled={!isEmailProvider} />}
+            value={isEmail? "비밀번호를 변경할 수 있습니다" : "소셜 로그인 계정은 비밀번호를 변경할 수 없습니다"}
+            action={<EditPWButton className={actionButtonClass} disabled={!isEmail}/>}
           />
           <ProfileRow
             label="로그아웃"
@@ -197,7 +225,7 @@ export default function ProfilePage() {
         }}
         confirmLabel="변경"
       >
-        <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="새 비밀번호" className="w-full" disabled={!isEmailProvider} />
+        <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="새 비밀번호" className="w-full" />
       </EditModal>
 
       <EditModal modalType="logout" title="로그아웃" description="현재 계정에서 로그아웃 하시겠습니까?" 

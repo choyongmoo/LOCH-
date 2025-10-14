@@ -20,45 +20,70 @@ interface JoinServerState {
 //서버 참가
 export const useJoinServer = create<JoinServerState>(() => ({
   joinServer: async (serverId, userId) => {
-    try{
+    try {
+      // 1. 서버 정보 가져오기
+      const { data: server, error: serverError } = await supabase
+        .from("servers")
+        .select("max_participants")
+        .eq("id", serverId)
+        .maybeSingle();
+      if (serverError || !server) throw serverError ?? new Error("서버 정보를 가져올 수 없습니다.");
+
+      // 2. 현재 참여자 수 확인
+      const { data: members, error: membersError } = await supabase
+        .from("server_members")
+        .select("*")
+        .eq("server_id", serverId)
+        .eq("is_active", true);
+      if (membersError) throw membersError;
+
+      const currentCount = members?.length ?? 0;
+
+      // 3. 최대 인원 체크
+      if (currentCount >= server.max_participants) {
+        alert("서버 인원이 꽉 찼습니다.");
+        return;
+      }
+
+      // 4. 기존 join 로직
       const { data: existing, error: fetchError } = await supabase
         .from("server_members")
         .select("*")
         .eq("server_id", serverId)
         .eq("user_id", userId)
         .maybeSingle();
+      if (fetchError) throw fetchError;
 
-        if (fetchError) throw fetchError;
+      if (existing) {
+        const { error: updateError } = await supabase
+          .from("server_members")
+          .update({
+            is_active: true,
+            left_at: null,
+            joined_at: new Date().toISOString(),
+          })
+          .eq("server_id", serverId)
+          .eq("user_id", userId);
 
-        if (existing) {
-          const { error: updateError } = await supabase
-            .from("server_members")
-            .update({
-              is_active: true,
-              left_at: null,
-              joined_at: new Date().toISOString(),
-            })
-            .eq("server_id", serverId)
-            .eq("user_id", userId)
-
-            if (updateError) throw updateError;
-        } else {
-          const{ error: insertError } = await supabase.from("server_members").insert([
-            {
-              server_id: serverId,
-              user_id: userId,
-              joined_at: new Date().toISOString(),
-              is_active: true,
-              role: "participant",
-            },
-          ]);
-          if (insertError) throw insertError;
-        } 
-    } catch(err) {
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase.from("server_members").insert([
+          {
+            server_id: serverId,
+            user_id: userId,
+            joined_at: new Date().toISOString(),
+            is_active: true,
+            role: "participant",
+          },
+        ]);
+        if (insertError) throw insertError;
+      }
+    } catch (err) {
       console.error("🚨 서버 입장 실패:", err);
     }
   },
-}))
+}));
+
 
 //기존 서버 관리용
 export const useServers = create<ServersState>((set) => ({
@@ -168,8 +193,8 @@ export const useServers = create<ServersState>((set) => ({
         is_active: false,
         left_at: new Date().toISOString(),
       })
-      .eq("server_Id", serverId)
-      .eq("user_Id", userId)
+      .eq("server_id", serverId)
+      .eq("user_id", userId)
       .eq("is_active", true);
 
       if (error) throw error;
