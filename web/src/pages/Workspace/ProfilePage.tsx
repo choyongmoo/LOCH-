@@ -23,6 +23,7 @@ import { useModal } from "@/store/useModalStore";
 import { useMicrophone } from "@/components/Workspace/hooks/useMicrophone";
 import { useDeleteAccount } from "@/components/Workspace/hooks/useDeleteAccount";
 import { useAuthStore } from "@/store/useAuthStore";
+import { Mic } from "lucide-react";
 
 export default function ProfilePage() {
   const user = useUserStore((state) => state.user);
@@ -33,41 +34,67 @@ export default function ProfilePage() {
   const closeModal = useModal((state) => state.closeModal);
   const logout = useUserStore((state) => state.logout);
   const deleteAccount = useDeleteAccount();
-  const { devices, selectedDeviceId, selectDevice } = useMicrophone();
+  const { devices, selectedDeviceId, selectDevice, startTest, stopTest, isTesting, canvasRef } = useMicrophone();
   const [tempDeviceId, setTempDeviceId] = useState<string | undefined>(selectedDeviceId);
   const [isEmail, setIsEmail] = useState<boolean>(false);
+  const [cameraLabel, setCameraLabel] = useState<string>("설정되지 않음");
 
+  const [selectedCameraId, setSelectedCameraId] = useState<string | undefined>(() => {
+    return localStorage.getItem("selectedCameraId") || undefined;
+  });
+  const [tempCameraId, setTempCameraId] = useState<string | undefined>(selectedCameraId);
+  const [_tempCameraName, setTempCameraName] = useState<string>(cameraLabel);
+  const [cameraDevices, setCameraDevices] = useState<MediaDeviceInfo[]>([]);
+  
   const handleColorChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setNewAccent_color(e.target.value);
   };
 
   useEffect(() => {
-  if (!user) return;
+    if (!user) return;
 
-  const checkProvider = async () => {
-    try {
-      const res = await fetch("https://ddkrmsyxgkxgrxpzuyau.functions.supabase.co/get-user-provider", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ userId: user.id }),
-      });
+    const checkProvider = async () => {
+      try {
+        const res = await fetch("https://ddkrmsyxgkxgrxpzuyau.functions.supabase.co/get-user-provider", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id }),
+        });
 
-      const data = await res.json();
+        const data = await res.json();
 
-      let providers: string[] = [];
-      if (data.providers && Array.isArray(data.providers)) {
-        providers = data.providers;
+        let providers: string[] = [];
+        if (data.providers && Array.isArray(data.providers)) {
+          providers = data.providers;
+        }
+
+        setIsEmail(providers.length === 0 || providers.includes("email")); 
+      } catch (err) {
+        console.error("프로바이더 확인 실패", err);
+        setIsEmail(true);
       }
+    };
 
-      setIsEmail(providers.length === 0 || providers.includes("email")); 
-    } catch (err) {
-      console.error("프로바이더 확인 실패", err);
-      setIsEmail(true);
-    }
-  };
+    checkProvider();
+  }, [user]);
 
-  checkProvider();
-}, [user]);
+  useEffect(() => {
+    const loadCameraDevices = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        setCameraDevices(devices.filter(d => d.kind === "videoinput"));
+
+        if (selectedCameraId) {
+          const cam = devices.find(d => d.deviceId === selectedCameraId);
+          setCameraLabel(cam?.label || "알 수 없는 카메라");
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    loadCameraDevices();
+  }, [selectedCameraId]);
 
   if (!user) return <div>Loading...</div>;
 
@@ -110,7 +137,7 @@ export default function ProfilePage() {
           />
           <ProfileRow
             label="카메라"
-            value={user.cameraLabel ?? "설정되지 않음"}
+            value={cameraLabel}
             action={
               <>
                 <CameraTestButton className={actionButtonClass} />
@@ -192,8 +219,76 @@ export default function ProfilePage() {
         </div>
       </EditModal>
 
-      <EditModal modalType="editCamera" title="카메라 변경" description="사용할 카메라를 선택하세요." onConfirm={() => {}} confirmLabel="변경"/>
-      <EditModal modalType="micTest" title="마이크 테스트" description="마이크를 테스트하세요." />
+      <EditModal modalType="editCamera" title="카메라 변경" description="사용할 카메라를 선택하세요." confirmLabel="변경" onConfirm={() => {
+          if (tempCameraId) {
+            setSelectedCameraId(tempCameraId);
+            const cam = cameraDevices.find(d => d.deviceId === tempCameraId);
+            setCameraLabel(cam?.label || "알 수 없는 카메라");
+            localStorage.setItem("selectedCameraId", tempCameraId);
+            closeModal();
+          }
+        }}
+      >
+        <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+          {cameraDevices.length === 0 && <p>사용 가능한 카메라가 없습니다.</p>}
+          {cameraDevices.map((cam) => (
+            <button
+              key={cam.deviceId}
+              className={`px-3 py-2 border rounded text-left ${
+                cam.deviceId === tempCameraId
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 dark:bg-[#23242e] text-gray-800 dark:text-gray-200"
+              }`}
+              onClick={() => {
+                setTempCameraId(cam.deviceId);
+                setTempCameraName(cam.label);
+              }}
+            >
+              {cam.label || "알 수 없는 카메라"}
+            </button>
+          ))}
+        </div>
+      </EditModal>
+
+      <EditModal
+        modalType="micTest"
+        title="마이크 테스트"
+        description="마이크를 테스트하세요."
+        confirmLabel="닫기"
+        onConfirm={() => {
+          if (isTesting) stopTest();
+          closeModal();
+        }}
+      >
+        {/* 컨트롤 영역 */}
+          <div className="flex justify-end gap-2">
+            <button
+              className={`px-3 py-1 border rounded ${isTesting ? "bg-blue-500 text-white" : ""}`}
+              onClick={() => isTesting ? stopTest() : startTest(selectedDeviceId)}
+            >
+              {isTesting ? "중지" : "시작"}
+            </button>
+          </div>
+        <div className="flex flex-col gap-4">
+          {/* 볼륨 표시 영역 */}
+          <div className="rounded-xl border border-blue-200 dark:border-blue-900 bg-white dark:bg-[#111827] p-4 flex flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <Mic className="text-gray-500 dark:text-gray-300" size={18} />
+              <div className="flex-1 h-6 md:h-7 rounded-full bg-blue-100 dark:bg-blue-950/50 overflow-hidden">
+                <canvas ref={canvasRef} className="w-full h-full block" />
+              </div>
+            </div>
+            <div className="text-xs text-gray-600 dark:text-gray-300">
+              장치: {devices.find(d => d.deviceId === selectedDeviceId)?.label || "장치를 선택하세요"}
+            </div>
+
+            <div className="text-xs text-gray-500 dark:text-gray-400">
+              {isTesting ? "마이크 테스트 중..." : "마이크를 테스트 해보세요!"}
+            </div>
+          </div>
+        </div>
+      </EditModal>
+
       <EditModal modalType="editMic" title="마이크 설정" description="사용할 마이크를 선택하세요." confirmLabel="변경" onConfirm={() => { if (tempDeviceId) selectDevice(tempDeviceId); closeModal(); }} >
         <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
           {devices.length === 0 && <p>사용 가능한 마이크가 없습니다.</p>}
