@@ -35,51 +35,7 @@ const DocsPage = () => {
   const [activeLog, setActiveLog] = React.useState<MeetingLog | null>(null);
   const [partialOpen, setPartialOpen] = React.useState<boolean>(false);
   
-  const { selectedServerId, setSelectedServerId } = useSelectedServerStore();
-
-  React.useEffect(() => {
-    try {
-      const raw = localStorage.getItem("home:selectedMeeting");
-      if (raw) {
-        const parsed = JSON.parse(raw) as { meetingId?: string } | null;
-        setSelectedServerId(parsed?.meetingId ?? null);
-      } else {
-        setSelectedServerId(null);
-      }
-    } catch {
-      setSelectedServerId(null);
-    }
-
-    const handleShowParticipants = (e: Event) => {
-      try {
-        const ce = e as CustomEvent<{ meetingId?: string }>;
-        const id = ce.detail?.meetingId ?? "";
-        setSelectedServerId(id || null);
-      } catch {
-        /* ignore */
-      }
-    };
-
-    const handleMeetingsUpdated = () => {
-      // Re-read in case selection or data changed
-      try {
-        const raw2 = localStorage.getItem("home:selectedMeeting");
-        if (raw2) {
-          const parsed2 = JSON.parse(raw2) as { meetingId?: string } | null;
-          setSelectedServerId(parsed2?.meetingId ?? null);
-        }
-      } catch {
-        /* ignore */
-      }
-    };
-
-    window.addEventListener("show-participants", handleShowParticipants as EventListener);
-    window.addEventListener("meetings-updated", handleMeetingsUpdated as EventListener);
-    return () => {
-      window.removeEventListener("show-participants", handleShowParticipants as EventListener);
-      window.removeEventListener("meetings-updated", handleMeetingsUpdated as EventListener);
-    };
-  }, []);
+  const { selectedServerId } = useSelectedServerStore();
 
   const loadLogs = React.useCallback(async (serverId: string) => {
     setLoading(true);

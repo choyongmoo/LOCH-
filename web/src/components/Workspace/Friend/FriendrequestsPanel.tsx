@@ -5,7 +5,7 @@ import FriendRequestList from "./FriendRequestList";
 
 export default function FriendRequestsPanel() {
   const currentUser = useUserStore((state) => state.user);
-  const { requests, fetchFriendRequests, respondFriendRequest, setRequests } = useFriendStore();
+  const { requests, fetchFriendRequests, respondFriendRequest, setRequests, deleteFriendRequest } = useFriendStore();
   const pendingRequests = requests.filter(req => req.status === "pending");
 
   useEffect(() => {
@@ -21,7 +21,7 @@ export default function FriendRequestsPanel() {
           setRequests(requests.filter(r => r.id !== req.id));
         },
         reject: () => {
-          respondFriendRequest(req.id, "declined");
+          deleteFriendRequest(req.id);
           setRequests(requests.filter(r => r.id !== req.id));
         },
       }))}
