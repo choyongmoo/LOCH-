@@ -22,36 +22,7 @@ export const MeetingButton = ({ className }: MeetingButtonProps) => {
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
-  const { selectedServerId, setSelectedServerId } = useSelectedServerStore();
-
-  // Initialize from localStorage and respond to MiniSidebar selections via 'show-participants'
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("home:selectedMeeting");
-      if (raw) {
-        const parsed = JSON.parse(raw) as { meetingId?: string } | null;
-        setSelectedServerId(parsed?.meetingId ?? null);
-      } else {
-        setSelectedServerId(null);
-      }
-    } catch {
-      setSelectedServerId(null);
-    }
-
-    const handleShowParticipants = (e: Event) => {
-      try {
-        const ce = e as CustomEvent<{ meetingId?: string }>;
-        const id = ce.detail?.meetingId ?? "";
-        setSelectedServerId(id || null);
-      } catch {
-        /* ignore */
-      }
-    };
-
-    window.addEventListener("show-participants", handleShowParticipants as EventListener);
-    return () =>
-      window.removeEventListener("show-participants", handleShowParticipants as EventListener);
-  }, []);
+  const { selectedServerId } = useSelectedServerStore();
 
   useEffect(() => {
     // If there is no selected server, clear state and stop loading
@@ -111,10 +82,8 @@ export const MeetingButton = ({ className }: MeetingButtonProps) => {
     }
   };
 
-  const hasSelection = !!selectedServerId;
-
   let meetingAction: ReactNode;
-  if (!hasSelection) {
+  if (!selectedServerId) {
     meetingAction = (
       <Button disabled variant="outline" size="lg" className={className ?? "w-full text-1xl"}>
         서버를 선택해 주세요
@@ -151,13 +120,13 @@ export const MeetingButton = ({ className }: MeetingButtonProps) => {
           variant="outline"
           className="w-full"
           onClick={() => {
-            if (hasSelection) {
-              navigate("/workspace/docs");
+            if (selectedServerId) {
+              navigate(`/workspace/docs`);
             }
           }}
-          disabled={!hasSelection}
+          disabled={!selectedServerId}
         >
-          {hasSelection ? "회의 내역" : "서버를 선택해 주세요"}
+          {selectedServerId ? "회의 내역" : "서버를 선택해 주세요"}
         </Button>
       </div>
     </div>
