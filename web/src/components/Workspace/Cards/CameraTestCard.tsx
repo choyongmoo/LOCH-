@@ -2,14 +2,31 @@ import { useModal } from "@/store/useModalStore";
 import { Camera } from "lucide-react";
 import { useNavigate } from "react-router";
 import EditModal from "../Modals/EditModal";
+import { useState, useEffect } from "react";
+import { useCameraDevices } from "../hooks/useCameraDevices";
 
 export default function CameraTestCard() {
-  const navigate =useNavigate();
-  const cameraDeviceName = "기본 카메라";
+  const navigate = useNavigate();
   const { openModal } = useModal();
+
+  const [selectedCameraId, setSelectedCameraId] = useState<string | undefined>(() => {
+    return localStorage.getItem("selectedCameraId") || undefined;
+  });
+
+  const [cameraDeviceName, setCameraDeviceName] = useState("장치를 선택하세요");
+
+  const cameras = useCameraDevices();
+
+  useEffect(() => {
+    if (selectedCameraId) {
+      const cam = cameras.find(c => c.deviceId === selectedCameraId);
+      if (cam) setCameraDeviceName(cam.label);
+    }
+  }, [selectedCameraId, cameras]);
 
   return (
     <div className="bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-6 flex flex-col relative h-40 md:h-48 overflow-hidden">
+      
       {/* 상단 컨트롤 바 */}
       <div className="absolute top-3 left-3 right-3 flex items-center justify-between gap-2 z-10">
         <button 
@@ -31,7 +48,38 @@ export default function CameraTestCard() {
           {cameraDeviceName}
         </span>
       </div>
-      <EditModal modalType="editCamera" title="카메라 변경" description="사용할 카메라를 선택하세요." onConfirm={() => {}} confirmLabel="변경"/>
+
+      {/* 장치 변경 모달 */}
+      <EditModal
+        modalType="editCamera"
+        title="카메라 변경"
+        description="사용할 카메라를 선택하세요."
+        confirmLabel="변경"
+        onConfirm={() => {}}
+      >
+        <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+          {cameras.length === 0 && (
+            <p className="text-sm text-gray-500">사용 가능한 카메라가 없습니다.</p>
+          )}
+          {cameras.map((camera) => (
+            <button
+              key={camera.deviceId}
+              className={`px-3 py-2 border rounded text-left ${
+                camera.deviceId === selectedCameraId
+                  ? "bg-blue-500 text-white"
+                  : "bg-gray-100 dark:bg-[#23242e] text-gray-800 dark:text-gray-200"
+              }`}
+              onClick={() => {
+                setSelectedCameraId(camera.deviceId);
+                setCameraDeviceName(camera.label);
+                localStorage.setItem("selectedCameraId", camera.deviceId);
+              }}
+            >
+              {camera.label || "알 수 없는 카메라"}
+            </button>
+          ))}
+        </div>
+      </EditModal>
     </div>
   );
 }
