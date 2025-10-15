@@ -85,7 +85,7 @@ export default function FriendsCard() {
                             className="flex items-center gap-3 w-full text-left rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-[#23242e] transition"
                         >
                             <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold"
+                            className="w-10 h-10 rounded-[10px] flex items-center justify-center text-white font-bold"
                             style={{ backgroundColor: friend.accent_color || "#7e22ce" }}
                             >
                                 {getInitials(friend.nickname)}

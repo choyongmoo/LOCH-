@@ -25,7 +25,6 @@ export default function ParticipantsCard({
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
         참여자 목록
       </h2>
-
       {isLoading ? (
         <div className="flex flex-col gap-3">
           {[1, 2, 3].map((i) => (
@@ -46,18 +45,19 @@ export default function ParticipantsCard({
           >
             {participants.map((p) => {
               const initials = getInitials(p.nickname || p.user_id);
+              console.log("accent_color for", p.nickname || p.user_id, ":", p.accent_color);
               return (
                 <li
                   key={p.id}
                   className="flex items-center gap-3 bg-gray-50 dark:bg-[#1f2126] p-2 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-[#2a2d31] transition"
                 >
                   <div
-                    className="w-10 h-10 rounded-xl text-white flex items-center justify-center font-semibold text-sm uppercase shrink-0"
-                    style={{ backgroundColor: p.accent_color || "#7e22ce" }}
+                    className="w-10 h-10 rounded-[10px] text-white flex items-center justify-center font-semibold text-sm uppercase shrink-0"
+                    style={{ backgroundColor: p.accent_color }}
                   >
                     {initials}
                   </div>
-                  <span className="text-sm text-gray-700 dark:text-gray-300 truncate">
+                  <span className="text-gray-800 dark:text-white truncate">
                     {p.nickname || `참여자 ${p.user_id.slice(0, 6)}`}
                   </span>
                 </li>

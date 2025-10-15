@@ -114,7 +114,7 @@ export function useServerDetail(selectedServerId?: string | null, servers: Serve
               user_id: m.user_id,
               nickname: p?.nickname ?? "",
               email: p?.email ?? "",
-              accent_color: p?.accent_color ?? "#3b82f6",
+              accent_color: p?.accent_color ?? "#7e22ce",
             };
           });
 
