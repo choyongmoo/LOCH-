@@ -7,31 +7,30 @@ async function summarizeText(text) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${apiKey}`,
+      Authorization: `Bearer ${apiKey}`
     },
     body: JSON.stringify({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       temperature: 0.2,
       max_tokens: 400,
       messages: [
         {
           role: "system",
-          content:
-            "You are a precise meeting summarizer. \
+          content: "You are a precise meeting summarizer. \
             Your task is to produce a clear summary of meeting transcripts. \
             Follow these rules strictly:\n \
             - Output 3–7 concise bullet points.\n \
             - Include key decisions and action items.\n \
             - Be objective and avoid speculation.\n \
             - Write in the same language as the transcript. \
-            If multiple languages are used, default to Korean.",
+            If multiple languages are used, default to Korean."
         },
         {
           role: "user",
-          content: `Summarize the following transcript:\n\n${text}`,
-        },
-      ],
-    }),
+          content: `Summarize the following transcript:\n\n${text}`
+        }
+      ]
+    })
   });
   if (!res.ok) {
     const errText = await res.text();
@@ -41,63 +40,54 @@ async function summarizeText(text) {
   const content = data?.choices?.[0]?.message?.content ?? "";
   return String(content).trim();
 }
-Deno.serve(async (req) => {
+Deno.serve(async (req)=>{
   const origin = req.headers.get("origin") ?? "*";
   const corsHeaders = {
     "Access-Control-Allow-Origin": origin,
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-    Vary: "Origin",
+    Vary: "Origin"
   };
   if (req.method === "OPTIONS") {
     return new Response(null, {
       status: 204,
-      headers: corsHeaders,
+      headers: corsHeaders
     });
   }
   try {
-    const { text } = await req.json().catch(() => ({}));
+    const { text } = await req.json().catch(()=>({}));
     const plain = (typeof text === "string" ? text : "").trim();
     if (!plain) {
-      return new Response(
-        JSON.stringify({
-          summary: "요약할 텍스트가 없습니다.",
-        }),
-        {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            ...corsHeaders,
-          },
-        }
-      );
-    }
-    const summary = await summarizeText(plain);
-    return new Response(
-      JSON.stringify({
-        summary,
-      }),
-      {
+      return new Response(JSON.stringify({
+        summary: "요약할 텍스트가 없습니다."
+      }), {
         status: 200,
         headers: {
           "Content-Type": "application/json",
-          ...corsHeaders,
-        },
+          ...corsHeaders
+        }
+      });
+    }
+    const summary = await summarizeText(plain);
+    return new Response(JSON.stringify({
+      summary
+    }), {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders
       }
-    );
+    });
   } catch (err) {
-    return new Response(
-      JSON.stringify({
-        error: err.message ?? String(err),
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          ...corsHeaders,
-        },
+    return new Response(JSON.stringify({
+      error: err.message ?? String(err)
+    }), {
+      status: 500,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders
       }
-    );
+    });
   }
 });

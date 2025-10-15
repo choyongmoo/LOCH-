@@ -19,6 +19,7 @@ from livekit.agents import (
     RoomOutputOptions,
     StopResponse,
     WorkerOptions,
+    WorkerPermissions,
     cli,
     llm,
     utils,
@@ -43,7 +44,7 @@ async def summarize_transcript(transcript_context: str) -> str:
         return ""
 
     response = await _openai_client.chat.completions.create(
-        model="gpt-5",
+        model="gpt-4o",
         temperature=0.2,
         max_completion_tokens=400,
         messages=[
@@ -249,4 +250,14 @@ def prewarm(proc: JobProcess):
 
 
 if __name__ == "__main__":
-    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm))
+    cli.run_app(
+        WorkerOptions(
+            entrypoint_fnc=entrypoint,
+            prewarm_fnc=prewarm,
+            permissions=WorkerPermissions(
+                hidden=True,
+                can_publish=False,
+                can_publish_data=False
+            )
+        )
+    )
