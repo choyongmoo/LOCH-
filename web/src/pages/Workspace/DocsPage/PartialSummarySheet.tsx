@@ -33,12 +33,58 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
   const [summary, setSummary] = React.useState<string>("");
   const [isSummarizing, setIsSummarizing] = React.useState<boolean>(false);
 
+  const storageKey = React.useMemo(() => (log?.id ? `partial-summary:${log.id}` : null), [log?.id]);
+
   React.useEffect(() => {
     if (!log?.id) return;
+    try {
+      if (typeof window !== "undefined" && storageKey) {
+        const raw = localStorage.getItem(storageKey);
+        if (raw) {
+          const data = JSON.parse(raw) as {
+            startText?: string;
+            endText?: string;
+            summary?: string;
+          };
+          setStartText(data.startText ?? "0");
+          setEndText(data.endText ?? formatSeconds(total));
+          setSummary(data.summary ?? "");
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Failed to load partial summary from localStorage", e);
+    }
     setStartText("0");
-    setEndText(String(Math.floor(total)));
+    setEndText(formatSeconds(total));
     setSummary("");
-  }, [log?.id, total]);
+  }, [log?.id, total, storageKey]);
+
+  const handleDownload = React.useCallback(() => {
+    const s = summary?.trim();
+    if (!s) return;
+    const content = [
+      "부분 요약",
+      `로그 ID: ${log?.id ?? "-"}`,
+      `시간 구간: ${startText} ~ ${endText}`,
+      "",
+      s,
+    ].join("\n");
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const safeId = String(log?.id ?? "unknown");
+    const fileName = `partial-summary-${safeId}-${startText}-${endText}.txt`.replace(
+      /[^a-zA-Z0-9._-]+/g,
+      "_"
+    );
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }, [summary, log?.id, startText, endText]);
 
   const doSummarize = async () => {
     try {
@@ -82,7 +128,24 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
         body: { text },
       });
 
-      setSummary(result.data?.summary || result.error?.message || "요약 중 오류가 발생했습니다.");
+      const finalSummary =
+        result.data?.summary || result.error?.message || "요약 중 오류가 발생했습니다.";
+      setSummary(finalSummary);
+
+      // Save only when summarization completes
+      try {
+        if (typeof window !== "undefined" && storageKey) {
+          const payload = JSON.stringify({
+            startText,
+            endText,
+            summary: finalSummary,
+            updatedAt: Date.now(),
+          });
+          localStorage.setItem(storageKey, payload);
+        }
+      } catch (e) {
+        console.warn("Failed to save partial summary to localStorage", e);
+      }
     } catch (e) {
       setSummary((e as { message?: string })?.message || "요약 중 오류가 발생했습니다.");
     } finally {
@@ -143,6 +206,9 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
             <div className="whitespace-pre-wrap text-sm leading-6 text-gray-900 dark:text-gray-100">
               {summary || "구간을 선택하고 요약을 실행하세요."}
             </div>
+            <Button size="sm" variant="outline" onClick={handleDownload} disabled={!summary}>
+              다운로드
+            </Button>
             <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-4">
               선택 구간 대화
             </div>

@@ -45,7 +45,7 @@ async def summarize_transcript(transcript_context: str) -> str:
     response = await _openai_client.chat.completions.create(
         model="gpt-5",
         temperature=0.2,
-        max_completeion_tokens=400,
+        max_completion_tokens=400,
         messages=[
             {
                 "role": "system",
