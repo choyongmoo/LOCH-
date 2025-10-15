@@ -72,9 +72,21 @@ serve(async (req)=>{
         }
       });
     }
+    const { data: profile, error: profileErr } = await supabase.from("profile").select("id, nickname").eq("id", user.id).single();
+    if (profileErr || !profile.nickname) {
+      return new Response(JSON.stringify({
+        error: "Profile not found"
+      }), {
+        status: 404,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json"
+        }
+      });
+    }
     const at = new AccessToken(Deno.env.get("LIVEKIT_API_KEY"), Deno.env.get("LIVEKIT_API_SECRET"), {
       identity: user.id,
-      name: user.email
+      name: profile.nickname
     });
     at.addGrant({
       roomJoin: true,
