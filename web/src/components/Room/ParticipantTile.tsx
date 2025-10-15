@@ -24,17 +24,6 @@ import { Track } from "livekit-client";
 import { ScreenShareIcon } from "lucide-react";
 import * as React from "react";
 
-/**
- * The `ParticipantContextIfNeeded` component only creates a `ParticipantContext`
- * if there is no `ParticipantContext` already.
- * @example
- * ```tsx
- * <ParticipantContextIfNeeded participant={trackReference.participant}>
- *  ...
- * </ParticipantContextIfNeeded>
- * ```
- * @public
- */
 export function ParticipantContextIfNeeded(
   props: React.PropsWithChildren<{
     participant?: Participant;
@@ -50,10 +39,6 @@ export function ParticipantContextIfNeeded(
   );
 }
 
-/**
- * Only create a `TrackRefContext` if there is no `TrackRefContext` already.
- * @internal
- */
 export function TrackRefContextIfNeeded(
   props: React.PropsWithChildren<{
     trackRef?: TrackReferenceOrPlaceholder;
@@ -67,34 +52,16 @@ export function TrackRefContextIfNeeded(
   );
 }
 
-/** @public */
 export interface ParticipantTileProps extends React.HTMLAttributes<HTMLDivElement> {
-  /** The track reference to display. */
   trackRef?: TrackReferenceOrPlaceholder;
   disableSpeakingIndicator?: boolean;
 
   onParticipantClick?: (event: ParticipantClickEvent) => void;
 }
 
-/**
- * The `ParticipantTile` component is the base utility wrapper for displaying a visual representation of a participant.
- * This component can be used as a child of the `TrackLoop` component or by passing a track reference as property.
- *
- * @example Using the `ParticipantTile` component with a track reference:
- * ```tsx
- * <ParticipantTile trackRef={trackRef} />
- * ```
- * @example Using the `ParticipantTile` component as a child of the `TrackLoop` component:
- * ```tsx
- * <TrackLoop>
- *  <ParticipantTile />
- * </TrackLoop>
- * ```
- * @public
- */
 export const ParticipantTile: (
   props: ParticipantTileProps & React.RefAttributes<HTMLDivElement>
-) => React.ReactNode = /* @__PURE__ */ React.forwardRef<HTMLDivElement, ParticipantTileProps>(
+) => React.ReactNode = React.forwardRef<HTMLDivElement, ParticipantTileProps>(
   function ParticipantTile(
     {
       trackRef,
@@ -142,8 +109,7 @@ export const ParticipantTile: (
                 {isTrackReference(trackReference) &&
                 (trackReference.publication?.kind === "video" ||
                   trackReference.source === Track.Source.Camera ||
-                  trackReference.source === Track.Source.ScreenShare) &&
-                trackReference.participant.identity.startsWith("agent-") ? (
+                  trackReference.source === Track.Source.ScreenShare) ? (
                   <VideoTrack
                     trackRef={trackReference}
                     onSubscriptionStatusChanged={handleSubscribe}
@@ -177,7 +143,7 @@ export const ParticipantTile: (
                     ) : (
                       <>
                         <ScreenShareIcon style={{ marginRight: "0.25rem" }} />
-                        <ParticipantName>&apos;s screen</ParticipantName>
+                        <ParticipantName>&apos;의 화면</ParticipantName>
                       </>
                     )}
                   </div>

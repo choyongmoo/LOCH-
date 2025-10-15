@@ -1,5 +1,6 @@
 import { Chat } from "@/components/Room/Chat";
 import { ConnectionStateToast } from "@/components/Room/ConnectionStateToast";
+import { ParticipantTile } from "@/components/Room/ParticipantTile";
 import type {
   MessageDecoder,
   MessageEncoder,
@@ -13,7 +14,6 @@ import {
   FocusLayoutContainer,
   GridLayout,
   LayoutContextProvider,
-  ParticipantTile,
   RoomAudioRenderer,
   useCreateLayoutContext,
   usePinnedTracks,
