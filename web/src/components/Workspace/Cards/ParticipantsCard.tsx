@@ -1,5 +1,6 @@
 import type { Participant } from "@/types/workspace";
 import { ScrollArea } from "@/components/common/ui/scroll-area";
+import { useUserProfileModal } from "@/store/useUserProfileModalStore";
 
 const cardClass =
   "bg-white dark:bg-[#1a1d21] rounded-xl shadow-xl p-6 flex flex-col";
@@ -16,10 +17,13 @@ function getInitials(name: string): string {
   return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-export default function ParticipantsCard({
-  participants,
-  isLoading,
-}: ParticipantsCardProps) {
+export default function ParticipantsCard({ participants, isLoading, }: ParticipantsCardProps) {
+  const { openUserProfile } = useUserProfileModal();
+
+  const handleParticipantClick = (p: Participant) => {
+    openUserProfile(p.user_id);
+  };
+      
   return (
     <div className={`${cardClass} min-h-[160px]`}>
       <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">
@@ -45,10 +49,10 @@ export default function ParticipantsCard({
           >
             {participants.map((p) => {
               const initials = getInitials(p.nickname || p.user_id);
-              console.log("accent_color for", p.nickname || p.user_id, ":", p.accent_color);
               return (
-                <li
+                <button
                   key={p.id}
+                  onClick={() => handleParticipantClick(p)}
                   className="flex items-center gap-3 bg-gray-50 dark:bg-[#1f2126] p-2 rounded-md border border-gray-200 dark:border-gray-700 shadow-sm hover:bg-gray-100 dark:hover:bg-[#2a2d31] transition"
                 >
                   <div
@@ -60,7 +64,7 @@ export default function ParticipantsCard({
                   <span className="text-gray-800 dark:text-white truncate">
                     {p.nickname || `참여자 ${p.user_id.slice(0, 6)}`}
                   </span>
-                </li>
+                </button>
               );
             })}
           </ul>

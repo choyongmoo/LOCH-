@@ -20,7 +20,7 @@ export default function FriendAddModal({ close }: { close: () => void }) {
             const { data, error } = await supabase
             .from("profile")
             .select("id, nickname, email")
-            .or(`nickname.ilike.%${keyword}%,email.ilike.%${keyword}%`) // encodeURIComponent 제거
+            .or(`nickname.ilike.%${keyword}%,email.ilike.%${keyword}%`)
             .neq("id", currentUser?.id);
 
             if (error) throw error;

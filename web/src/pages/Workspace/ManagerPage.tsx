@@ -23,7 +23,8 @@ export default function ManagerPage() {
 
   const handleonLeaveServer = (serverId: string, userId: string) => {
     onLeaveServer(serverId, userId)
-  }
+  };
+
   const serverWithMembers = selectedServer && servers.find((s) => s.id === selectedServer.id);
 
   return (

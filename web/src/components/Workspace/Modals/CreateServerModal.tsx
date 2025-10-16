@@ -11,7 +11,7 @@ export default function CreateRoomModal({ close, userId }: { close: () => void, 
   const [roomName, setRoomName] = useState("");
   const [description, setDescription] = useState("");
   const [maxParticipants, setMaxParticipants] = useState(1);
-  const [isPrivate, setIsPrivate] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(true);
   const [password, setPassword] = useState("");
   const [page, setPage] = useState<ModalPage>("main");
 
@@ -88,7 +88,6 @@ export default function CreateRoomModal({ close, userId }: { close: () => void, 
     }
   };
 
-
   const handleJoin = async (server: any) => {
     
     if (server.is_private) {
@@ -154,18 +153,28 @@ export default function CreateRoomModal({ close, userId }: { close: () => void, 
               <span className="ml-2 text-gray-400 text-sm">1~10명</span>
             </div>
 
-            {/* 비공개 체크 */}
+            {/* 공개 체크박스 */}
             <div className="mb-4 flex items-center gap-2">
-              <input type="checkbox" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} className="w-4 h-4 accent-blue-500" />
-              <label className="text-sm text-gray-300">비공개</label>
+              <input
+                type="checkbox"
+                checked={!isPrivate}
+                onChange={(e) => setIsPrivate(!e.target.checked)} 
+                className="w-4 h-4 accent-blue-500"
+              />
+              <label className="text-sm text-gray-300">공개 서버로 만들기</label>
             </div>
 
-            {/* 비밀번호 */}
+            {/* 비밀번호 입력 */}
             {isPrivate && (
               <div className="mb-4">
                 <label className="block text-sm text-gray-300 mb-1">비밀번호</label>
-                <input type="text" placeholder="비밀번호 입력" value={password} onChange={(e) => setPassword(e.target.value)}
-                  className="w-full p-2 rounded-md border border-gray-600 bg-[#202225] text-white focus:outline-none focus:border-blue-500" />
+                <input
+                  type="text"
+                  placeholder="비밀번호 입력"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-2 rounded-md border border-gray-600 bg-[#202225] text-white focus:outline-none focus:border-blue-500"
+                />
               </div>
             )}
 

@@ -1,4 +1,3 @@
-// src/hooks/useServerDetail.ts
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Participant, Server } from "@/types/workspace";

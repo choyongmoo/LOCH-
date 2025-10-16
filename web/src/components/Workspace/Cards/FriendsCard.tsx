@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Profile } from "@/types/workspace";
 import { ScrollArea } from "@/components/common/ui/scroll-area";
+import { useUserProfileModal } from "@/store/useUserProfileModalStore";
 
 export default function FriendsCard() {
     const [friends, setFriends] = useState<Profile[]>([]);
     const [loading, setLoading] = useState(true);
-
+    const { openUserProfile } = useUserProfileModal();
+    
     useEffect(() => {
         const loadFriends = async () => {
             setLoading(true);
@@ -56,7 +58,8 @@ export default function FriendsCard() {
     };
 
     const handleFriendClick = (friend: Profile) => {
-        console.log("친구 클릭:", friend.nickname, friend.id);
+        if (!friend.id) return;
+        openUserProfile(friend.id);
     };
 
     return (
