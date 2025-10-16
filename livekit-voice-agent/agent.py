@@ -83,7 +83,7 @@ class Transcriber(Agent):
     ):
         super().__init__(
             instructions="not-needed",
-            stt=openai.STT(model="gpt-4o-mini-transcribe"),
+            stt=openai.STT(model="gpt-4o-transcribe"),
         )
         self.created_at = created_at
         self.participant_identity = participant_identity

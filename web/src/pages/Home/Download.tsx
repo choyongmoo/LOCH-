@@ -4,11 +4,10 @@ import screenshot from "@/assets/landing/river_dashboard.png";
 
 import windowsIcon from "@/assets/landing/windows.png";
 import windowsIconDark from "@/assets/landing/windows2.svg";
-import androidIcon from "@/assets/landing/android.svg";
-import androidIconDark from "@/assets/landing/android2.png";
 
-const WINDOWS_EXE = "/downloads/LOCH_Setup_x64.exe";
-const ANDROID_APK = "/downloads/LOCH_App.apk";
+
+const WINDOWS_EXE =
+  "https://github.com/choyongmoo/LOCH-/releases/download/Production/river_app.zip";
 
 export const Download = () => {
   const ref = useRef<HTMLElement | null>(null);
@@ -29,7 +28,6 @@ export const Download = () => {
 
   return (
     <section id="download" ref={ref} className="relative w-full bg-transparent">
-      
       <div className="pointer-events-none absolute inset-0 -z-10">
         <div
           className="absolute inset-0"
@@ -46,52 +44,51 @@ export const Download = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 py-24 md:py-32 grid grid-cols-1 md:grid-cols-2 items-center gap-12">
-   
         <div>
           <h1 className="text-4xl md:text-5xl font-extrabold leading-[1.05] tracking-tight text-foreground">
             앱 다운로드
           </h1>
           <p className="mt-4 max-w-xl text-muted-foreground">
-            Windows와 Android에서 사용할 수 있어요. 설치 후 로그인만 하면 바로 시작할 수 있습니다.
+            Windows용 LOCH 데스크톱 앱입니다. 설치 후 로그인하면 바로 사용할 수 있습니다.
           </p>
 
-    
-          <div className="mt-8 flex flex-col gap-3">
+          <div className="mt-8">
             <Button
               asChild
               size="lg"
               className="group h-12 w-full max-w-sm rounded-full px-6 bg-foreground text-background hover:opacity-90 shadow-sm"
               title="Download for Windows (x64)"
             >
-              <a href={WINDOWS_EXE} download className="flex items-center gap-3 font-semibold">
-               
-                <img src={windowsIcon} alt="" aria-hidden className="h-5 w-5 object-contain dark:hidden" />
-            
-                <img src={windowsIconDark} alt="" aria-hidden className="h-5 w-5 object-contain hidden dark:block" />
+              <a
+                href={WINDOWS_EXE}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-3 font-semibold"
+              >
+                <img
+                  src={windowsIcon}
+                  alt=""
+                  aria-hidden
+                  className="h-5 w-5 object-contain dark:hidden"
+                />
+                <img
+                  src={windowsIconDark}
+                  alt=""
+                  aria-hidden
+                  className="h-5 w-5 object-contain hidden dark:block"
+                />
                 <span>Download for Windows</span>
-                <span aria-hidden className="translate-x-0 transition-transform group-hover:translate-x-0.5">→</span>
-              </a>
-            </Button>
-
-            <Button
-              asChild
-              variant="outline"
-              size="lg"
-              className="h-12 w-full max-w-sm rounded-full px-6"
-              title="Download for Android"
-            >
-              <a href={ANDROID_APK} download className="flex items-center gap-3 font-semibold">
-              
-                <img src={androidIcon} alt="" aria-hidden className="h-5 w-5 object-contain dark:hidden" />
-            
-                <img src={androidIconDark} alt="" aria-hidden className="h-5 w-5 object-contain hidden dark:block" />
-                <span>Download for Android</span>
+                <span
+                  aria-hidden
+                  className="translate-x-0 transition-transform group-hover:translate-x-0.5"
+                >
+                  →
+                </span>
               </a>
             </Button>
           </div>
         </div>
 
-      
         <div className="relative">
           <div className="relative mx-auto w-full max-w-2xl overflow-hidden rounded-2xl ring-1 ring-inset ring-foreground/10 bg-transparent">
             <div className="flex h-9 items-center justify-between border-b border-foreground/10 bg-muted/40 px-3">
@@ -105,7 +102,9 @@ export const Download = () => {
               <div className="flex items-center gap-1">
                 <WinBtn ariaLabel="Minimize">—</WinBtn>
                 <WinBtn ariaLabel="Maximize">□</WinBtn>
-                <WinBtn ariaLabel="Close" danger>×</WinBtn>
+                <WinBtn ariaLabel="Close" danger>
+                  ×
+                </WinBtn>
               </div>
             </div>
             <img src={screenshot} alt="App screenshot" className="block w-full h-auto" />
@@ -118,21 +117,27 @@ export const Download = () => {
 
 export default Download;
 
-
 function WinBtn({
   children,
   ariaLabel,
   danger,
-}: { children: React.ReactNode; ariaLabel: string; danger?: boolean }) {
+}: {
+  children: React.ReactNode;
+  ariaLabel: string;
+  danger?: boolean;
+}) {
   return (
     <button
       aria-label={ariaLabel}
       className={`grid h-7 w-9 place-items-center rounded hover:opacity-90
-      ${danger ? "text-red-500/80 hover:text-red-600" : "text-muted-foreground hover:text-foreground"}`}
+      ${
+        danger
+          ? "text-red-500/80 hover:text-red-600"
+          : "text-muted-foreground hover:text-foreground"
+      }`}
       type="button"
       tabIndex={-1}
     >
-    
       <span
         className={
           danger

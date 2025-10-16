@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import type { Profile } from "@/types/workspace";
 import { ScrollArea } from "@/components/common/ui/scroll-area";
+import { useUserProfileModal } from "@/store/useUserProfileModalStore";
 
 export default function FriendsCard() {
     const [friends, setFriends] = useState<Profile[]>([]);
     const [loading, setLoading] = useState(true);
-
+    const { openUserProfile } = useUserProfileModal();
+    
     useEffect(() => {
         const loadFriends = async () => {
             setLoading(true);
@@ -56,7 +58,8 @@ export default function FriendsCard() {
     };
 
     const handleFriendClick = (friend: Profile) => {
-        console.log("친구 클릭:", friend.nickname, friend.id);
+        if (!friend.id) return;
+        openUserProfile(friend.id);
     };
 
     return (
@@ -85,7 +88,7 @@ export default function FriendsCard() {
                             className="flex items-center gap-3 w-full text-left rounded-lg p-2 hover:bg-gray-100 dark:hover:bg-[#23242e] transition"
                         >
                             <div
-                            className="w-8 h-8 rounded-lg flex items-center justify-center text-white font-bold"
+                            className="w-10 h-10 rounded-[10px] flex items-center justify-center text-white font-bold"
                             style={{ backgroundColor: friend.accent_color || "#7e22ce" }}
                             >
                                 {getInitials(friend.nickname)}

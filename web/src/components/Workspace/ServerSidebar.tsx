@@ -18,7 +18,7 @@ export default function ServerSidebar() {
   const user = useUserStore((state) => state.user);
   const servers = useServers((state) => state.servers);
   const fetchAllUserServers = useServers((state) => state.fetchAllUserServers);
-
+  const resetSelectedServer = useSelectedServerStore((state) => state.resetSelectedServer);
   const selectedServerId = useSelectedServerStore((state) => state.selectedServerId);
   const setSelectedServerId = useSelectedServerStore((state) => state.setSelectedServerId);
 
@@ -80,6 +80,7 @@ export default function ServerSidebar() {
           description="현재 계정에서 로그아웃 하시겠습니까?"
           onConfirm={async () => {
             await logout();
+            resetSelectedServer();
           }}
           confirmLabel="로그아웃"
         />

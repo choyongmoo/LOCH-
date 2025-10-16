@@ -41,7 +41,7 @@ export default function MicrophoneTestCard() {
           </div>
         </div>
         <div className="text-xs text-gray-600 dark:text-gray-300 truncate">
-          장치: {devices.find(d => d.deviceId === selectedDeviceId)?.label || "기본 마이크"}
+          장치: {devices.find(d => d.deviceId === selectedDeviceId)?.label || "장치를 선택하세요"}
         </div>
         <div className="text-xs text-gray-500 dark:text-gray-400">
           {isTesting ? "마이크 테스트 중..." : "마이크를 테스트 해보세요!"}
@@ -49,7 +49,7 @@ export default function MicrophoneTestCard() {
       </div>
 
       {/* 장치 변경 모달 */}
-      <EditModal 
+      <EditModal
         modalType="editMic" 
         title="마이크 설정" 
         description="사용할 마이크를 선택하세요." 

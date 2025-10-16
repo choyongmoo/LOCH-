@@ -26,8 +26,8 @@ export default function IntroCard() {
       ) : serverDetail ? (
         <>
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-md flex items-center justify-center font-extrabold text-2xl text-gray-800 bg-gray-200 border-2 border-gray-400" >
-              {serverDetail.room_name.charAt(0).toUpperCase()}
+            <div className="w-12 h-12 rounded-[10px] bg-gray-900 text-gray-100 flex items-center justify-center text-lg font-bold" >
+              {serverDetail.room_name.slice(0, 2).toUpperCase()}
             </div>
             <div className="flex flex-col">
               <span className="text-xs text-gray-400 dark:text-gray-500 uppercase mb-1">서버 이름</span>
@@ -63,7 +63,7 @@ export default function IntroCard() {
       ) : (
         <div>
           <div className="flex items-center gap-4 mb-4">
-            <div className="w-12 h-12 rounded-md flex items-center justify-center bg-gray-400 text-white font-bold text-lg">
+            <div className="w-12 h-12 rounded-[10px] flex items-center justify-center bg-gray-400 text-white font-bold text-lg">
               S
             </div>
             <div>
