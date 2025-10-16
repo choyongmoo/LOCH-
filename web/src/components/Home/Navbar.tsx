@@ -20,19 +20,19 @@ export function Navbar() {
   const handleIntroClick = (id: string) => {
     if (window.location.pathname !== "/") {
       (window as any).__scrollTo = id;
-      navigate("/"); 
+      navigate("/");
     }
   };
 
   return (
-    <NavigationMenu viewport={false}>
+    <NavigationMenu viewport={false} className="relative z-50">
       <NavigationMenuList>
-        {/* 소개 드롭다운 */}
+
         <NavigationMenuItem>
           <NavigationMenuTrigger>소개</NavigationMenuTrigger>
-          <NavigationMenuContent>
+
+          <NavigationMenuContent className="z-[60]">
             <ul className="grid w-[400px] gap-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]">
-              {/* 주요 기능 */}
               <li>
                 <ScrollLink
                   to="about"

@@ -2,12 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 import { Button } from "@/components/common/ui/button";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
+  Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
 } from "@/components/common/ui/card";
 import { Input } from "@/components/common/ui/input";
 import { Label } from "@/components/common/ui/label";
@@ -26,37 +21,30 @@ export const Signup = () => {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const redirectTo = `${window.location.origin}/signin`; // 인증 메일 클릭 후 이동할 경로
+
   const handleSubmit = async () => {
     setError(null);
     setMessage(null);
 
-    if (!email || !password) {
-      setError("이메일과 비밀번호를 입력해주세요.");
-      return;
-    }
-    if (password.length < 6) {
-      setError("비밀번호는 6자 이상이어야 합니다.");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("비밀번호가 일치하지 않습니다.");
-      return;
-    }
+    if (!email || !password) return setError("이메일과 비밀번호를 입력해주세요.");
+    if (password.length < 6) return setError("비밀번호는 6자 이상이어야 합니다.");
+    if (password !== confirmPassword) return setError("비밀번호가 일치하지 않습니다.");
 
-    const birthDate = birthYear && birthMonth && birthDay
-      ? `${birthYear}-${String(birthMonth).padStart(2, "0")}-${String(birthDay).padStart(2, "0")}`
-      : undefined;
+    const birthDate =
+      birthYear && birthMonth && birthDay
+        ? `${birthYear}-${String(birthMonth).padStart(2, "0")}-${String(birthDay).padStart(2, "0")}`
+        : undefined;
 
     try {
       setSubmitting(true);
+
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: {
-            name: nickname,
-            birthDate,
-          },
+          emailRedirectTo: redirectTo,
+          data: { name: nickname, birthDate },
         },
       });
 
@@ -66,15 +54,10 @@ export const Signup = () => {
       }
 
       if (data?.user) {
-        setMessage("회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.");
-        // 즉시 로그인 방지: 혹시 세션이 생겼다면 로그아웃 처리
-        try {
-          await supabase.auth.signOut();
-        } catch (err) {
-          }
-        window.location.href = "/signin";
+        await supabase.auth.signOut().catch(() => {});
+        setMessage("인증 메일을 보냈습니다. 메일함(스팸함 포함)에서 링크를 눌러 가입을 완료하세요.");
       }
-    } catch (err) {
+    } catch {
       setError("회원가입 중 오류가 발생했습니다.");
     } finally {
       setSubmitting(false);
@@ -92,45 +75,25 @@ export const Signup = () => {
         {/* 이름 */}
         <div className="grid gap-2">
           <Label htmlFor="nickname">이름</Label>
-          <Input
-            id="nickname"
-            type="text"
-            value={nickname}
-            onChange={(e) => setNickname(e.target.value)}
-          />
+          <Input id="nickname" value={nickname} onChange={(e) => setNickname(e.target.value)} />
         </div>
 
         {/* 이메일 */}
         <div className="grid gap-2">
           <Label htmlFor="email">이메일</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
+          <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
         </div>
 
         {/* 비밀번호 */}
         <div className="grid gap-2">
           <Label htmlFor="password">비밀번호</Label>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
+          <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
         </div>
 
         {/* 비밀번호 확인 */}
         <div className="grid gap-2">
           <Label htmlFor="confirm-password">비밀번호 확인</Label>
-          <Input
-            id="confirm-password"
-            type="password"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-          />
+          <Input id="confirm-password" type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
         </div>
 
         {/* 생년월일 */}
@@ -185,21 +148,17 @@ export const Signup = () => {
         </div>
       </CardContent>
 
-      <CardFooter className="flex flex-col gap-4 pt-2">
-        {error && (
-          <Paragraph className="text-red-500 text-sm">{error}</Paragraph>
-        )}
-        {message && (
-          <Paragraph className="text-green-600 text-sm">{message}</Paragraph>
-        )}
+      <CardFooter className="flex flex-col gap-3 pt-2">
+        {error && <Paragraph className="text-red-500 text-sm">{error}</Paragraph>}
+        {message && <Paragraph className="text-green-600 text-sm">{message}</Paragraph>}
+
         <Button className="w-full" onClick={handleSubmit} disabled={submitting}>
           {submitting ? "처리 중..." : "회원가입"}
         </Button>
+
         <Paragraph muted className="text-center">
           이미 계정이 있으신가요?{" "}
-          <Link to="/signin" className="underline">
-            로그인
-          </Link>
+          <Link to="/signin" className="underline">로그인</Link>
         </Paragraph>
       </CardFooter>
     </Card>

@@ -3,24 +3,86 @@ import { supabase } from "@/lib/supabase";
 import { ChevronDown, ChevronUp, LogOut, LayoutDashboard } from "lucide-react";
 import { useNavigate } from "react-router";
 
-type SupaUser = {
-  email?: string;
-  user_metadata?: Record<string, any>;
-} | null;
+type SupaUser = { id: string; email?: string } | null;
+type ProfileRow = { nickname: string | null; email: string | null };
 
 export default function UserMenu() {
   const nav = useNavigate();
   const [user, setUser] = useState<SupaUser>(null);
+  const [profile, setProfile] = useState<ProfileRow | null>(null);
+
+  const [ready, setReady] = useState(false);
+
   const [open, setOpen] = useState(false);
   const anchorRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
+  const loadProfile = async (uid: string) => {
+    const { data, error } = await supabase
+      .from("profile")  
+      .select("nickname,email") 
+      .eq("id", uid)
+      .single();
+    if (!error) setProfile({ nickname: data?.nickname ?? null, email: data?.email ?? null });
+  };
+
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setUser(data.user as any));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) =>
-      setUser((s?.user as any) ?? null)
-    );
-    return () => sub.subscription.unsubscribe();
+    let realtime: ReturnType<typeof supabase.channel> | null = null;
+
+    const init = async () => {
+      setReady(false);
+      const { data } = await supabase.auth.getUser();
+      const u = (data.user as any) ?? null;
+
+      if (!u) {
+        setUser(null);
+        setProfile(null);
+        setReady(true);
+        return;
+      }
+
+      await loadProfile(u.id);     
+      setUser({ id: u.id, email: u.email ?? undefined });
+      setReady(true);
+
+      realtime = supabase
+        .channel("self-profile")
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "profile", filter: `id=eq.${u.id}` },
+          (payload) => {
+            const row = payload.new as any;
+            setProfile({
+              nickname: row?.nickname ?? null,
+              email: row?.email ?? null,
+            });
+          }
+        )
+        .subscribe();
+    };
+
+    init();
+
+    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, s) => {
+      setReady(false);
+      const next = (s?.user as any) ?? null;
+
+      if (!next) {
+        setUser(null);
+        setProfile(null);
+        setReady(true);
+        return;
+      }
+
+      await loadProfile(next.id);   
+      setUser({ id: next.id, email: next.email ?? undefined });
+      setReady(true);
+    });
+
+    return () => {
+      sub.subscription.unsubscribe();
+      if (realtime) supabase.removeChannel(realtime);
+    };
   }, []);
 
   useEffect(() => {
@@ -35,20 +97,16 @@ export default function UserMenu() {
   }, [open]);
 
   const name: string = useMemo(() => {
-    const n =
-      (user?.user_metadata?.name as string) ||
-      (user?.user_metadata?.full_name as string) ||
-      (user?.email ? user.email.split("@")[0] : "");
-    return n || "사용자";
-  }, [user]);
+    if (!profile?.nickname) {
+      const em = profile?.email ?? user?.email ?? "";
+      return em ? em.split("@")[0] : "사용자";
+    }
+    return profile.nickname;
+  }, [profile?.nickname, profile?.email, user?.email]);
 
-  const email = user?.email ?? "";
-  const initials = name
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const email = profile?.email ?? user?.email ?? "";
+  const initials = (name || "U")
+    .split(" ").map((p) => p[0]).join("").slice(0, 2).toUpperCase();
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -56,7 +114,8 @@ export default function UserMenu() {
     nav("/");
   };
 
-  if (!user) return null;
+
+  if (!ready || !user) return null;
 
   return (
     <div className="relative">
@@ -93,8 +152,9 @@ export default function UserMenu() {
               <p className="truncate text-xs text-muted-foreground">{email}</p>
             </div>
           </div>
+
           <div className="h-px bg-foreground/10" />
-          
+
           <div className="py-1">
             <MenuItem
               icon={<LayoutDashboard className="h-4 w-4" />}
@@ -107,6 +167,7 @@ export default function UserMenu() {
           </div>
 
           <div className="h-px bg-foreground/10" />
+
           <div className="py-1">
             <MenuItem
               icon={<LogOut className="h-4 w-4" />}
