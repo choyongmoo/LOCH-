@@ -15,33 +15,32 @@ export const useFriendStore = create<FriendState>((set, get) => ({
   requests: [],
   setRequests: (requests) => set({ requests }),
 
-  fetchFriendRequests: async () => {
-  const { data, error } = await supabase
+  fetchFriendRequests: async (userId: string) => {
+  const { data: requests, error: requestsError } = await supabase
     .from("friend_requests")
-    .select(`
-      id,
-      requester_id,
-      addressee_id,
-      status,
-      created_at,
-      requester:requester_id (nickname)
-    `) as { data: any[] | null; error: any };
+    .select("*")
+    .eq("addressee_id", userId);
 
-  if (error) return console.error(error);
+  if (requestsError) return console.error(requestsError);
 
-  if (data) {
-    const formatted = data.map(req => ({
-      id: req.id,
-      requester_id: req.requester_id,
-      addressee_id: req.addressee_id,
-      status: req.status,
-      created_at: req.created_at,
-      name: req.requester.nickname,
-      requestedAt: new Date(req.created_at).toLocaleString(),
-    }));
+  const requesterIds = requests.map(r => r.requester_id);
+  const { data: profiles, error: profilesError } = await supabase
+    .from("profile")
+    .select("id, nickname")
+    .in("id", requesterIds);
 
-    set({ requests: formatted });
-  }
+  if (profilesError) return console.error(profilesError);
+
+  const formatted = requests.map(r => {
+    const requester = profiles.find(p => p.id === r.requester_id);
+    return {
+      ...r,
+      name: requester?.nickname || "알 수 없음",
+      requestedAt: new Date(r.created_at).toLocaleString(),
+    };
+  });
+
+  set({ requests: formatted });
 },
 
   addFriendRequest: async (addressee_id: string) => {

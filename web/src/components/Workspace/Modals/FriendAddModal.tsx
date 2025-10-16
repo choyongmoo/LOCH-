@@ -51,7 +51,7 @@ export default function FriendAddModal({ close }: { close: () => void }) {
             const { error } = await supabase.from("friend_requests").insert({
                 requester_id: currentUser.id,
                 addressee_id: targetId,
-                status: "pending", // enum 값
+                status: "pending",
                 created_at: new Date().toISOString(),
                 responded_at: null,
             });

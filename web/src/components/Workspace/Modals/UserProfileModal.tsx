@@ -58,7 +58,8 @@ export default function UserProfileModal() {
 
             {/* 자기소개 */}
             <DialogDescription className="mb-4 block text-gray-300">
-              {profile.bio || "자기소개가 없습니다."}
+              <span className="font-semibold text-gray-200">자기소개: </span>
+              <span className="text-gray-300">{profile.bio || "자기소개가 없습니다."}</span>
             </DialogDescription>
 
             {/* 정보 섹션 */}

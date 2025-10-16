@@ -1,4 +1,3 @@
-// store/useMobileStore.ts
 import { create } from "zustand"
 
 type MobileState = {
