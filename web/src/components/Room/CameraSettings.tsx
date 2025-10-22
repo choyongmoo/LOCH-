@@ -70,7 +70,12 @@ export function CameraSettings() {
       <section className="lk-button-group">
         <TrackToggle source={Track.Source.Camera}>카메라</TrackToggle>
         <div className="lk-button-group-menu">
-          <MediaDeviceMenu kind="videoinput" />
+          <MediaDeviceMenu
+            kind="videoinput"
+            onActiveDeviceChange={(_kind, deviceId) =>
+              localStorage.setItem("selectedCamera", deviceId ?? "default")
+            }
+          />
         </div>
       </section>
 
