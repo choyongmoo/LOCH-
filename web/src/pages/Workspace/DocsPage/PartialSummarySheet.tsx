@@ -80,7 +80,7 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     const fileName =
-      `partial-summary-${log?.started_at?.slice(0, 10)}`.replace(/[^a-zA-Z0-9._-]+/g, "-") + ".txt";
+      `partial-summary-${log?.started_at?.slice(0, 19)}`.replace(/[^a-zA-Z0-9._-]+/g, "-") + ".txt";
     a.href = url;
     a.download = fileName;
     document.body.appendChild(a);

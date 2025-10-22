@@ -61,7 +61,13 @@ export const TranscriptSheet: React.FC<TranscriptSheetProps> = ({ open, onOpenCh
             <Button
               size="sm"
               variant="outline"
-              onClick={() => downloadJson(log?.transcript, `transcript-${log?.id || "log"}.json`)}
+              onClick={() =>
+                downloadJson(
+                  log?.transcript,
+                  `transcript-${log?.started_at?.slice(0, 19)}`.replace(/[^a-zA-Z0-9._-]+/g, "-") +
+                    ".json"
+                )
+              }
             >
               다운로드
             </Button>

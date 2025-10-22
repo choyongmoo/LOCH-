@@ -150,7 +150,12 @@ const DocsPage = () => {
         </div>
       </div>
 
-      <SummarySheet open={summaryOpen} onOpenChange={setSummaryOpen} summary={activeLog?.summary} />
+      <SummarySheet
+        open={summaryOpen}
+        onOpenChange={setSummaryOpen}
+        summary={activeLog?.summary}
+        started_at={activeLog?.started_at}
+      />
 
       <TranscriptSheet
         open={transcriptOpen}
