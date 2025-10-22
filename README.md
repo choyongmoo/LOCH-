@@ -1,5 +1,6 @@
-## LOCH Web (Vite + React + Supabase + LiveKit)
+## LOCH Web (Vite + React + Supabase + LiveKit+ AWS)
 
+주소: d2m0eness3apiw.cloudfront.net
 협업 워크스페이스와 실시간 화상/음성 미팅을 위한 웹 애플리케이션입니다. React + Vite 기반으로 구축되었고, 인증과 데이터 관리는 Supabase, 실시간 미디어는 LiveKit을 사용합니다.
 
 ### 주요 기능
@@ -114,7 +115,3 @@ supabase/
 - 배포 플랫폼(Vercel/Netlify/Cloudflare 등) 환경 변수에 `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`, `VITE_LIVEKIT_URL`을 설정하세요.
 - LiveKit 서버 URL 및 토큰 발급 흐름이 올바르게 동작하는지 사전 점검하세요.
 
----
-
-## 라이선스
-프로젝트 라이선스가 정해지면 이 섹션을 업데이트하세요.
