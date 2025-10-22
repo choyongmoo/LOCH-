@@ -19,7 +19,12 @@ import React from "react";
 type PartialSummarySheetProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  log: { id?: string; started_at?: string; ended_at?: string; transcript?: unknown } | null;
+  log: {
+    id?: string;
+    started_at?: string;
+    ended_at?: string;
+    transcript?: unknown;
+  } | null;
 };
 
 export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
@@ -46,7 +51,7 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
             endText?: string;
             summary?: string;
           };
-          setStartText(data.startText ?? "0");
+          setStartText(data.startText ?? "0:00");
           setEndText(data.endText ?? formatSeconds(total));
           setSummary(data.summary ?? "");
           return;
@@ -55,7 +60,7 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
     } catch (e) {
       console.warn("Failed to load partial summary from localStorage", e);
     }
-    setStartText("0");
+    setStartText("0:00");
     setEndText(formatSeconds(total));
     setSummary("");
   }, [log?.id, total, storageKey]);
@@ -64,27 +69,25 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
     const s = summary?.trim();
     if (!s) return;
     const content = [
-      "부분 요약",
-      `로그 ID: ${log?.id ?? "-"}`,
-      `시간 구간: ${startText} ~ ${endText}`,
+      "[[부분 요약]]",
+      "",
+      `회의 시작: ${log?.started_at ?? "-"}`,
+      `회의 종료: ${log?.ended_at ?? "-"}`,
       "",
       s,
     ].join("\n");
     const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    const safeId = String(log?.id ?? "unknown");
-    const fileName = `partial-summary-${safeId}-${startText}-${endText}.txt`.replace(
-      /[^a-zA-Z0-9._-]+/g,
-      "_"
-    );
+    const fileName =
+      `partial-summary-${log?.started_at?.slice(0, 10)}`.replace(/[^a-zA-Z0-9._-]+/g, "-") + ".txt";
     a.href = url;
     a.download = fileName;
     document.body.appendChild(a);
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
-  }, [summary, log?.id, startText, endText]);
+  }, [summary, log?.started_at, log?.ended_at]);
 
   const doSummarize = async () => {
     try {

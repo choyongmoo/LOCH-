@@ -1,10 +1,11 @@
 import { Button } from "@/components/common/ui/button";
 import { supabase } from "@/lib/supabase";
+import { parseDate } from "@/lib/utils";
+import { useSelectedServerStore } from "@/store/useSelectedServerStore";
 import React from "react";
 import { PartialSummarySheet } from "./PartialSummarySheet";
 import { SummarySheet } from "./SummarySheet";
 import { TranscriptSheet } from "./TranscriptSheet";
-import { useSelectedServerStore } from "@/store/useSelectedServerStore";
 
 type MeetingLog = {
   id: string;
@@ -15,16 +16,6 @@ type MeetingLog = {
   ended_at: string;
 };
 
-function formatDate(value: string) {
-  try {
-    const d = new Date(value);
-    if (Number.isNaN(d.getTime())) return "-";
-    return d.toLocaleString();
-  } catch {
-    return "-";
-  }
-}
-
 const DocsPage = () => {
   const [logs, setLogs] = React.useState<MeetingLog[]>([]);
   const [loading, setLoading] = React.useState<boolean>(false);
@@ -34,7 +25,7 @@ const DocsPage = () => {
   const [transcriptOpen, setTranscriptOpen] = React.useState<boolean>(false);
   const [activeLog, setActiveLog] = React.useState<MeetingLog | null>(null);
   const [partialOpen, setPartialOpen] = React.useState<boolean>(false);
-  
+
   const { selectedServerId } = useSelectedServerStore();
 
   const loadLogs = React.useCallback(async (serverId: string) => {
@@ -48,7 +39,12 @@ const DocsPage = () => {
         .order("started_at", { ascending: false });
 
       if (error) throw error;
-      setLogs((data ?? []) as unknown as MeetingLog[]);
+      const mapped = (data ?? []).map((log) => ({
+        ...(log as Record<string, unknown>),
+        started_at: parseDate((log as { started_at: string }).started_at),
+        ended_at: parseDate((log as { ended_at: string }).ended_at),
+      })) as unknown as MeetingLog[];
+      setLogs(mapped);
     } catch (e) {
       const msg = (e as { message?: string })?.message ?? "불러오는 중 오류가 발생했습니다.";
       setError(msg);
@@ -123,14 +119,11 @@ const DocsPage = () => {
                 key={log.id}
                 className="grid grid-cols-12 gap-2 items-center px-4 py-3 border-b border-gray-100 dark:border-[#2a2b36] text-sm"
               >
-                <div
-                  className="col-span-4 sm:col-span-3 truncate"
-                  title={formatDate(log.started_at)}
-                >
-                  {formatDate(log.started_at)}
+                <div className="col-span-4 sm:col-span-3 truncate" title={log.started_at}>
+                  {log.started_at}
                 </div>
-                <div className="col-span-4 sm:col-span-3 truncate" title={formatDate(log.ended_at)}>
-                  {formatDate(log.ended_at)}
+                <div className="col-span-4 sm:col-span-3 truncate" title={log.ended_at}>
+                  {log.ended_at}
                 </div>
                 <div className="col-span-2 sm:col-span-3 flex justify-center">
                   <Button size="sm" variant="outline" onClick={() => openSummary(log)}>
