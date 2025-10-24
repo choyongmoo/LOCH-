@@ -120,6 +120,19 @@ export function CustomControlBar({
     saveVideoInputDeviceId,
   } = usePersistentUserChoices({ preventSave: !saveUserChoices });
 
+  // Initialize from localStorage selections (shared across app)
+  React.useEffect(() => {
+    try {
+      if (typeof window === "undefined") return;
+      const storedMicId = localStorage.getItem("selectedMic");
+      const storedCamId = localStorage.getItem("selectedCamera");
+      if (storedMicId) saveAudioInputDeviceId(storedMicId);
+      if (storedCamId) saveVideoInputDeviceId(storedCamId);
+    } catch (_err) {
+      void _err; /* ignore */
+    }
+  }, [saveAudioInputDeviceId, saveVideoInputDeviceId]);
+
   const microphoneOnChange = React.useCallback(
     (enabled: boolean, isUserInitiated: boolean) =>
       isUserInitiated ? saveAudioInputEnabled(enabled) : null,
@@ -147,9 +160,10 @@ export function CustomControlBar({
           <div className="lk-button-group-menu">
             <MediaDeviceMenu
               kind="audioinput"
-              onActiveDeviceChange={(_kind, deviceId) =>
+              onActiveDeviceChange={(_kind, deviceId) => (
+                localStorage.setItem("selectedMic", deviceId ?? "default"),
                 saveAudioInputDeviceId(deviceId ?? "default")
-              }
+              )}
             />
           </div>
         </div>
@@ -167,9 +181,10 @@ export function CustomControlBar({
           <div className="lk-button-group-menu">
             <MediaDeviceMenu
               kind="videoinput"
-              onActiveDeviceChange={(_kind, deviceId) =>
+              onActiveDeviceChange={(_kind, deviceId) => (
+                localStorage.setItem("selectedCamera", deviceId ?? "default"),
                 saveVideoInputDeviceId(deviceId ?? "default")
-              }
+              )}
             />
           </div>
         </div>

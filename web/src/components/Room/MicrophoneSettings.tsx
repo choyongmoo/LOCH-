@@ -1,6 +1,6 @@
 import { MediaDeviceMenu, TrackToggle, useLocalParticipant } from "@livekit/components-react";
-import { Track } from "livekit-client";
 import type { LocalAudioTrack } from "livekit-client";
+import { Track } from "livekit-client";
 import * as React from "react";
 
 export function MicrophoneSettings() {
@@ -31,25 +31,53 @@ export function MicrophoneSettings() {
     }
 
     // Cleanup any previous nodes/context (without restoring previous track)
-    try { gainRef.current?.disconnect(); } catch (_err) { void _err; /* ignore */ }
-    try { sourceRef.current?.disconnect(); } catch (_err) { void _err; /* ignore */ }
-    try { destRef.current?.disconnect(); } catch (_err) { void _err; /* ignore */ }
-    try { audioCtxRef.current?.close(); } catch (_err) { void _err; /* ignore */ }
+    try {
+      gainRef.current?.disconnect();
+    } catch (_err) {
+      void _err; /* ignore */
+    }
+    try {
+      sourceRef.current?.disconnect();
+    } catch (_err) {
+      void _err; /* ignore */
+    }
+    try {
+      destRef.current?.disconnect();
+    } catch (_err) {
+      void _err; /* ignore */
+    }
+    try {
+      audioCtxRef.current?.close();
+    } catch (_err) {
+      void _err; /* ignore */
+    }
     audioCtxRef.current = null;
     sourceRef.current = null;
     gainRef.current = null;
     destRef.current = null;
     replacedRef.current = false;
 
-    const AC = (window as unknown as { AudioContext?: typeof AudioContext; webkitAudioContext?: typeof AudioContext }).AudioContext
-      || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    const AC =
+      (
+        window as unknown as {
+          AudioContext?: typeof AudioContext;
+          webkitAudioContext?: typeof AudioContext;
+        }
+      ).AudioContext ||
+      (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
     if (!AC) {
       return;
     }
 
     const setup = async () => {
       const ctx = new AC();
-      try { if (ctx.state === "suspended") { await ctx.resume(); } } catch (_err) { void _err; /* ignore */ }
+      try {
+        if (ctx.state === "suspended") {
+          await ctx.resume();
+        }
+      } catch (_err) {
+        void _err; /* ignore */
+      }
       const source = ctx.createMediaStreamSource(new MediaStream([currentUnderlyingTrack]));
       const gain = ctx.createGain();
       const dest = ctx.createMediaStreamDestination();
@@ -75,10 +103,26 @@ export function MicrophoneSettings() {
       } catch (_err) {
         void _err;
         // If replace fails, tear down created context
-        try { gain.disconnect(); } catch (_e) { void _e; /* ignore */ }
-        try { source.disconnect(); } catch (_e) { void _e; /* ignore */ }
-        try { dest.disconnect(); } catch (_e) { void _e; /* ignore */ }
-        try { ctx.close(); } catch (_e) { void _e; /* ignore */ }
+        try {
+          gain.disconnect();
+        } catch (_e) {
+          void _e; /* ignore */
+        }
+        try {
+          source.disconnect();
+        } catch (_e) {
+          void _e; /* ignore */
+        }
+        try {
+          dest.disconnect();
+        } catch (_e) {
+          void _e; /* ignore */
+        }
+        try {
+          ctx.close();
+        } catch (_e) {
+          void _e; /* ignore */
+        }
         audioCtxRef.current = null;
         sourceRef.current = null;
         gainRef.current = null;
@@ -94,10 +138,26 @@ export function MicrophoneSettings() {
     // Restoration is handled in the top-level cleanup below to avoid mismatching tracks.
     return () => {
       // Tear down nodes/context only
-      try { gainRef.current?.disconnect(); } catch (_err) { void _err; /* ignore */ }
-      try { sourceRef.current?.disconnect(); } catch (_err) { void _err; /* ignore */ }
-      try { destRef.current?.disconnect(); } catch (_err) { void _err; /* ignore */ }
-      try { audioCtxRef.current?.close(); } catch (_err) { void _err; /* ignore */ }
+      try {
+        gainRef.current?.disconnect();
+      } catch (_err) {
+        void _err; /* ignore */
+      }
+      try {
+        sourceRef.current?.disconnect();
+      } catch (_err) {
+        void _err; /* ignore */
+      }
+      try {
+        destRef.current?.disconnect();
+      } catch (_err) {
+        void _err; /* ignore */
+      }
+      try {
+        audioCtxRef.current?.close();
+      } catch (_err) {
+        void _err; /* ignore */
+      }
       audioCtxRef.current = null;
       sourceRef.current = null;
       gainRef.current = null;
@@ -121,12 +181,32 @@ export function MicrophoneSettings() {
       const pub = microphoneTrack;
       const lkTrack = (pub?.track ?? null) as LocalAudioTrack | null;
       if (lkTrack && replacedRef.current && originalTrackRef.current) {
-        try { lkTrack.replaceTrack(originalTrackRef.current); } catch (_err) { void _err; /* ignore */ }
+        try {
+          lkTrack.replaceTrack(originalTrackRef.current);
+        } catch (_err) {
+          void _err; /* ignore */
+        }
       }
-      try { gainRef.current?.disconnect(); } catch (_err) { void _err; /* ignore */ }
-      try { sourceRef.current?.disconnect(); } catch (_err) { void _err; /* ignore */ }
-      try { destRef.current?.disconnect(); } catch (_err) { void _err; /* ignore */ }
-      try { audioCtxRef.current?.close(); } catch (_err) { void _err; /* ignore */ }
+      try {
+        gainRef.current?.disconnect();
+      } catch (_err) {
+        void _err; /* ignore */
+      }
+      try {
+        sourceRef.current?.disconnect();
+      } catch (_err) {
+        void _err; /* ignore */
+      }
+      try {
+        destRef.current?.disconnect();
+      } catch (_err) {
+        void _err; /* ignore */
+      }
+      try {
+        audioCtxRef.current?.close();
+      } catch (_err) {
+        void _err; /* ignore */
+      }
       audioCtxRef.current = null;
       sourceRef.current = null;
       gainRef.current = null;
@@ -158,14 +238,24 @@ export function MicrophoneSettings() {
     >
       <path d="M3 10v4h4l5 4V6L7 10H3z" fill="currentColor" />
       {!muted && (
-        <path d="M16 7a5 5 0 010 10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M16 7a5 5 0 010 10"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       )}
       {!muted && (
-        <path d="M18.5 4.5a8.5 8.5 0 010 15" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M18.5 4.5a8.5 8.5 0 010 15"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       )}
-      {muted && (
-        <path d="M20 4L4 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      )}
+      {muted && <path d="M20 4L4 20" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />}
     </svg>
   );
 
@@ -182,7 +272,12 @@ export function MicrophoneSettings() {
       <section className="lk-button-group">
         <TrackToggle source={Track.Source.Microphone}>마이크</TrackToggle>
         <div className="lk-button-group-menu">
-          <MediaDeviceMenu kind="audioinput" />
+          <MediaDeviceMenu
+            kind="audioinput"
+            onActiveDeviceChange={(_kind, deviceId) =>
+              localStorage.setItem("selectedMic", deviceId ?? "default")
+            }
+          />
         </div>
       </section>
 
