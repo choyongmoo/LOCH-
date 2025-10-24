@@ -68,7 +68,11 @@ jobs:
           aws s3 rm s3://${{ secrets.S3_BUCKET }}/assets/ --recursive --exclude "*" --include "*.map" || true
 
       - name: Invalidate CloudFront
+        env:
+          DIST_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
+          if [ -z "$DIST_ID" ]; then
+            echo "CLOUDFRONT_DISTRIBUTION_ID is missing or not accessible"
+            exit 1
+          fi
+          aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths "/*"
