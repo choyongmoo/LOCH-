@@ -45,10 +45,9 @@ jobs:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
           aws-region: ap-northeast-2
 
-      - name: Install AWS CLI
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y awscli
+      - name: Check AWS CLI
+        run: aws --version
+          
 
       # defaults 때문에 현재 폴더는 web/ 이라서 dist 경로 그대로 사용 가능
       - name: Sync hashed assets with long cache
