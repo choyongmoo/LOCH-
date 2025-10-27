@@ -144,7 +144,7 @@ export const Signin = () => {
             aria-label="카카오로 로그인"
           >
             <img
-              src="dist/assets/kakaotalk-logo.svg"
+              src="https://d2m0eness3apiw.cloudfront.net/assets/kakaotalk-logo.svg"
               alt="Kakao"
               className="h-8 w-8 object-contain"
             />
