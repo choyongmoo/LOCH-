@@ -14,13 +14,10 @@ export function supportsScreenSharing(): boolean {
   );
 }
 
-export function mergeProps<T extends Record<string, unknown>, U extends Record<string, unknown>>(
-  a: T,
-  b: U
-): T & U {
-  const result: Record<string, unknown> = { ...a };
+export function mergeProps<T extends object, U extends object>(a: T, b: U): T & U {
+  const result: Record<string, unknown> = { ...(a as Record<string, unknown>) };
 
-  for (const key of Object.keys(b)) {
+  for (const key of Object.keys(b as Record<string, unknown>)) {
     const av = (a as Record<string, unknown>)[key];
     const bv = (b as Record<string, unknown>)[key];
 
@@ -44,7 +41,6 @@ export function mergeProps<T extends Record<string, unknown>, U extends Record<s
       continue;
     }
 
-    // Default: second overrides first
     result[key] = bv;
   }
 
@@ -167,5 +163,26 @@ export function downloadJson(data: unknown, filename: string) {
     URL.revokeObjectURL(url);
   } catch {
     /* ignore */
+  }
+}
+
+export function parseDate(value: string) {
+  try {
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "-";
+    const yyyy = String(d.getFullYear());
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+
+    const hours24 = d.getHours();
+    const ampm = hours24 < 12 ? "오전" : "오후";
+    const h12 = hours24 % 12 === 0 ? 12 : hours24 % 12;
+    const hh = String(h12).padStart(2, "0");
+    const mi = String(d.getMinutes()).padStart(2, "0");
+    const ss = String(d.getSeconds()).padStart(2, "0");
+
+    return `${yyyy}/${mm}/${dd} ${hh}:${mi}:${ss} ${ampm}`;
+  } catch {
+    return "-";
   }
 }

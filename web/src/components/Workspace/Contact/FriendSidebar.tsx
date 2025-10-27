@@ -37,9 +37,9 @@ export default function FriendSidebar({ friends = [], selectedFriend, onSelectFr
                                 className="w-8 h-8 rounded flex items-center justify-center text-white font-bold"
                                 style={{ backgroundColor: friend.accent_color || "#7e22ce" }}
                             >
-                                {friend.name.charAt(0).toUpperCase()}
+                                {friend.nickname.charAt(0).toUpperCase()}
                             </div>
-                            <span className="truncate text-gray-900 dark:text-gray-100">{friend.nickname || friend.name}</span>
+                            <span className="truncate text-gray-900 dark:text-gray-100">{friend.nickname || friend.email}</span>
                         </div>
                     ))
                 )}
