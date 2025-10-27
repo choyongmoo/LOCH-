@@ -10,8 +10,6 @@ interface ServersState {
   updateServer: (server: Server) => Promise<void>;
   deleteServer: (serverId: string) => Promise<void>;
   onLeaveServer: (serverId: string, userId: string) => Promise<void>;
-  kickMember: (serverId: string, targetUserId: string, currentHostUserId: string) => Promise<void>;
-  transferHost: (serverId: string, newHostUserId: string, currentHostUserId: string) => Promise<void>;
 }
 
 //서버 참가
@@ -200,63 +198,5 @@ export const useServers = create<ServersState>((set) => ({
       set((state) => ({
         servers: state.servers.filter((s) => s.id !== serverId),
       }));
-  },
-  
-kickMember: async (serverId, targetUserId) => {
-    try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
-      if (!token) throw new Error("Not logged in");
-
-      const res = await fetch("https://ddkrmsyxgkxgrxpzuyau.supabase.co/functions/v1/server-management", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({ action: "kickMember", serverId, targetUserId }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Kick member failed");
-
-      set((state) => ({
-        servers: state.servers.map((s) =>
-          s.id === serverId
-            ? { ...s, members: s.members?.filter((m) => m.user_id !== targetUserId) }
-            : s
-        ),
-      }));
-    } catch (err) {
-      console.error("🚨 멤버 추방 실패:", err);
-      throw err;
-    }
-  },
-
-  transferHost: async (serverId, newHostUserId) => {
-    try {
-      const token = (await supabase.auth.getSession()).data.session?.access_token;
-      if (!token) throw new Error("Not logged in");
-
-      const res = await fetch("https://ddkrmsyxgkxgrxpzuyau.supabase.co/functions/v1/server-management", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({ action: "transferHost", serverId, newHostUserId }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Host transfer failed");
-
-      set((state) => ({
-        servers: state.servers.map((s) =>
-          s.id === serverId ? { ...s, host: newHostUserId } : s
-        ),
-      }));
-    } catch (err) {
-      console.error("🚨 호스트 변경 실패:", err);
-      throw err;
-    }
   },
 }));

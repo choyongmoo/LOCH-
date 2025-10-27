@@ -1,5 +1,10 @@
 import { Link } from "react-router-dom";
-import type { RecentPage } from "../utils/recentPage";
+
+interface RecentPage {
+  path: string;
+  name: string;
+  ts: number;
+}
 
 interface RecentModalProps {
   recentPages: RecentPage[];
@@ -9,6 +14,11 @@ interface RecentModalProps {
 
 export default function RecentActivityModal({ recentPages, showAllModal, setShowAllModal }: RecentModalProps) {
   const MAX_STORE = 10;
+
+  const getDisplayName = (path: string) => path.split("/").filter(Boolean).pop() || "홈";
+
+  const formatVisitedAt = (ts: number) => new Date(ts).toLocaleString();
+
   if (!showAllModal) return null;
 
   return (
@@ -55,8 +65,8 @@ export default function RecentActivityModal({ recentPages, showAllModal, setShow
                 </svg>
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-blue-700">{item.name}</div>
-                <div className="text-xs text-gray-500">방문: {new Date(item.ts).toLocaleString()}</div>
+                <div className="font-semibold text-blue-700">{getDisplayName(item.path)}</div>
+                <div className="text-xs text-gray-500">방문: {formatVisitedAt(item.ts)}</div>
               </div>
             </Link>
           ))}

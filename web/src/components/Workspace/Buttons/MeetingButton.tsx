@@ -1,13 +1,9 @@
 import { Button } from "@/components/common/ui/button";
 import { supabase } from "@/lib/supabase";
 import { useSelectedServerStore } from "@/store/useSelectedServerStore";
-import { useUserStore } from "@/store/useUserStore";
 import { Loader2, Video } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
-import { getDisplayName, getStorageKey, type RecentPage } from "../utils/recentPage";
-
-const MAX_RECENT = 3; 
 
 interface MeetingButtonProps {
   serverId?: string;
@@ -27,19 +23,6 @@ export const MeetingButton = ({ className }: MeetingButtonProps) => {
   const navigate = useNavigate();
 
   const { selectedServerId } = useSelectedServerStore();
-
-  const user = useUserStore(state => state.user);
-
-  const addRecentPage = (path: string) => {
-    const storageKey = getStorageKey(user?.id);
-    const stored: RecentPage[] = JSON.parse(localStorage.getItem(storageKey) || "[]");
-    const name = getDisplayName(path);
-    if (!name) return;
-
-    const newPage: RecentPage = { path, name, ts: Date.now() };
-    const updatedPages = [newPage, ...stored.filter(p => p.path !== path)].slice(0, MAX_RECENT);
-    localStorage.setItem(storageKey, JSON.stringify(updatedPages));
-  };
 
   useEffect(() => {
     // If there is no selected server, clear state and stop loading
@@ -138,8 +121,6 @@ export const MeetingButton = ({ className }: MeetingButtonProps) => {
           className="w-full"
           onClick={() => {
             if (selectedServerId) {
-              const path = `/workspace/docs`;
-              addRecentPage(path);
               navigate(`/workspace/docs`);
             }
           }}

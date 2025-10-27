@@ -1,23 +1,48 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { useModal } from "@/store/useModalStore";
 import RecentActivityModal from "../Modals/RecentActivityModal";
 import { useUserStore } from "@/store/useUserStore";
-import { getStorageKey, type RecentPage } from "../utils/recentPage";
 
 const MAX_RECENT = 3;
 
+export interface RecentPage {
+  path: string;
+  name: string;
+  ts: number;
+}
+
 export default function RecentActivityCard() {
+  const location = useLocation();
   const [recentPages, setRecentPages] = useState<RecentPage[]>([]);
   const { openModal, currentModal } = useModal();
   const user = useUserStore((state) => state.user);
 
-  const storageKey = getStorageKey(user?.id);
+  const getDisplayName = (path: string) =>
+    path.split("/").filter(Boolean).pop() || "홈";
+
+  const storageKey = user ? `recentPages_${user.id}` : "recentPages_guest";
 
   useEffect(() => {
     const stored: RecentPage[] = JSON.parse(localStorage.getItem(storageKey) || "[]");
     setRecentPages(stored.slice(0, MAX_RECENT));
   }, [storageKey]);
+
+  useEffect(() => {
+    if (!location.pathname || !user) return;
+
+    const stored: RecentPage[] = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    const newPage: RecentPage = {
+      path: location.pathname,
+      name: getDisplayName(location.pathname),
+      ts: Date.now(),
+    };
+
+    const fullUpdatedPages = [newPage, ...stored.filter((p) => p.path !== location.pathname)];
+    localStorage.setItem(storageKey, JSON.stringify(fullUpdatedPages));
+
+    setRecentPages(fullUpdatedPages.slice(0, MAX_RECENT));
+  }, [location.pathname, user, storageKey]);
 
   return (
     <div className="w-full">
@@ -43,18 +68,16 @@ export default function RecentActivityCard() {
               <Link
                 to={item.path}
                 key={`${item.path}-${item.ts}`}
-                className="flex items-center gap-3 p-3 border rounded-lg hover:bg-gray-50 dark:hover:bg-[#23242e] transition"
+                className="flex items-center gap-4 p-4 border rounded-xl hover:bg-gray-50 dark:hover:bg-[#23242e] transition"
               >
-                <div className="w-8 h-8 flex items-center justify-center bg-gray-100 rounded">
-                  <svg width="20" height="20" fill="none">
-                    <rect x="3" y="3" width="14" height="14" rx="3" fill="#2563eb" />
-                    <rect x="6" y="7" width="8" height="2" rx="1" fill="white" />
-                    <rect x="6" y="11" width="8" height="2" rx="1" fill="white" />
-                  </svg>
-                </div>
+                <div className="w-10 h-10 flex items-center justify-center bg-gray-100 rounded-lg" />
                 <div className="flex-1">
-                  <div className="font-semibold text-blue-700">{item.name}</div>
-                  <div className="text-xs text-gray-500">방문: {new Date(item.ts).toLocaleString()}</div>
+                  <div className="font-bold text-blue-700 hover:underline">
+                    {item.name}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    방문: {new Date(item.ts).toLocaleString()}
+                  </div>
                 </div>
               </Link>
             ))
