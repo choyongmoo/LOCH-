@@ -144,7 +144,7 @@ export const Signin = () => {
             aria-label="카카오로 로그인"
           >
             <img
-              src="https://d2m0eness3apiw.cloudfront.net/assets/kakaotalk-logo.svg"
+              src="/kakaotalk-logo.svg"
               alt="Kakao"
               className="h-8 w-8 object-contain"
             />
@@ -157,7 +157,7 @@ export const Signin = () => {
             aria-label="Google로 로그인"
           >
             <img
-              src="dist/assets/google-new.svg"
+              src="/google-new.svg"
               alt="Google"
               className="h-7 w-7 object-contain"
             />
@@ -170,7 +170,7 @@ export const Signin = () => {
             aria-label="GitHub로 로그인"
           >
             <img
-              src="dist/assets/github.svg"
+              src="/github.svg"
               alt="GitHub"
               className="h-7 w-7 object-contain invert"
             />
