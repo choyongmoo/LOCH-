@@ -4,16 +4,11 @@ import { ContactButton, HomeButton, ManagerButton, ProfileButton, SettingButton,
 import MenuGroup from "./MenuGorup";
 import { OthLogo } from "../common/OthLogo";
 import { MeetingButton } from "./Buttons/MeetingButton";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUserStore } from "@/store/useUserStore";
+import { getDisplayName, getStorageKey, type RecentPage } from "./utils/RecentPage";
 
 const MAX_RECENT = 10;
-
-interface RecentPage {
-  path: string;
-  name: string;
-  ts: number;
-}
 
 export default function MenuSidebar() {
   const location = useLocation();
@@ -23,31 +18,18 @@ export default function MenuSidebar() {
   const [showFriendRequest, setShowFriendRequest] = useState(false);
   const [, setRecentPages] = useState<RecentPage[]>([]);
 
-  const getDisplayName = (path: string) =>
-    path.split("/").filter(Boolean).pop() || "홈";
-
-  const getStorageKey = () => (user ? `recentPages_${user.id}` : "recentPages_guest");
-
   const addRecentPage = (path: string) => {
-    const storageKey = getStorageKey();
-    const stored = localStorage.getItem(storageKey);
-    const prevPages: RecentPage[] = stored ? JSON.parse(stored) : [];
+    const storageKey = getStorageKey(user?.id);
+    const stored: RecentPage[] = JSON.parse(localStorage.getItem(storageKey) || "[]");
+    const name = getDisplayName(path);
+    if (!name) return; // home/workspace 제외
 
-    const newPage: RecentPage = {
-      path,
-      name: getDisplayName(path),
-      ts: Date.now(),
-    };
-
-    const updatedPages = [newPage, ...prevPages.filter((p) => p.path !== path)].slice(0, MAX_RECENT);
+    const newPage: RecentPage = { path, name, ts: Date.now() };
+    const updatedPages = [newPage, ...stored.filter(p => p.path !== path)].slice(0, MAX_RECENT);
 
     setRecentPages(updatedPages);
     localStorage.setItem(storageKey, JSON.stringify(updatedPages));
   };
-
-  useEffect(() => {
-    addRecentPage(location.pathname);
-  }, [location.pathname, user]);
 
   const handleButtonClick = (path: string, type?: string) => {
     navigate(path);
