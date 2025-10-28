@@ -51,9 +51,6 @@ export const MeetingButton = ({ className }: MeetingButtonProps) => {
     }
 
     const fetchRoom = async () => {
-      console.log("VITE_SUPABASE_URL:", import.meta.env.VITE_SUPABASE_URL);
-      console.log("VITE_LIVEKIT_URL:", import.meta.env.VITE_LIVEKIT_URL);
-
       setLoading(true);
       setError(null);
       const { data, error } = await supabase
