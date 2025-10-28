@@ -1,15 +1,8 @@
-import { useState } from "react";
 import { Heading } from "@/components/common/ui/Heading";
 import { Paragraph } from "@/components/common/ui/Paragraph";
 import { Button } from "@/components/common/ui/button";
 import { useNavigate } from "react-router";
-import {
-  FileText,
-  Wrench,
-  CheckCircle2,
-  GitBranchPlus,
-  PenLine,
-} from "lucide-react";
+import { FileText } from "lucide-react";
 
 const VERSION = "v0.9.4";
 const LAST_UPDATED = "2025-09-19";
@@ -30,7 +23,6 @@ const PRODUCTS = [
 
 export default function Docs() {
   const nav = useNavigate();
-  const [todo, setTodo] = useState({ addCard: false, writeDetail: false });
 
   return (
     <div className="max-w-6xl mx-auto px-6 py-16">
@@ -103,34 +95,5 @@ export default function Docs() {
   );
 }
 
-function DevCheck({
-  label,
-  icon,
-  done,
-  onToggle,
-}: {
-  label: string;
-  icon: React.ReactNode;
-  done: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      className={[
-        "w-full flex items-center justify-between rounded-xl border px-3 py-2 text-sm transition",
-        "hover:bg-accent",
-        done ? "border-green-300/60 bg-green-50 dark:bg-green-900/20" : "",
-      ].join(" ")}
-    >
-      <span className="inline-flex items-center gap-2 text-left">
-        {icon}
-        {label}
-      </span>
-      {done && (
-        <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-      )}
-    </button>
-  );
-}
+
+
