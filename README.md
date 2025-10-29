@@ -13,7 +13,7 @@
 <img width="2536" height="1395" alt="image" src="https://github.com/user-attachments/assets/a7d3cb1d-979a-4e73-84e3-4c890742b8ad" />
 
 
-
+<br>
 - **워크스페이스**: 프로필, 설정, 친구/초대, 문서 페이지, 서버 사이드바 등
 <img width="2559" height="1390" alt="image" src="https://github.com/user-attachments/assets/368accef-0d32-4e66-bd11-db03f4cfffcd" />
 
