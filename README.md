@@ -6,7 +6,7 @@
 
 ### 주요 기능
 - **인증**: 회원가입, 로그인, 비밀번호 찾기/재설정
-  <img width="2559" height="1394" alt="image" src="https://github.com/user-attachments/assets/49ffbbd9-94d4-4e93-98ce-772a420a6766" />
+<img width="2559" height="1394" alt="image" src="https://github.com/user-attachments/assets/49ffbbd9-94d4-4e93-98ce-772a420a6766" />
 
 <img width="2000" height="1300" alt="image" src="https://github.com/user-attachments/assets/240512d5-d7fd-49de-ba67-bf49a6859675" />
 
