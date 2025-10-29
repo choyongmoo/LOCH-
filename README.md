@@ -7,22 +7,16 @@
 ### 주요 기능
 - **인증**: 회원가입, 로그인, 비밀번호 찾기/재설정
 - **워크스페이스**: 프로필, 설정, 친구/초대, 문서 페이지, 서버 사이드바 등
-- **미팅**: LiveKit 기반 실시간 음성/영상, 방 입장(`room/:roomId`)
-- **문서/가이드**: 홈 페이지의 문서 목록/상세(`docs`, `docs/:slug`)
+- **미팅**: LiveKit 기반 실시간 음성/영상, 방 입장
+- **문서/가이드**: 홈 페이지의 문서 목록/상세
 
 ### 기술 스택
-- **Frontend**: React 19, TypeScript 5, Vite 7, Tailwind CSS 4
-- **UI/상태**: Radix UI, framer-motion, Zustand, react-router 7
+- **Frontend**: React, TypeScript, Vite, Tailwind CSS
+- **UI/상태**: Zustand, react-router
 - **Realtime/Backend**: Supabase JS, LiveKit Client, Supabase Edge Functions
-- **기타**: ESLint, @tailwindcss/vite, path alias(`@ -> ./src`)
-
 ---
 
 ## 시작하기
-
-참고: `src/lib/livekit.ts`는 Supabase Edge Function을 호출할 때 `VITE_SUPABASE_URL`을 사용합니다. (`${VITE_SUPABASE_URL}/functions/v1/join-livekit-room`)
-
----
 
 ## 디렉터리 구조(요약)
 ```
