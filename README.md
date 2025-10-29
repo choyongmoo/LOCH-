@@ -10,6 +10,9 @@
 
 <img width="2553" height="1385" alt="image" src="https://github.com/user-attachments/assets/0c647828-3518-411a-8a71-dfdc3ebbebdb" />
 
+<img width="2559" height="1391" alt="image" src="https://github.com/user-attachments/assets/58cef3e5-f981-4206-8648-601eafa642f4" />
+
+<img width="545" height="567" alt="image" src="https://github.com/user-attachments/assets/0fdf5150-2801-4f35-9e58-8df5ba11c226" />
 
 
 - **워크스페이스**: 프로필, 설정, 친구/초대, 문서 페이지, 서버 사이드바 등
