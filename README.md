@@ -8,7 +8,7 @@
 - **인증**: 회원가입, 로그인, 비밀번호 찾기/재설정
   <img width="2559" height="1394" alt="image" src="https://github.com/user-attachments/assets/49ffbbd9-94d4-4e93-98ce-772a420a6766" />
 
-<img width="2559" height="1300" alt="image" src="https://github.com/user-attachments/assets/240512d5-d7fd-49de-ba67-bf49a6859675" />
+<img width="2550" height="1300" alt="image" src="https://github.com/user-attachments/assets/240512d5-d7fd-49de-ba67-bf49a6859675" />
 
 - **워크스페이스**: 프로필, 설정, 친구/초대, 문서 페이지, 서버 사이드바 등
 - **미팅**: LiveKit 기반 실시간 음성/영상, 방 입장
