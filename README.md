@@ -16,8 +16,6 @@
 - **Realtime/Backend**: Supabase JS, LiveKit Client, Supabase Edge Functions
 ---
 
-## 시작하기
-
 ## 디렉터리 구조(요약)
 ```
 src/
@@ -36,9 +34,6 @@ supabase/
   functions/             # Edge Functions (join-livekit-room 등)
   migrations/            # DB 마이그레이션
 ```
-
----
-
 ---
 
 ## Supabase Edge Functions
