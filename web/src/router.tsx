@@ -15,7 +15,6 @@ import ProfilePage from "./pages/Workspace/ProfilePage";
 import { ResetPassword } from "@/pages/Auth/ResetPassword";
 import Docs from "@/pages/Home/Docs";
 import { ForgotPassword } from "./pages/Auth/ForgotPassword";
-import DocsDetail from "./pages/Home/Doc/DocsDetail";
 import { Download } from "./pages/Home/Download";
 import { Room } from "./pages/Room";
 import ManagerPage from "./pages/Workspace/ManagerPage";
@@ -33,8 +32,7 @@ export const Router = () => {
           <Route index element={<Home />} />
           <Route path="about" element={<About />} />
           <Route path="download" element={<Download />} />
-          <Route path="docs" element={<Docs />} />
-          <Route path="docs/:slug" element={<DocsDetail />} />
+          <Route path="docs" element={<Docs />}  />
         </Route>
 
         {/* Auth Pages */}
