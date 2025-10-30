@@ -16,7 +16,8 @@
 
 ##
 - **미팅**: LiveKit 기반 실시간 음성/영상, 방 입장
-<img width="1919" height="939" alt="image" src="https://github.com/user-attachments/assets/994cdd7e-ac03-4884-acd2-59c838413e1a" />
+<img width="1919" height="941" alt="image" src="https://github.com/user-attachments/assets/5e948a15-a25c-43dd-9145-f9d69b9a407e" />
+
 
 ##
 - **문서/가이드**: 홈 페이지의 문서 목록/상세
