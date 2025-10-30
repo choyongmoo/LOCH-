@@ -12,7 +12,7 @@
 
 ##
 - **워크스페이스**: 프로필, 설정, 친구/초대, 문서 페이지, 서버 사이드바 등
-<img width="2559" height="1390" alt="image" src="https://github.com/user-attachments/assets/368accef-0d32-4e66-bd11-db03f4cfffcd" />
+<img width="1919" height="939" alt="image" src="https://github.com/user-attachments/assets/80fd4f78-0a6c-427d-95b8-b6b96e55b164" />
 
 ##
 - **미팅**: LiveKit 기반 실시간 음성/영상, 방 입장
