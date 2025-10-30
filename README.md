@@ -20,7 +20,7 @@
 
 
 ##
-- **문서/가이드**: 홈 페이지의 문서 목록/상세
+- **가이드**: 홈 페이지의 설명서 목록/상세
 
 ### 기술 스택
 - **Frontend**: React, TypeScript, Vite, Tailwind CSS
