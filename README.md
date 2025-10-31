@@ -21,6 +21,7 @@
 
 ##
 - **가이드**: 홈 페이지의 설명서 목록/상세
+<img width="1895" height="940" alt="image" src="https://github.com/user-attachments/assets/c2e842f0-2d39-47a6-a940-bcfb84f6da5b" />
 
 ### 기술 스택
 - **Frontend**: React, TypeScript, Vite, Tailwind CSS
