@@ -14,13 +14,37 @@ export default function ProfilePage() {
 
   const actionButtonClass = "text-blue-600 dark:text-blue-400 text-sm hover:underline px-2";
 
-  // 상위 상태에서 관리
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(initialDeviceId);
   const [cameraLabel, setCameraLabel] = useState("설정되지 않음");
   const [selectedCameraId, setSelectedCameraId] = useState<string | undefined>(() => localStorage.getItem("selectedCameraId") || undefined);
 
+  const [isEmail, setIsEmail] = useState(false);
+
   useEffect(() => {
-    // 선택된 카메라가 있으면 레이블 업데이트
+    if (!user?.id) return;
+    const fetchProviders = async () => {
+      try {
+        const res = await fetch("https://your-edge-function-url", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user.id })
+        });
+        const data = await res.json();
+        if (Array.isArray(data.providers) && data.providers.includes("email")) {
+          setIsEmail(true);
+        } else {
+          setIsEmail(false);
+        }
+      } catch (err) {
+        console.error("Provider fetch error:", err);
+        setIsEmail(false);
+      }
+    };
+    fetchProviders();
+  }, [user?.id]);
+
+  // 선택된 카메라 레이블 업데이트
+  useEffect(() => {
     const loadCameraLabel = async () => {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
@@ -50,7 +74,7 @@ export default function ProfilePage() {
         <Divider />
         <ProfileAccount
           user={user}
-          isEmail={true}
+          isEmail={isEmail}
           actionButtonClass={actionButtonClass}
         />
       </ScrollArea>

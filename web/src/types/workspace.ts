@@ -38,6 +38,10 @@ export interface Profile {
   // UI용 필드
   cameraLabel?: string;
   micLabel?: string;
+
+  app_metadata?: {
+    provider?: string;
+  };
 }
 
 export interface Manager {
