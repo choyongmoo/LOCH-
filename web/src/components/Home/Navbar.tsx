@@ -44,7 +44,7 @@ export function Navbar() {
                     <div className="text-sm leading-none font-medium cursor-pointer">
                       주요 기능
                       <p className="text-muted-foreground line-clamp-2 text-sm leading-snug mt-1">
-                        어떤 기능들이 제공되는지 간단히 살펴보세요.
+                        프로젝트의 주요 기능을 소개합니다.
                       </p>
                     </div>
                   </NavigationMenuLink>
@@ -64,7 +64,7 @@ export function Navbar() {
                     <div className="text-sm leading-none font-medium cursor-pointer">
                       팀 소개
                       <p className="text-muted-foreground line-clamp-2 text-sm leading-snug mt-1">
-                        팀원 역할, 담당 파트, 사진 등 프로젝트를 함께 만든 구성원 소개
+                        프로젝트를 함께 만든 구성원을 소개합니다.
                       </p>
                     </div>
                   </NavigationMenuLink>
@@ -104,7 +104,7 @@ export function Navbar() {
         {/* 문서 메뉴 */}
         <NavigationMenuItem>
           <NavigationMenuLink asChild className={navigationMenuTriggerStyle()}>
-            <Link to="/docs">문서</Link>
+            <Link to="/docs">설명서</Link>
           </NavigationMenuLink>
         </NavigationMenuItem>
       </NavigationMenuList>

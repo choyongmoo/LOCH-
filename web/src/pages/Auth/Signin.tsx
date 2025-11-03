@@ -14,6 +14,7 @@ import { Label } from "@/components/common/ui/label";
 import { Paragraph } from "@/components/common/ui/Paragraph";
 import { Separator } from "@/components/common/ui/separator";
 import { supabase } from "@/lib/supabase";
+import { ArrowLeft } from "lucide-react"; 
 
 export const Signin = () => {
   const navigate = useNavigate();
@@ -128,111 +129,132 @@ export const Signin = () => {
   };
 
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader className="text-center">
-        <CardTitle>로그인</CardTitle>
-        <CardDescription>계정 정보를 입력하여 로그인하세요.</CardDescription>
-      </CardHeader>
-
-      <CardContent className="grid gap-6">
-        <div className="flex items-center justify-center gap-5">
-          <button
-            type="button"
-            onClick={handleKakaoSignin} 
-            className="h-14 w-14 rounded-xl shadow-sm border border-black/5 flex items-center justify-center hover:scale-105 transition"
-            style={{ backgroundColor: "#FEE500" }}
-            aria-label="카카오로 로그인"
-          >
-            <img
-              src="/kakaotalk-logo.svg"
-              alt="Kakao"
-              className="h-8 w-8 object-contain"
-            />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleGoogleSignin}
-            className="h-14 w-14 rounded-xl shadow-sm border bg-white text-gray-800 hover:bg-gray-50 flex items-center justify-center hover:scale-105 transition"
-            aria-label="Google로 로그인"
-          >
-            <img
-              src="/google-new.svg"
-              alt="Google"
-              className="h-7 w-7 object-contain"
-            />
-          </button>
-
-          <button
-            type="button"
-            onClick={handleGithubSignin} 
-            className="h-14 w-14 rounded-xl shadow-sm border border-black/10 bg-[#24292F] hover:bg-black/90 flex items-center justify-center hover:scale-105 transition"
-            aria-label="GitHub로 로그인"
-          >
-            <img
-              src="/github.svg"
-              alt="GitHub"
-              className="h-7 w-7 object-contain invert"
-            />
-          </button>
+    <div className="relative w-full max-w-md">
+      <button
+        type="button"
+        onClick={() => navigate("/")}
+        className="group absolute -top-10 left-0 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition"
+      >
+        <div className="flex items-center justify-center w-7 h-7 rounded-full border border-gray-300 dark:border-gray-600 group-hover:border-foreground/50">
+          <ArrowLeft className="w-4 h-4" />
         </div>
+        <span className="font-medium group-hover:underline">
+          뒤로가기
+        </span>
+      </button>
 
-        <div className="flex items-center gap-4">
-          <Separator className="flex-1" />
-          <span className="text-muted-foreground text-xs">OR</span>
-          <Separator className="flex-1" />
-        </div>
+      <Card className="w-full shadow-md backdrop-blur bg-white/80 dark:bg-gray-900/70">
+        <CardHeader className="text-center">
+          <CardTitle className="text-2xl font-bold text-foreground">
+            로그인
+          </CardTitle>
+          <CardDescription>
+            계정 정보를 입력하여 로그인하세요.
+          </CardDescription>
+        </CardHeader>
 
-        <div className="grid gap-2">
-          <Label htmlFor="email">이메일</Label>
-          <Input
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
-
-        <div className="grid gap-2">
-          <div className="flex items-center justify-between">
-            <Label htmlFor="password">비밀번호</Label>
-            <Link
-              to="/forgot-password"
-              className="underline text-sm text-muted-foreground"
+        <CardContent className="grid gap-6">
+          <div className="flex items-center justify-center gap-5">
+            <button
+              type="button"
+              onClick={handleKakaoSignin}
+              className="h-14 w-14 rounded-xl shadow-sm border border-black/5 flex items-center justify-center hover:scale-105 transition"
+              style={{ backgroundColor: "#FEE500" }}
+              aria-label="카카오로 로그인"
             >
-              비밀번호를 잊으셨나요?
-            </Link>
-          </div>
-          <Input
-            id="password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                void handleEmailSignin();
-              }
-            }}
-          />
-        </div>
-      </CardContent>
+              <img
+                src="/kakaotalk-logo.svg"
+                alt="Kakao"
+                className="h-8 w-8 object-contain"
+              />
+            </button>
 
-      <CardFooter className="flex flex-col gap-4 pt-2">
-        {error && <Paragraph className="text-red-500 text-sm">{error}</Paragraph>}
-        <Button
-          className="w-full"
-          onClick={handleEmailSignin}
-          disabled={loading}
-        >
-          {loading ? "로그인 중..." : "로그인"}
-        </Button>
-        <Paragraph muted className="text-center">
-          계정이 없으신가요?{" "}
-          <Link to="/signup" className="underline">
-            회원가입
-          </Link>
-        </Paragraph>
-      </CardFooter>
-    </Card>
+            <button
+              type="button"
+              onClick={handleGoogleSignin}
+              className="h-14 w-14 rounded-xl shadow-sm border bg-white text-gray-800 hover:bg-gray-50 flex items-center justify-center hover:scale-105 transition"
+              aria-label="Google로 로그인"
+            >
+              <img
+                src="/google-new.svg"
+                alt="Google"
+                className="h-7 w-7 object-contain"
+              />
+            </button>
+
+            <button
+              type="button"
+              onClick={handleGithubSignin}
+              className="h-14 w-14 rounded-xl shadow-sm border border-black/10 bg-[#24292F] hover:bg-black/90 flex items-center justify-center hover:scale-105 transition"
+              aria-label="GitHub로 로그인"
+            >
+              <img
+                src="/github.svg"
+                alt="GitHub"
+                className="h-7 w-7 object-contain invert"
+              />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <Separator className="flex-1" />
+            <span className="text-muted-foreground text-xs">OR</span>
+            <Separator className="flex-1" />
+          </div>
+
+          <div className="grid gap-2">
+            <Label htmlFor="email">이메일</Label>
+            <Input
+              id="email"
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+
+          <div className="grid gap-2">
+            <div className="flex items-center justify-between">
+              <Label htmlFor="password">비밀번호</Label>
+              <Link
+                to="/forgot-password"
+                className="underline text-sm text-muted-foreground"
+              >
+                비밀번호를 잊으셨나요?
+              </Link>
+            </div>
+            <Input
+              id="password"
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  void handleEmailSignin();
+                }
+              }}
+            />
+          </div>
+        </CardContent>
+
+        <CardFooter className="flex flex-col gap-4 pt-2">
+          {error && (
+            <Paragraph className="text-red-500 text-sm">{error}</Paragraph>
+          )}
+          <Button
+            className="w-full font-semibold"
+            onClick={handleEmailSignin}
+            disabled={loading}
+          >
+            {loading ? "로그인 중..." : "로그인"}
+          </Button>
+          <Paragraph muted className="text-center">
+            계정이 없으신가요?{" "}
+            <Link to="/signup" className="underline">
+              회원가입
+            </Link>
+          </Paragraph>
+        </CardFooter>
+      </Card>
+    </div>
   );
 };
