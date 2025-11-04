@@ -1,7 +1,6 @@
 import React from "react";
-import zustandLogo from "@/assets/landing/zus.jpg";
-import awsLogo from "@/assets/landing/aws.png";
-
+import zustandLogo from "@/assets/landing/zus.jpg"; 
+import { FunctionSquare } from "lucide-react";
 
 type StackItem = { label: string; icon?: React.ReactNode };
 type StackColumnProps = { title: string; items: StackItem[] };
@@ -27,7 +26,6 @@ const StackColumn = ({ title, items }: StackColumnProps) => {
   );
 };
 
-
 const IconImg = ({ src, alt }: { src: string; alt: string }) => (
   <img
     src={src}
@@ -39,35 +37,35 @@ const IconImg = ({ src, alt }: { src: string; alt: string }) => (
 );
 
 const FRONTEND: StackItem[] = [
-  { label: "React", icon: <IconImg src="https://cdn.simpleicons.org/react" alt="React" /> },
-  { label: "Axios", icon: <IconImg src="https://avatars.githubusercontent.com/u/32372333?s=200&v=4" alt="Axios" /> },
-  { label: "Socket.IO Client", icon: <IconImg src="https://cdn.simpleicons.org/socketdotio" alt="Socket.IO" /> },
-  { label: "Zustand", icon: <IconImg src={zustandLogo} alt="Zustand" /> },   // ✅ 로컬 이미지
+  { label: "React",        icon: <IconImg src="https://cdn.simpleicons.org/react" alt="React" /> },
+  { label: "TypeScript",   icon: <IconImg src="https://cdn.simpleicons.org/typescript" alt="TypeScript" /> },
+  { label: "Vite",         icon: <IconImg src="https://cdn.simpleicons.org/vite" alt="Vite" /> },
   { label: "Tailwind CSS", icon: <IconImg src="https://cdn.simpleicons.org/tailwindcss" alt="TailwindCSS" /> },
 ];
 
-const BACKEND_SUPABASE: StackItem[] = [
-  { label: "Supabase Auth", icon: <IconImg src="https://cdn.simpleicons.org/supabase" alt="Supabase" /> },
-  { label: "Supabase Database", icon: <IconImg src="https://cdn.simpleicons.org/supabase" alt="Supabase" /> },
-  { label: "Supabase Realtime", icon: <IconImg src="https://cdn.simpleicons.org/supabase" alt="Supabase" /> },
+const UI_STATE: StackItem[] = [
+  { label: "Zustand",       icon: <IconImg src={zustandLogo} alt="Zustand" /> }, 
+  { label: "react-router",  icon: <IconImg src="https://cdn.simpleicons.org/reactrouter" alt="React Router" /> },
 ];
 
-const DATABASE: StackItem[] = [
-  { label: "PostgreSQL (via Supabase)", icon: <IconImg src="https://cdn.simpleicons.org/postgresql" alt="PostgreSQL" /> },
-];
-
-const DEVOPS: StackItem[] = [
-  { label: "GitHub", icon: <IconImg src="https://cdn.simpleicons.org/github" alt="GitHub" /> },
-  { label: "Postman", icon: <IconImg src="https://cdn.simpleicons.org/postman" alt="Postman" /> },
-  { label: "Docker", icon: <IconImg src="https://cdn.simpleicons.org/docker" alt="Docker" /> },
-  { label: "AWS", icon: <IconImg src={awsLogo} alt="AWS" /> },  
+const REALTIME_BACKEND: StackItem[] = [
+  { label: "Supabase JS",            icon: <IconImg src="https://cdn.simpleicons.org/supabase" alt="Supabase" /> },
+  { label: "LiveKit Client",         icon: <IconImg src="https://livekit.io/favicon.ico" alt="LiveKit" /> }, 
+  {
+    label: "Supabase Edge Functions",
+    icon: (
+      <span className="inline-flex items-center rounded px-1.5 py-0.5 border text-[10px]">
+        <FunctionSquare className="h-3.5 w-3.5" />
+        <span className="ml-1 font-semibold">Edge</span>
+      </span>
+    ),
+  },
 ];
 
 export const Tech = () => {
   return (
     <section id="tech" className="relative w-full min-h-[88vh] flex items-center justify-center px-6">
       <div className="w-full max-w-6xl">
-     
         <div className="relative flex justify-center">
           <div className="inline-flex items-center justify-center px-6 py-3 rounded-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
             <span className="text-base font-extrabold tracking-wide text-gray-800 dark:text-white">
@@ -79,11 +77,10 @@ export const Tech = () => {
           </div>
         </div>
 
-      
-        <div className="relative mt-16 grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div className="relative mt-16 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="hidden md:block absolute -top-10 left-0 right-0">
-            <div className="grid grid-cols-4 gap-6">
-              {[0, 1, 2, 3].map((i) => (
+            <div className="grid grid-cols-3 gap-6">
+              {[0, 1, 2].map((i) => (
                 <div key={i} className="flex justify-center">
                   <div className="h-10 w-px bg-gray-300 dark:bg-gray-700" />
                 </div>
@@ -91,10 +88,9 @@ export const Tech = () => {
             </div>
           </div>
 
-          <StackColumn title="FRONT-END" items={FRONTEND} />
-          <StackColumn title="BACK-END (Supabase)" items={BACKEND_SUPABASE} />
-          <StackColumn title="DATABASE" items={DATABASE} />
-          <StackColumn title="DEVOPS" items={DEVOPS} />
+          <StackColumn title="FRONTEND" items={FRONTEND} />
+          <StackColumn title="UI / 상태" items={UI_STATE} />
+          <StackColumn title="REALTIME / BACKEND" items={REALTIME_BACKEND} />
         </div>
       </div>
     </section>

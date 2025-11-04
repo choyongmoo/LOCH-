@@ -1,9 +1,10 @@
 import type { ReactNode } from "react";
 
 interface Props {
-    label: string;
+    label: ReactNode;
     value: ReactNode;
     action?: ReactNode;
+    className?: string;
 }
 
 export default function ProfileRow({ label, value, action }: Props) {

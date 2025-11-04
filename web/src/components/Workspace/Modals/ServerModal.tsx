@@ -5,6 +5,7 @@ import { useServerModal } from "../hooks/useServerModal";
 import { useState, useEffect } from "react";
 import { useServers } from "@/store/useServersStore";
 import { supabase } from "@/lib/supabase";
+import { ConfirmModal } from "./ConfirmModal";
 
 interface Props {
   server: Server;
@@ -52,6 +53,13 @@ export default function ServerModal({
 
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const serverInviteLink = `${window.location.origin}/invite/${server.id}`;
+
+  const [confirmAction, setConfirmAction] = useState<{
+    type: "kick" | "transfer" | null;
+    targetId: string | null;
+    nickname?: string;
+  }>({ type: null, targetId: null });
+  
   const { kickMember, transferHost } = useServers();
 
   // 호스트 전용: 멤버 추방
@@ -188,18 +196,33 @@ export default function ServerModal({
             <div className="flex flex-col gap-2 max-h-40 overflow-y-auto">
               {members.map((m) =>
                 m.user_id !== currentUserId && (
-                  <div key={m.id} className="flex justify-between items-center p-2 bg-[#2f3136] rounded-md">
+                  <div
+                    key={m.id}
+                    className="flex justify-between items-center p-2 bg-[#2f3136] rounded-md"
+                  >
                     <span className="text-sm">{m.profile.nickname}</span>
                     <div className="flex gap-2">
                       <Button
                         className="bg-red-600 hover:bg-red-700 text-white text-xs px-2 py-1"
-                        onClick={() => handleKick(m.user_id)}
+                        onClick={() =>
+                          setConfirmAction({
+                            type: "kick",
+                            targetId: m.user_id,
+                            nickname: m.profile.nickname,
+                          })
+                        }
                       >
                         추방
                       </Button>
                       <Button
                         className="bg-yellow-600 hover:bg-yellow-700 text-white text-xs px-2 py-1"
-                        onClick={() => handleTransferHost(m.user_id)}
+                        onClick={() =>
+                          setConfirmAction({
+                            type: "transfer",
+                            targetId: m.user_id,
+                            nickname: m.profile.nickname,
+                          })
+                        }
                       >
                         호스트 변경
                       </Button>
@@ -272,6 +295,24 @@ export default function ServerModal({
         </div>
       )}
 
+      {/* ✅ 확인 모달 */}
+      {confirmAction.type && confirmAction.targetId && (
+        <ConfirmModal
+          message={
+            confirmAction.type === "kick"
+              ? `"${confirmAction.nickname}"님을 정말 추방하시겠습니까?`
+              : `"${confirmAction.nickname}"님에게 호스트 권한을 양도하시겠습니까?`
+          }
+          onConfirm={() => {
+            if (confirmAction.type === "kick" && confirmAction.targetId)
+              handleKick(confirmAction.targetId);
+            if (confirmAction.type === "transfer" && confirmAction.targetId)
+              handleTransferHost(confirmAction.targetId);
+            setConfirmAction({ type: null, targetId: null });
+          }}
+          onCancel={() => setConfirmAction({ type: null, targetId: null })}
+        />
+      )}
       {/* InviteModal */}
       {isInviteOpen && (
         <InviteModal
