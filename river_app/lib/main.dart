@@ -121,7 +121,15 @@ class _ExampleBrowser extends State<ExampleBrowser> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: compositeView());
+    return Scaffold(
+      body: compositeView(),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () async {
+          await _controller.goBack();
+        },
+        child: const Icon(Icons.arrow_back),
+      ),
+    );
   }
 
   Future<WebviewPermissionDecision> _onPermissionRequested(
