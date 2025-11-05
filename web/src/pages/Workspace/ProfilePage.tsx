@@ -7,17 +7,40 @@ import ProfilePersonal from "@/components/Workspace/Profile/ProfilePersonal";
 import ProfileAccount from "@/components/Workspace/Profile/ProfileAccount";
 import ProfileModals from "@/components/Workspace/Profile/ProfileModals";
 import Divider from "@/components/Workspace/Profile/Divider";
+import { supabase } from "@/lib/supabase";
 
 export default function ProfilePage() {
   const user = useUserStore((state) => state.user);
   const { devices, selectedDeviceId: initialDeviceId } = useMicrophone();
-
+  const [isEmail, setIsEmail] = useState<boolean>(false);
   const actionButtonClass = "text-blue-600 dark:text-blue-400 text-sm hover:underline px-2";
 
   // 상위 상태에서 관리
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(initialDeviceId);
   const [cameraLabel, setCameraLabel] = useState("설정되지 않음");
   const [selectedCameraId, setSelectedCameraId] = useState<string | undefined>(() => localStorage.getItem("selectedCameraId") || undefined);
+
+  useEffect(() => {
+  if (!user) return;
+
+  const checkProvider = async () => {
+    try {
+      const {data, error} = await supabase.functions.invoke("get-user-provider");
+
+      let providers: string[] = [];
+      if (data.providers && Array.isArray(data.providers)) {
+        providers = data.providers;
+      }
+
+      setIsEmail(providers.length === 0 || providers.includes("email")); 
+    } catch (err) {
+      console.error("프로바이더 확인 실패", err);
+      setIsEmail(true);
+    }
+  };
+
+  checkProvider();
+}, [user]);
 
   useEffect(() => {
     // 선택된 카메라가 있으면 레이블 업데이트
@@ -50,7 +73,7 @@ export default function ProfilePage() {
         <Divider />
         <ProfileAccount
           user={user}
-          isEmail={true}
+          isEmail={isEmail}
           actionButtonClass={actionButtonClass}
         />
       </ScrollArea>
