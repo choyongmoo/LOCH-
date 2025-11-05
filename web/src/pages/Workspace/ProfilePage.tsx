@@ -27,6 +27,10 @@ export default function ProfilePage() {
     try {
       const {data, error} = await supabase.functions.invoke("get-user-provider");
 
+      if (error) {
+        return
+      }
+
       let providers: string[] = [];
       if (data.providers && Array.isArray(data.providers)) {
         providers = data.providers;
