@@ -34,12 +34,12 @@ export default function ProfilePage() {
       let providers: string[] = [];
       if (data.providers && Array.isArray(data.providers)) {
         providers = data.providers;
+        console.log(data);
       }
 
       setIsEmail(providers.length === 0 || providers.includes("email")); 
     } catch (err) {
       console.error("프로바이더 확인 실패", err);
-      setIsEmail(true);
     }
   };
 

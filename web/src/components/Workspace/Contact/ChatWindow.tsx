@@ -34,13 +34,12 @@ export default function ChatWindow({ currentUserId, selectedFriend }: ChatWindow
   const renderMessageText = (msg: any) => {
   if (msg.type === "server_invite" && msg.serverId) {
     return (
-      <button
-        type="button"
-        className="text-blue-500 underline cursor-pointer bg-transparent p-0"
+      <span
         onClick={() => navigate(`/workspace/invite/${msg.serverId}`)}
+        className="underline text-blue-500 hover:text-blue-400 cursor-pointer"
       >
         {msg.text}
-      </button>
+      </span>
     );
   }
 
