@@ -103,7 +103,6 @@ export default function CreateRoomModal({ close, userId }: { close: () => void, 
   };
 
   const handleJoin = async (server: any) => {
-    
     if (server.is_private) {
       const entered = passwordInputs[server.id];
       if (entered !== server.password) {
@@ -112,8 +111,19 @@ export default function CreateRoomModal({ close, userId }: { close: () => void, 
       }
     }
 
-    await joinServer(server.id, userId);
+    const result = await joinServer(server.id, userId);
+
+    if (!result.success) {
+      if (result.reason === "full") {
+        alert("현재 이 서버는 인원이 꽉 찼습니다.");
+      } else {
+        alert("서버에 입장할 수 없습니다.");
+      }
+      return;
+    }
+
     await useServers.getState().fetchAllUserServers(userId);
+
     alert(`${server.room_name} 서버에 입장했습니다!`);
     close();
   };

@@ -105,7 +105,7 @@ export default function ChatWindow({ currentUserId, selectedFriend }: ChatWindow
 
                   <div className={`flex flex-col ${msg.sender === "me" ? "items-end" : "items-start"}`}>
                     <div
-                      className={`px-3 py-2 rounded-xl max-w-xs text-sm ${
+                      className={`px-3 py-2 rounded-xl max-w-xs text-sm break-all ${
                         msg.sender === "me"
                           ? "bg-indigo-500 text-white"
                           : "bg-gray-200 dark:bg-[#40444b] text-gray-800 dark:text-gray-200"
