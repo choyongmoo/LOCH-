@@ -41,7 +41,7 @@ export default function ProfilePersonal({
             </div>
           }
           value={
-            <span className="font-medium text-white">
+            <span className="font-medium text-gray-300">
               {user.nickname ?? "설정되지 않음"}
             </span>
           }

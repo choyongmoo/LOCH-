@@ -30,7 +30,7 @@ export default function ProfileAccount({
             </div>
           }
           value={
-            <span className="font-medium text-white">
+            <span className="font-medium text-gray-300">
               {user.email ?? "설정되지 않음"}
             </span>
           }

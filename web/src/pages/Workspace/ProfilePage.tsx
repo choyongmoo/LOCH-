@@ -15,7 +15,6 @@ export default function ProfilePage() {
   const [isEmail, setIsEmail] = useState<boolean>(false);
   const actionButtonClass = "text-blue-600 dark:text-blue-400 text-sm hover:underline px-2";
 
-  // 상위 상태에서 관리
   const [selectedDeviceId, setSelectedDeviceId] = useState<string | undefined>(initialDeviceId);
   const [cameraLabel, setCameraLabel] = useState("설정되지 않음");
   const [selectedCameraId, setSelectedCameraId] = useState<string | undefined>(() => localStorage.getItem("selectedCameraId") || undefined);
@@ -47,7 +46,6 @@ export default function ProfilePage() {
 }, [user]);
 
   useEffect(() => {
-    // 선택된 카메라가 있으면 레이블 업데이트
     const loadCameraLabel = async () => {
       try {
         const devices = await navigator.mediaDevices.enumerateDevices();
