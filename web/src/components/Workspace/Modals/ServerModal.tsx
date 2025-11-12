@@ -31,7 +31,7 @@ export default function ServerModal({
   onLeaveServer,
 }: Props) {
   const isHost = currentUserId === server.host;
-
+  const [errorMessage, setErrorMessage] = useState("");
   const [members, setMembers] = useState<Member[]>([]);
 
   const {
@@ -62,21 +62,17 @@ export default function ServerModal({
   
   const { kickMember, transferHost } = useServers();
 
-  // 호스트 전용: 멤버 추방
   const handleKick = (memberUserId: string) => {
     kickMember(server.id, memberUserId, currentUserId);
     setMembers((prev) => prev.filter((m) => m.user_id !== memberUserId));
   };
 
-  // 호스트 전용: 호스트 변경
   const handleTransferHost = (memberId: string) => {
     transferHost(server.id, memberId, currentUserId);
   };
 
-  // 멤버 목록 fetch
   useEffect(() => {
     const fetchMembers = async () => {
-      // 1단계: server_members 테이블에서 활성 멤버 가져오기
       const { data: membersData, error: membersError } = await supabase
         .from("server_members")
         .select("id,user_id")
@@ -90,7 +86,6 @@ export default function ServerModal({
 
       if (!membersData) return;
 
-      // 2단계: profile 테이블에서 멤버 프로필 가져오기
       const userIds = membersData.map((m) => m.user_id);
       const { data: profileData, error: profileError } = await supabase
         .from("profile")
@@ -252,7 +247,27 @@ export default function ServerModal({
                   서버 삭제
                 </Button>
                 <Button
-                  onClick={() => handleSave(onSave)}
+                  onClick={() => {
+                    if (!roomName.trim()) {
+                      setErrorMessage("방 이름은 필수입니다.");
+                      setShowErrorModal(true);
+                      return;
+                    }
+
+                    if (isPrivate && !password.trim()) {
+                      setErrorMessage("비공개 서버는 비밀번호를 입력해야 합니다.");
+                      setShowErrorModal(true);
+                      return;
+                    }
+
+                    if (maxParticipants < currentParticipants) {
+                      setErrorMessage(`현재 참여자 수(${currentParticipants}명)보다 작은 값으로 설정할 수 없습니다.`);
+                      setShowErrorModal(true);
+                      return;
+                    }
+
+                    handleSave(onSave);
+                  }}
                   className="bg-blue-600 hover:bg-blue-700"
                 >
                   저장
@@ -282,9 +297,7 @@ export default function ServerModal({
       {showErrorModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
           <div className="bg-[#202225] p-4 rounded-xl shadow-lg text-white w-[300px] text-center">
-            <p>
-              현재 참여자 수 {currentParticipants}명 보다 작은 값으로 설정할 수 없습니다.
-            </p>
+            <p>{errorMessage}</p>
             <Button
               className="mt-4 bg-blue-600 hover:bg-blue-700"
               onClick={() => setShowErrorModal(false)}
@@ -295,7 +308,7 @@ export default function ServerModal({
         </div>
       )}
 
-      {/* ✅ 확인 모달 */}
+      {/* 확인 모달 */}
       {confirmAction.type && confirmAction.targetId && (
         <ConfirmModal
           message={

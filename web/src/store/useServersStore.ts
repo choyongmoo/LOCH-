@@ -16,7 +16,10 @@ interface ServersState {
 
 //서버 참가
 interface JoinServerState {
-  joinServer: (serverId: string, userId: string) => Promise<void>;
+  joinServer: (
+    serverId: string,
+    userId: string
+  ) => Promise<{ success: boolean; reason?: string }>;
 }
 
 //서버 참가
@@ -43,21 +46,19 @@ export const useJoinServer = create<JoinServerState>(() => ({
 
       // 3. 최대 인원 체크
       if (currentCount >= server.max_participants) {
-        alert("서버 인원이 꽉 찼습니다.");
-        return;
+        return { success: false, reason: "full" };
       }
 
-      // 4. 기존 join 로직
-      const { data: existing, error: fetchError } = await supabase
+      // 4. 기존 멤버 확인
+      const { data: existing } = await supabase
         .from("server_members")
         .select("*")
         .eq("server_id", serverId)
         .eq("user_id", userId)
         .maybeSingle();
-      if (fetchError) throw fetchError;
 
       if (existing) {
-        const { error: updateError } = await supabase
+        await supabase
           .from("server_members")
           .update({
             is_active: true,
@@ -66,10 +67,8 @@ export const useJoinServer = create<JoinServerState>(() => ({
           })
           .eq("server_id", serverId)
           .eq("user_id", userId);
-
-        if (updateError) throw updateError;
       } else {
-        const { error: insertError } = await supabase.from("server_members").insert([
+        await supabase.from("server_members").insert([
           {
             server_id: serverId,
             user_id: userId,
@@ -78,14 +77,15 @@ export const useJoinServer = create<JoinServerState>(() => ({
             role: "participant",
           },
         ]);
-        if (insertError) throw insertError;
       }
+
+      return { success: true };
     } catch (err) {
       console.error("🚨 서버 입장 실패:", err);
+      return { success: false, reason: "error" };
     }
   },
 }));
-
 
 //기존 서버 관리용
 export const useServers = create<ServersState>((set) => ({

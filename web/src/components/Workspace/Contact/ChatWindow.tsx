@@ -34,13 +34,12 @@ export default function ChatWindow({ currentUserId, selectedFriend }: ChatWindow
   const renderMessageText = (msg: any) => {
   if (msg.type === "server_invite" && msg.serverId) {
     return (
-      <button
-        type="button"
-        className="text-blue-500 underline cursor-pointer bg-transparent p-0"
+      <span
         onClick={() => navigate(`/workspace/invite/${msg.serverId}`)}
+        className="underline text-blue-500 hover:text-blue-400 cursor-pointer"
       >
         {msg.text}
-      </button>
+      </span>
     );
   }
 
@@ -106,7 +105,7 @@ export default function ChatWindow({ currentUserId, selectedFriend }: ChatWindow
 
                   <div className={`flex flex-col ${msg.sender === "me" ? "items-end" : "items-start"}`}>
                     <div
-                      className={`px-3 py-2 rounded-xl max-w-xs text-sm ${
+                      className={`px-3 py-2 rounded-xl max-w-xs text-sm break-all ${
                         msg.sender === "me"
                           ? "bg-indigo-500 text-white"
                           : "bg-gray-200 dark:bg-[#40444b] text-gray-800 dark:text-gray-200"
