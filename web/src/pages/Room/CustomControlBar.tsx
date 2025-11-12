@@ -4,7 +4,6 @@ import { mergeProps, supportsScreenSharing } from "@/lib/utils";
 import {
   ChatIcon,
   ChatToggle,
-  DisconnectButton,
   GearIcon,
   LeaveIcon,
   MediaDeviceMenu,
@@ -213,14 +212,16 @@ export function CustomControlBar({
         </SettingsMenuToggle>
       )}
       {visibleControls.leave && (
-        <DisconnectButton
+        <button
+          className="lk-button"
+          type="button"
           onClick={() => {
             navigate("/workspace");
           }}
         >
           {showIcon && <LeaveIcon />}
           {showText && "나가기"}
-        </DisconnectButton>
+        </button>
       )}
       <StartMediaButton label="미디어 재생" />
     </div>
