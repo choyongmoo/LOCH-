@@ -12,7 +12,6 @@ export async function sendMessage(
   if (!input.trim()) return;
 
   try {
-    // 1️⃣ conversation 조회 (있으면 가져오기)
     let { data: conv } = await supabase
       .from("conversations")
       .select("*")
@@ -20,7 +19,6 @@ export async function sendMessage(
       .eq("is_dm", true)
       .maybeSingle();
 
-    // 2️⃣ conversation 없으면 새로 생성
     if (!conv) {
       const { data: newConv, error: insertConvError } = await supabase
         .from("conversations")
@@ -35,7 +33,6 @@ export async function sendMessage(
       conv = newConv;
     }
 
-    // 3️⃣ 메시지 삽입
     const { data: msgData, error: msgError } = await supabase
       .from("messages")
       .insert({
@@ -55,7 +52,6 @@ export async function sendMessage(
       return;
     }
 
-    // 4️⃣ 로컬 상태에 추가
     addMessage({
       id: msgData.id,
       sender: "me",

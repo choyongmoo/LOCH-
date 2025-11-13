@@ -17,43 +17,43 @@ export default function ContactPage() {
         if (!currentUser?.id) return;
 
         try {
-        const { data, error } = await supabase
-            .from("friend_requests")
-            .select(`
-                id,
-                status,
-                requester_id,
-                addressee_id,
-                requester:requester_id(id, nickname, accent_color),
-                addressee:addressee_id(id, nickname, accent_color)
-            `)
-            .or(
-                `and(requester_id.eq.${currentUser.id},status.eq.accepted),and(addressee_id.eq.${currentUser.id},status.eq.accepted)`
-            );
+            const { data, error } = await supabase
+                .from("friend_requests")
+                .select(`
+                    id,
+                    status,
+                    requester_id,
+                    addressee_id,
+                    requester:requester_id(id, nickname, accent_color),
+                    addressee:addressee_id(id, nickname, accent_color)
+                `)
+                .or(
+                    `and(requester_id.eq.${currentUser.id},status.eq.accepted),and(addressee_id.eq.${currentUser.id},status.eq.accepted)`
+                );
 
-        if (error) throw error;
+            if (error) throw error;
 
-        const formatted: Friend[] = (data || []).map((req) => {
-            const friendInfoArray = req.requester_id === currentUser.id ? req.addressee : req.requester;
-            const friendInfo = Array.isArray(friendInfoArray) ? friendInfoArray[0] : friendInfoArray;
+            const formatted: Friend[] = (data || []).map((req) => {
+                const friendInfoArray = req.requester_id === currentUser.id ? req.addressee : req.requester;
+                const friendInfo = Array.isArray(friendInfoArray) ? friendInfoArray[0] : friendInfoArray;
 
-            return {
-            id: friendInfo?.id || "",
-            nickname: friendInfo?.nickname,
-            name: friendInfo?.nickname || "",
-            accent_color: friendInfo?.accent_color,
-            };
-        });
+                return {
+                id: friendInfo?.id || "",
+                nickname: friendInfo?.nickname,
+                name: friendInfo?.nickname || "",
+                accent_color: friendInfo?.accent_color,
+                };
+            });
 
-        setFriends(formatted);
-        } catch (err) {
-            console.error("친구 목록 불러오기 실패", err);
-        }
-    };
+            setFriends(formatted);
+            } catch (err) {
+                console.error("친구 목록 불러오기 실패", err);
+            }
+        };
 
-    useEffect(() => {
-        fetchFriends();
-    }, [currentUser?.id]);
+        useEffect(() => {
+            fetchFriends();
+        }, [currentUser?.id]);
 
     return (
         <div className="flex h-screen">

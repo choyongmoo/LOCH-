@@ -14,13 +14,10 @@ export function supportsScreenSharing(): boolean {
   );
 }
 
-export function mergeProps<T extends Record<string, unknown>, U extends Record<string, unknown>>(
-  a: T,
-  b: U
-): T & U {
-  const result: Record<string, unknown> = { ...a };
+export function mergeProps<T extends object, U extends object>(a: T, b: U): T & U {
+  const result: Record<string, unknown> = { ...(a as Record<string, unknown>) };
 
-  for (const key of Object.keys(b)) {
+  for (const key of Object.keys(b as Record<string, unknown>)) {
     const av = (a as Record<string, unknown>)[key];
     const bv = (b as Record<string, unknown>)[key];
 
@@ -44,7 +41,6 @@ export function mergeProps<T extends Record<string, unknown>, U extends Record<s
       continue;
     }
 
-    // Default: second overrides first
     result[key] = bv;
   }
 

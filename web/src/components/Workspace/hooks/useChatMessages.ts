@@ -26,7 +26,7 @@ export const useChatMessages = (currentUserId?: string, selectedFriend?: Friend 
       }
 
       const formatted: Message[] = (data ?? []).map((m: any) => ({
-        id: m.id, // Supabase에서 온 메시지 id 사용
+        id: m.id,
         sender: m.sender_id === currentUserId ? "me" : "friend",
         text: m.content,
         timestamp: new Date(m.created_at).getTime(),

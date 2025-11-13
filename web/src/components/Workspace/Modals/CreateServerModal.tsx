@@ -21,11 +21,25 @@ export default function CreateRoomModal({ close, userId }: { close: () => void, 
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [passwordInputs, setPasswordInputs] = useState<{ [key: string]: string }>({});
+  const [showErrorModal, setShowErrorModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const handleSubmit = async () => {
-    if (!roomName.trim()) return alert("방 이름은 필수입니다.");
-    if (maxParticipants < 1 || maxParticipants > 10) return alert("최대 인원은 1~10명 사이여야 합니다.");
-
+    if (!roomName.trim()) {
+      setErrorMessage("방 이름은 필수입니다.");
+      setShowErrorModal(true);
+      return;
+    }
+    if (maxParticipants < 1 || maxParticipants > 10) {
+      setErrorMessage("최대 인원은 1~10명 사이여야 합니다.");
+      setShowErrorModal(true);
+      return;
+    }
+    if (isPrivate && !password.trim()) {
+      setErrorMessage("비공개 서버는 비밀번호를 입력해야 합니다.");
+      setShowErrorModal(true);
+      return;
+    }
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
 
@@ -89,7 +103,6 @@ export default function CreateRoomModal({ close, userId }: { close: () => void, 
   };
 
   const handleJoin = async (server: any) => {
-    
     if (server.is_private) {
       const entered = passwordInputs[server.id];
       if (entered !== server.password) {
@@ -98,8 +111,19 @@ export default function CreateRoomModal({ close, userId }: { close: () => void, 
       }
     }
 
-    await joinServer(server.id, userId);
+    const result = await joinServer(server.id, userId);
+
+    if (!result.success) {
+      if (result.reason === "full") {
+        alert("현재 이 서버는 인원이 꽉 찼습니다.");
+      } else {
+        alert("서버에 입장할 수 없습니다.");
+      }
+      return;
+    }
+
     await useServers.getState().fetchAllUserServers(userId);
+
     alert(`${server.room_name} 서버에 입장했습니다!`);
     close();
   };
@@ -233,6 +257,19 @@ export default function CreateRoomModal({ close, userId }: { close: () => void, 
                 </div>
               )}
             </ScrollArea>
+          </div>
+        )}
+        {showErrorModal && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+            <div className="bg-[#202225] p-4 rounded-xl shadow-lg text-white w-[300px] text-center">
+              <p>{errorMessage}</p>
+              <Button
+                className="mt-4 bg-blue-600 hover:bg-blue-700"
+                onClick={() => setShowErrorModal(false)}
+              >
+                확인
+              </Button>
+            </div>
           </div>
         )}
       </div>

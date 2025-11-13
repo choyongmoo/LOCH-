@@ -9,7 +9,6 @@ permissions:
   id-token: write
   contents: read
 
-# ⬇️ 모든 run 스텝의 작업 폴더를 web/ 로 고정
 defaults:
   run:
     working-directory: web
@@ -27,8 +26,8 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-          # ⬇️ 캐시 키가 web/package-lock.json을 보도록 지정
           cache-dependency-path: web/package-lock.json
+          
 
       - name: Install deps
         run: npm ci
@@ -37,27 +36,27 @@ jobs:
         env:
           VITE_SUPABASE_URL: ${{ secrets.VITE_SUPABASE_URL }}
           VITE_SUPABASE_ANON_KEY: ${{ secrets.VITE_SUPABASE_ANON_KEY }}
-        run: npm run build   # => web/dist 생성
+          VITE_LIVEKIT_URL: ${{ secrets.VITE_LIVEKIT_URL }}
+          VITE_LIVEKIT_TOKEN_ENDPOINT: ${{ secrets.VITE_LIVEKIT_TOKEN_ENDPOINT }}
+        run: npm run build   # => dist 생성
 
       - name: Configure AWS (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ap-northeast-2
 
-      - name: Install AWS CLI
-        run: |
-          sudo apt-get update -y
-          sudo apt-get install -y awscli
+      - name: Check AWS CLI
+        run: aws --version
 
-      # defaults 때문에 현재 폴더는 web/ 이라서 dist 경로 그대로 사용 가능
       - name: Sync hashed assets with long cache
-        run: |
-          aws s3 sync dist s3://${{ secrets.S3_BUCKET }} \
-            --delete \
-            --exclude "index.html" \
-            --exclude "assets/*.map" \
-            --cache-control "public, max-age=31536000, immutable"
+        run: >
+          aws s3 sync dist s3://${{ secrets.S3_BUCKET }}
+          --delete
+          --exclude "uploads/*"
+          --exclude "index.html"
+          --exclude "assets/*.map"
+          --cache-control "public, max-age=31536000, immutable"
 
       - name: Upload index.html with short cache
         run: |
@@ -69,7 +68,11 @@ jobs:
           aws s3 rm s3://${{ secrets.S3_BUCKET }}/assets/ --recursive --exclude "*" --include "*.map" || true
 
       - name: Invalidate CloudFront
+        env:
+          DIST_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
         run: |
-          aws cloudfront create-invalidation \
-            --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} \
-            --paths "/*"
+          if [ -z "$DIST_ID" ]; then
+            echo "CLOUDFRONT_DISTRIBUTION_ID is missing or not accessible"
+            exit 1
+          fi
+          aws cloudfront create-invalidation --distribution-id "$DIST_ID" --paths "/*"
