@@ -35,15 +35,34 @@ logging.getLogger("asyncio").setLevel(logging.WARNING)
 logging.getLogger("livekit.agents").setLevel(logging.WARNING)
 logging.getLogger("hpack").setLevel(logging.WARNING)
 
-_openai_client = OpenAIAsyncClient()
-_supabase_client = supabase.create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_SERVICE_ROLE_KEY"))
+_openai_client: OpenAIAsyncClient | None = None
+_supabase_client = None
+
+
+def get_openai_client() -> OpenAIAsyncClient:
+    global _openai_client
+    if _openai_client is None:
+        _openai_client = OpenAIAsyncClient()
+    return _openai_client
+
+
+def get_supabase_client():
+    global _supabase_client
+    if _supabase_client is None:
+        supabase_url = os.getenv("SUPABASE_URL")
+        supabase_service_role_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+        if not supabase_url or not supabase_service_role_key:
+            raise RuntimeError("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set")
+        _supabase_client = supabase.create_client(supabase_url, supabase_service_role_key)
+    return _supabase_client
 
 
 async def summarize_transcript(transcript_context: str) -> str:
     if not transcript_context or not transcript_context.strip():
         return ""
 
-    response = await _openai_client.chat.completions.create(
+    client = get_openai_client()
+    response = await client.chat.completions.create(
         model="gpt-4o",
         temperature=0.2,
         max_completion_tokens=400,
@@ -51,20 +70,18 @@ async def summarize_transcript(transcript_context: str) -> str:
             {
                 "role": "system",
                 "content": (
-                    "You are a precise meeting summarizer. "
-                    "Your task is to produce a clear summary of meeting transcripts. "
-                    "Follow these rules strictly:\n"
-                    "- Output 5–10 concise bullet points.\n"
-                    "- Include key decisions and action items.\n"
-                    "- Be objective and avoid speculation.\n"
-                    "- Write in the same language as the transcript. "
-                    "If multiple languages are used, default to Korean."
+                    "당신은 회의 내용을 정확하게 정리하는 전문 요약가입니다.\n"
+                    "다음 규칙을 반드시 따르세요:\n"
+                    "- 5~10개의 간결한 불릿 포인트로만 출력합니다.\n"
+                    "- 핵심 결정 사항과 액션 아이템을 반드시 포함합니다.\n"
+                    "- 추측이나 의견은 포함하지 않고, 실제 발언에 기반해 서술합니다.\n"
+                    "- 가능한 한 한국어로 작성합니다. 여러 언어가 섞여 있더라도 최종 출력은 한국어를 기본으로 합니다.\n"
                 ),
             },
             {
                 "role": "user",
                 "content": (
-                    f"Summarize the following transcript:\n\n{transcript_context}"
+                    f"다음 회의 내용을 요약하세요:\n\n{transcript_context}"
                 ),
             },
         ],
@@ -83,7 +100,7 @@ class Transcriber(Agent):
     ):
         super().__init__(
             instructions="not-needed",
-            stt=openai.STT(model="gpt-4o-transcribe"),
+            stt=openai.STT(model="gpt-4o-transcribe", language="ko"),
         )
         self.created_at = created_at
         self.participant_identity = participant_identity
@@ -204,7 +221,7 @@ class MultiUserTranscriber:
 
         server_id = ""
         try:
-            rooms = _supabase_client.table("rooms").select("server_id").eq("id", self.ctx.room.name).single().execute()
+            rooms = get_supabase_client().table("rooms").select("server_id").eq("id", self.ctx.room.name).single().execute()
             server_id = rooms.data["server_id"]
         except Exception as e:
             logger.error(f"[{(time.monotonic() - self.created_at):.2f}s] server id retrieval failed for {self.ctx.room.name}: {e}")
@@ -225,7 +242,7 @@ class MultiUserTranscriber:
         }
 
         try:
-            result = _supabase_client.table("meeting_logs").insert(payload).execute()
+            result = get_supabase_client().table("meeting_logs").insert(payload).execute()
             logger.info(f"[{(time.monotonic() - self.created_at):.2f}s] successfully inserted session log for {self.ctx.room.name}")
         except Exception as e:
             logger.error(f"[{(time.monotonic() - self.created_at):.2f}s] session log insertion failed for {self.ctx.room.name}: {e}")
