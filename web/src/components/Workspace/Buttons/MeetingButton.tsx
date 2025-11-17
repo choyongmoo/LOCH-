@@ -7,7 +7,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router";
 import { getDisplayName, getStorageKey, type RecentPage } from "../utils/recentPage";
 
-const MAX_RECENT = 3; 
+const MAX_RECENT = 3;
 
 interface MeetingButtonProps {
   serverId?: string;
@@ -28,7 +28,7 @@ export const MeetingButton = ({ className }: MeetingButtonProps) => {
 
   const { selectedServerId } = useSelectedServerStore();
 
-  const user = useUserStore(state => state.user);
+  const user = useUserStore((state) => state.user);
 
   const addRecentPage = (path: string) => {
     const storageKey = getStorageKey(user?.id);
@@ -37,7 +37,7 @@ export const MeetingButton = ({ className }: MeetingButtonProps) => {
     if (!name) return;
 
     const newPage: RecentPage = { path, name, ts: Date.now() };
-    const updatedPages = [newPage, ...stored.filter(p => p.path !== path)].slice(0, MAX_RECENT);
+    const updatedPages = [newPage, ...stored.filter((p) => p.path !== path)].slice(0, MAX_RECENT);
     localStorage.setItem(storageKey, JSON.stringify(updatedPages));
   };
 
@@ -106,7 +106,7 @@ export const MeetingButton = ({ className }: MeetingButtonProps) => {
         서버를 선택해 주세요
       </Button>
     );
-  } else if (loading) {
+  } else if (loading || (room && room.user_count <= 0 && room.is_active)) {
     meetingAction = (
       <Button disabled variant="outline" size="lg" className={className ?? "w-full"}>
         <Loader2 className="animate-spin" />
