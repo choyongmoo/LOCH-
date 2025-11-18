@@ -24,7 +24,7 @@ from livekit.agents import (
     llm,
     utils,
 )
-from livekit.plugins import openai, silero
+from livekit.plugins import openai, silero, noise_cancellation
 from openai import AsyncOpenAI as OpenAIAsyncClient
 import supabase
 
@@ -100,7 +100,7 @@ class Transcriber(Agent):
     ):
         super().__init__(
             instructions="not-needed",
-            stt=openai.STT(model="gpt-4o-transcribe", language="ko"),
+            stt=openai.STT(model="gpt-4o-transcribe", language="ko", detect_language=True),
         )
         self.created_at = created_at
         self.participant_identity = participant_identity
@@ -193,6 +193,7 @@ class MultiUserTranscriber:
             input_options=RoomInputOptions(
                 text_enabled=False,
                 video_enabled=False,
+                noise_cancellation=noise_cancellation.BVC()
             ),
             output_options=RoomOutputOptions(
                 transcription_enabled=True,

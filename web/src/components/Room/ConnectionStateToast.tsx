@@ -28,7 +28,7 @@ export function ConnectionStateToast(props: ConnectionStateToastProps) {
         );
         break;
       case ConnectionState.Disconnected:
-        setNotification(<>Disconnected</>);
+        setNotification(<>연결 종료</>);
         break;
       default:
         setNotification(undefined);

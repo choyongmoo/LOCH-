@@ -215,12 +215,15 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
             <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 mt-4">
               선택 구간 대화
             </div>
-            <div className="max-h-[50vh] overflow-auto divide-y divide-gray-100 dark:divide-white/10 rounded-md border border-gray-100 dark:border-white/10">
+            <div className="max-h-[60vh] overflow-auto divide-y divide-gray-100 dark:divide-white/10 rounded-md border border-gray-100 dark:border-white/10">
               {(() => {
                 const start = Math.max(0, parseTimeInput(startText));
                 const end = Math.max(start, parseTimeInput(endText));
                 const items = getTranscriptEntries(log?.transcript).filter(
-                  (i) => Number.isFinite(i.timestamp) && i.timestamp >= start && i.timestamp <= end
+                  (i) =>
+                    Number.isFinite(i.timestamp) &&
+                    Math.trunc(i.timestamp) >= start &&
+                    Math.trunc(i.timestamp) <= end
                 );
                 if (items.length === 0)
                   return (

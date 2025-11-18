@@ -102,7 +102,7 @@ const DocsPage = () => {
         </div>
 
         {/* Body */}
-        <div className="max-h-[60vh] overflow-auto">
+        <div className="max-h-[120vh] overflow-auto">
           {loading ? (
             <div className="px-4 py-8 text-center text-sm text-gray-500 dark:text-gray-400">
               불러오는 중...
