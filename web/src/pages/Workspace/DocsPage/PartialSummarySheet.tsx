@@ -158,7 +158,7 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-xl">
+      <SheetContent side="right" className="w-full sm:max-w-xl overflow-auto">
         <SheetHeader>
           <SheetTitle>부분 요약</SheetTitle>
           <SheetDescription>시간 구간을 선택해 간단 요약을 확인하세요.</SheetDescription>
