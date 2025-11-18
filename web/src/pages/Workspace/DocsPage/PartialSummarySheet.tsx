@@ -220,7 +220,10 @@ export const PartialSummarySheet: React.FC<PartialSummarySheetProps> = ({
                 const start = Math.max(0, parseTimeInput(startText));
                 const end = Math.max(start, parseTimeInput(endText));
                 const items = getTranscriptEntries(log?.transcript).filter(
-                  (i) => Number.isFinite(i.timestamp) && i.timestamp >= start && i.timestamp <= end
+                  (i) =>
+                    Number.isFinite(i.timestamp) &&
+                    Math.trunc(i.timestamp) >= start &&
+                    Math.trunc(i.timestamp) <= end
                 );
                 if (items.length === 0)
                   return (
