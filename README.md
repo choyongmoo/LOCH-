@@ -29,6 +29,10 @@
 - **Realtime/Backend**: Supabase JS, LiveKit Client, Supabase Edge Functions
 ---
 
+## 구조도
+<img width="1280" height="720" alt="6ee1ee02724dd95b" src="https://github.com/user-attachments/assets/fc5e80e6-c469-46e8-a31e-7dd44f9c2de2" />
+
+
 ## 디렉터리 구조(요약)
 ```
 src/
